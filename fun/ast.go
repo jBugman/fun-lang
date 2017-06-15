@@ -51,6 +51,17 @@ type FuncBody interface {
 
 func (fa FuncApplication) funcBodyMarker() {}
 func (do DoBlock) funcBodyMarker()         {}
+func (u Undef) funcBodyMarker()            {}
+
+// Undef represents function body placeholder
+type Undef bool
+
+// Undefined is an Undef singleton
+const Undefined Undef = true
+
+func (u Undef) String() string {
+	return undefined
+}
 
 // FuncDecl represents function declaration
 type FuncDecl struct {

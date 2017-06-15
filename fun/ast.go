@@ -1,3 +1,4 @@
+// Package fun contains Fun language AST and means to prettyprint its source code.
 package fun
 
 import (
@@ -22,20 +23,20 @@ const (
 	closeBracket  = ")"
 )
 
-// Module represents single source file
+// Module represents single source file.
 type Module struct {
 	Name    string
 	Imports []Import
 	Decls   []Decl
 }
 
-// Import represents import
+// Import represents import.
 type Import struct {
 	Path  string
 	Alias string
 }
 
-// Decl represents declaration
+// Decl represents declaration.
 type Decl interface {
 	String() string
 	declMarker()
@@ -43,7 +44,7 @@ type Decl interface {
 
 func (fd FuncDecl) declMarker() {}
 
-// FuncBody represents function body
+// FuncBody represents function body.
 type FuncBody interface {
 	String() string
 	funcBodyMarker()
@@ -53,17 +54,17 @@ func (fa FuncApplication) funcBodyMarker() {}
 func (do DoBlock) funcBodyMarker()         {}
 func (u Undef) funcBodyMarker()            {}
 
-// Undef represents function body placeholder
+// Undef represents function body placeholder.
 type Undef bool
 
-// Undefined is an Undef singleton
+// Undefined is an Undef singleton.
 const Undefined Undef = true
 
 func (u Undef) String() string {
 	return undefined
 }
 
-// FuncDecl represents function declaration
+// FuncDecl represents function declaration.
 type FuncDecl struct {
 	Name    string
 	Params  Parameters
@@ -71,13 +72,13 @@ type FuncDecl struct {
 	Body    FuncBody
 }
 
-// Parameter represents function parameter
+// Parameter represents function parameter.
 type Parameter struct {
 	Name string
 	Type Type
 }
 
-// Type represents type
+// Type represents type.
 type Type string
 
 func (imp Import) String() string {
@@ -136,7 +137,7 @@ func (fd FuncDecl) String() string {
 	return out.String() + lf
 }
 
-// Parameters represents function parameters
+// Parameters represents function parameters.
 type Parameters []Parameter // TODO not only types
 
 func (ps Parameters) String() string {
@@ -147,7 +148,7 @@ func (ps Parameters) String() string {
 	return strings.Join(ss, arrow)
 }
 
-// Names build parameter list for binding
+// Names build parameter list for binding.
 func (ps Parameters) Names() string {
 	ss := make([]string, len(ps))
 	for i := 0; i < len(ps); i++ {
@@ -156,7 +157,7 @@ func (ps Parameters) Names() string {
 	return strings.Join(ss, space)
 }
 
-// Results represents function result list
+// Results represents function result list.
 type Results []Type
 
 func (ts Results) String() string {
@@ -174,25 +175,25 @@ func (ts Results) String() string {
 	}
 }
 
-// Expression is a pure function
+// Expression is a pure function.
 type Expression interface {
 	funcBodyMarker()
 	// expressionMarker()
 }
 
-// Statement just performs side effects
+// Statement just performs side effects.
 type Statement interface {
 	funcBodyMarker()
 	// statementMarker()
 }
 
-// DoBlock represents raw Go code as a function body
+// DoBlock represents raw Go code as a function body.
 type DoBlock struct {
 	Text []string
 }
 
-// FuncApplication represents function application
-// At least for now it may be both Statement and Expression
+// FuncApplication represents function application.
+// At least for now it may be both Statement and Expression.
 type FuncApplication struct {
 	Name      string
 	Module    string
@@ -220,7 +221,7 @@ func (fa FuncApplication) String() string {
 	return buf.String()
 }
 
-// Assuming non-empty body, empty do block does not really makes sense
+// Assuming non-empty body, empty do block does not really makes sense.
 func (do DoBlock) String() string {
 	buf := bytes.NewBufferString(doDecl)
 	for _, line := range do.Text {
@@ -229,12 +230,12 @@ func (do DoBlock) String() string {
 	return strings.TrimSuffix(buf.String(), lf)
 }
 
-// Argument represents argument to which a function is applied
+// Argument represents argument to which a function is applied.
 type Argument interface {
 	argumentMarker()
 }
 
-// Literal represents language literals
+// Literal represents language literals.
 type Literal interface {
 	argumentMarker()
 	literalMarker()
@@ -242,25 +243,25 @@ type Literal interface {
 
 func (fa FuncApplication) argumentMarker() {}
 
-// Int wraps Go int
+// Int wraps Go int.
 type Int int
 
 func (t Int) literalMarker()  {}
 func (t Int) argumentMarker() {}
 
-// Float wraps Go float32
+// Float wraps Go float32.
 type Float float32
 
 func (t Float) literalMarker()  {}
 func (t Float) argumentMarker() {}
 
-// Double wraps Go float64
+// Double wraps Go float64.
 type Double float64
 
 func (t Double) literalMarker()  {}
 func (t Double) argumentMarker() {}
 
-// String wraps Go string
+// String wraps Go string.
 type String string
 
 func (t String) literalMarker()  {}
@@ -270,13 +271,13 @@ func (t String) String() string {
 	return fmt.Sprintf("%#v", t)
 }
 
-// Bool wraps Go bool
+// Bool wraps Go bool.
 type Bool bool
 
 func (t Bool) literalMarker()  {}
 func (t Bool) argumentMarker() {}
 
-// Var represents something passed by name
+// Var represents something passed by name.
 type Var string
 
 func (v Var) argumentMarker() {}

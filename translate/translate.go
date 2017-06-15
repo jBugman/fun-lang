@@ -1,3 +1,4 @@
+// Package translate provides methods for convert Go AST to Fun AST.
 package translate
 
 import (
@@ -9,7 +10,7 @@ import (
 	"../fun"
 )
 
-// FromFile converts Go ast.File to Fun Module
+// FromFile converts Go ast.File to Fun Module.
 func FromFile(src *ast.File) (fun.Module, error) {
 
 	var module fun.Module
@@ -34,7 +35,7 @@ func FromFile(src *ast.File) (fun.Module, error) {
 	return module, nil
 }
 
-// ConvertImport converts Go import to Fun Import
+// ConvertImport converts Go import to Fun Import.
 func ConvertImport(imp *ast.ImportSpec) (fun.Import, error) {
 	var result fun.Import
 	var err error
@@ -46,7 +47,7 @@ func ConvertImport(imp *ast.ImportSpec) (fun.Import, error) {
 	return result, nil
 }
 
-// ConvertFuncDecl converts Go function declaration to the Fun one
+// ConvertFuncDecl converts Go function declaration to the Fun one.
 func ConvertFuncDecl(fd *ast.FuncDecl) fun.FuncDecl {
 	// Name
 	fn := fun.FuncDecl{Name: identToString(fd.Name)}

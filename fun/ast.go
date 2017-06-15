@@ -18,6 +18,8 @@ const (
 	dot           = "."
 	intendation   = "    "
 	doDecl        = "do" + lf
+	openBracket   = "("
+	closeBracket  = ")"
 )
 
 // Module represents single source file
@@ -157,7 +159,7 @@ func (ts Results) String() string {
 		for i := 0; i < len(ts); i++ {
 			ss[i] = string(ts[i])
 		}
-		return "(" + strings.Join(ss, comma) + ")"
+		return openBracket + strings.Join(ss, comma) + closeBracket
 	}
 }
 
@@ -183,7 +185,7 @@ type DoBlock struct {
 type FuncApplication struct {
 	Name      string
 	Module    string
-	Arguments []interface{} // TODO concrete types
+	Arguments []Argument
 }
 
 func (fa FuncApplication) String() string {
@@ -195,7 +197,7 @@ func (fa FuncApplication) String() string {
 	if len(fa.Arguments) > 0 {
 		args := make([]string, len(fa.Arguments))
 		for i := 0; i < len(args); i++ {
-			args[i] = fmt.Sprint(fa.Arguments[i]) // TODO use String() of concrete types
+			args[i] = fmt.Sprint(fa.Arguments[i])
 		}
 		fmt.Fprint(&buf, space, strings.Join(args, space))
 	}
@@ -210,3 +212,55 @@ func (do DoBlock) String() string {
 	}
 	return strings.TrimSuffix(buf.String(), lf)
 }
+
+// Argument represents argument to which a function is applied
+type Argument interface {
+	argumentMarker()
+}
+
+// Literal represents language literals
+type Literal interface {
+	argumentMarker()
+	literalMarker()
+}
+
+func (fa FuncApplication) argumentMarker() {}
+
+// Int wraps Go int
+type Int int
+
+func (t Int) literalMarker()  {}
+func (t Int) argumentMarker() {}
+
+// Float wraps Go float32
+type Float float32
+
+func (t Float) literalMarker()  {}
+func (t Float) argumentMarker() {}
+
+// Double wraps Go float64
+type Double float64
+
+func (t Double) literalMarker()  {}
+func (t Double) argumentMarker() {}
+
+// String wraps Go string
+type String string
+
+func (t String) literalMarker()  {}
+func (t String) argumentMarker() {}
+
+func (t String) String() string {
+	return fmt.Sprintf("%#v", t)
+}
+
+// Bool wraps Go bool
+type Bool bool
+
+func (t Bool) literalMarker()  {}
+func (t Bool) argumentMarker() {}
+
+// Var represents something passed by name
+type Var string
+
+func (v Var) argumentMarker() {}

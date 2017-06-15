@@ -96,7 +96,7 @@ func ExampleCreateAST() {
 				Body: fun.FuncApplication{
 					Module:    "fmt",
 					Name:      "Println",
-					Arguments: []interface{}{42},
+					Arguments: []fun.Argument{fun.String("Hello World!")},
 				},
 			},
 		},
@@ -108,13 +108,13 @@ func ExampleCreateAST() {
 	// import "fmt"
 	//
 	// main :: ()
-	// main = fmt.Println 42
+	// main = fmt.Println "Hello World!"
 }
 
 func ExampleFuncApplication_String_local() {
 	fn := fun.FuncApplication{
 		Name:      "sum",
-		Arguments: []interface{}{1, 2},
+		Arguments: []fun.Argument{fun.Int(1), fun.Int(2)},
 	}
 	fmt.Println(fn)
 	// Output:
@@ -125,18 +125,18 @@ func ExampleFuncApplication_String_fmtPrintln() {
 	fn := fun.FuncApplication{
 		Name:      "Println",
 		Module:    "fmt",
-		Arguments: []interface{}{"count"},
+		Arguments: []fun.Argument{fun.Float(4.2)},
 	}
 	fmt.Println(fn)
 	// Output:
-	// fmt.Println count
+	// fmt.Println 4.2
 }
 
 func ExampleFuncDecl_String_statementBody() {
 	statement := fun.FuncApplication{
 		Name:      "Println",
 		Module:    "fmt",
-		Arguments: []interface{}{"x"},
+		Arguments: []fun.Argument{fun.Var("x")},
 	}
 	fn := fun.FuncDecl{
 		Name:   "printInt",

@@ -77,21 +77,11 @@ func ConvertFuncDecl(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error
 	}
 	if len(fd.Body.List) == 1 {
 		// Convert to FuncApplication
-		fs := fun.FuncApplication{}
-		// Module:
-		// Name:
-		// Arguments:
-		stmt := fd.Body.List[0]
-		switch stmt.(type) {
-		case *ast.ReturnStmt:
-			fs.Kind = fun.EXPRESSION
-			// TODO binary expr
-		default:
-			fs.Kind = fun.STATEMENT
-			// TODO statements
+		fa, err := ConvertStmt(fset, fd.Body.List[0])
+		if err != nil {
+			return fn, err
 		}
-		ast.Print(fset, stmt)   // debug
-		fn.Body = fun.Undefined // TODO remove placeholder
+		fn.Body = fa
 	} else {
 		// Convert to Fun DoBlock
 		db := fun.DoBlock{}
@@ -104,6 +94,82 @@ func ConvertFuncDecl(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error
 	}
 
 	return fn, nil
+}
+
+// ConvertStmt converts Go statement to a corresponding FuncApplication depending on type
+func ConvertStmt(fset *token.FileSet, stmt ast.Stmt) (fun.FuncBody, error) {
+	result := fun.FuncApplication{}
+	switch st := stmt.(type) {
+	case *ast.ReturnStmt:
+		result.Kind = fun.EXPRESSION
+		// TODO at least binary expr
+		// Module:
+		// Name:
+		// Arguments:
+		ast.Print(fset, st)       // debug
+		return fun.Undefined, nil // TODO change return type to FuncApplication
+	case *ast.ExprStmt:
+		result.Kind = fun.STATEMENT
+		switch expr := st.X.(type) {
+		case *ast.CallExpr:
+			switch f := expr.Fun.(type) {
+			case *ast.SelectorExpr:
+				result.Name = identToString(f.Sel)
+				// Module (only?)
+				switch x := f.X.(type) {
+				case *ast.Ident:
+					result.Module = identToString(x)
+				default:
+					ast.Print(fset, f)                                          // debug
+					return result, fmt.Errorf("call type not supported: %v", f) // TODO add more
+				}
+			default:
+				ast.Print(fset, f)                                          // debug
+				return result, fmt.Errorf("call type not supported: %v", f) // TODO add more
+			}
+			// result.Name = f.Fun.Sel.Name
+			// Arguments
+			for _, e := range expr.Args {
+				var arg fun.Argument
+				switch a := e.(type) {
+				case *ast.BasicLit:
+					arg = litToArgument(a)
+				default:
+					ast.Print(fset, e)                                              // debug
+					return result, fmt.Errorf("argument type not supported: %v", e) // TODO add more
+				}
+				result.Arguments = append(result.Arguments, arg)
+			}
+		default:
+			ast.Print(fset, expr)                                              // debug
+			return result, fmt.Errorf("ast.Expr type not supported: %v", expr) // TODO add more
+		}
+	default:
+		ast.Print(fset, st)                                              // debug
+		return result, fmt.Errorf("ast.Stmt type not supported: %v", st) // TODO add more
+	}
+	return result, nil
+}
+
+func litToArgument(lit *ast.BasicLit) fun.Argument {
+	var arg fun.Argument
+	switch lit.Kind {
+	case token.INT:
+		arg = fun.Int(lit.Value)
+	case token.FLOAT:
+		arg = fun.Double(lit.Value)
+	case token.STRING:
+		s, _ := litStringToString(lit) // should not be error
+		arg = fun.String(s)
+	case token.CHAR:
+		s, _ := litStringToString(lit) // should not be error
+		arg = fun.Char(s)
+	case token.IMAG:
+		arg = fun.Imaginary(lit.Value)
+	default:
+		panic(fmt.Sprintf("unexpected type: %v", lit))
+	}
+	return arg
 }
 
 func identToString(ident *ast.Ident) string {

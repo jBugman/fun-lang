@@ -15,6 +15,9 @@ const (
 	space         = " "
 	comma         = ", "
 	binding       = " = "
+	dot           = "."
+	intendation   = "    "
+	doDecl        = "do" + lf
 )
 
 // Module represents single source file
@@ -43,6 +46,9 @@ type FuncBody interface {
 	String() string
 	funcBodyMarker()
 }
+
+func (fa FuncApplication) funcBodyMarker() {}
+func (do DoBlock) funcBodyMarker()         {}
 
 // FuncDecl represents function declaration
 type FuncDecl struct {
@@ -110,6 +116,8 @@ func (fd FuncDecl) String() string {
 	// TODO implement body
 	if fd.Body == nil {
 		fmt.Fprint(&out, undefined)
+	} else {
+		fmt.Fprint(&out, fd.Body)
 	}
 
 	return out.String() + lf
@@ -151,4 +159,54 @@ func (ts Results) String() string {
 		}
 		return "(" + strings.Join(ss, comma) + ")"
 	}
+}
+
+// Expression is a pure function
+type Expression interface {
+	funcBodyMarker()
+	// expressionMarker()
+}
+
+// Statement just performs side effects
+type Statement interface {
+	funcBodyMarker()
+	// statementMarker()
+}
+
+// DoBlock represents raw Go code as a function body
+type DoBlock struct {
+	Text []string
+}
+
+// FuncApplication represents function application
+// At least for now it may be both Statement and Expression
+type FuncApplication struct {
+	Name      string
+	Module    string
+	Arguments []interface{} // TODO concrete types
+}
+
+func (fa FuncApplication) String() string {
+	var buf bytes.Buffer
+	if fa.Module != "" {
+		fmt.Fprint(&buf, fa.Module, dot)
+	}
+	fmt.Fprint(&buf, fa.Name)
+	if len(fa.Arguments) > 0 {
+		args := make([]string, len(fa.Arguments))
+		for i := 0; i < len(args); i++ {
+			args[i] = fmt.Sprint(fa.Arguments[i]) // TODO use String() of concrete types
+		}
+		fmt.Fprint(&buf, space, strings.Join(args, space))
+	}
+	return buf.String()
+}
+
+// Assuming non-empty body, empty do block does not really makes sense
+func (do DoBlock) String() string {
+	buf := bytes.NewBufferString(doDecl)
+	for _, line := range do.Text {
+		fmt.Fprint(buf, intendation, line, lf)
+	}
+	return strings.TrimSuffix(buf.String(), lf)
 }

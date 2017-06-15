@@ -91,7 +91,14 @@ func ExampleCreateAST() {
 			{Path: "fmt"},
 		},
 		Decls: []fun.Decl{
-			fun.FuncDecl{Name: "main"},
+			fun.FuncDecl{
+				Name: "main",
+				Body: fun.FuncApplication{
+					Module:    "fmt",
+					Name:      "Println",
+					Arguments: []interface{}{42},
+				},
+			},
 		},
 	}
 	fmt.Print(module)
@@ -101,5 +108,70 @@ func ExampleCreateAST() {
 	// import "fmt"
 	//
 	// main :: ()
-	// main = undefined
+	// main = fmt.Println 42
+}
+
+func ExampleFuncApplication_String_local() {
+	fn := fun.FuncApplication{
+		Name:      "sum",
+		Arguments: []interface{}{1, 2},
+	}
+	fmt.Println(fn)
+	// Output:
+	// sum 1 2
+}
+
+func ExampleFuncApplication_String_fmtPrintln() {
+	fn := fun.FuncApplication{
+		Name:      "Println",
+		Module:    "fmt",
+		Arguments: []interface{}{"count"},
+	}
+	fmt.Println(fn)
+	// Output:
+	// fmt.Println count
+}
+
+func ExampleFuncDecl_String_statementBody() {
+	statement := fun.FuncApplication{
+		Name:      "Println",
+		Module:    "fmt",
+		Arguments: []interface{}{"x"},
+	}
+	fn := fun.FuncDecl{
+		Name:   "printInt",
+		Params: fun.Parameters{{"x", "int"}},
+		Body:   statement,
+	}
+	fmt.Println(fn)
+	// Output:
+	// printInt :: int -> ()
+	// printInt x = fmt.Println x
+}
+
+func ExampleDoBlock_String_oneLine() {
+	fn := fun.DoBlock{[]string{`fmt.Fprintf(&b, "world!")`}}
+	fmt.Println(fn)
+	// Output:
+	// do
+	//     fmt.Fprintf(&b, "world!")
+}
+
+func ExampleFuncDecl_String_doBlock_multiline() {
+	fn := fun.FuncDecl{
+		Name:   "printHash",
+		Params: fun.Parameters{{"str", "string"}},
+		Body: fun.DoBlock{[]string{
+			`h := md5.New()`,
+			`io.WriteString(h, str)`,
+			`fmt.Printf("%x", h.Sum(nil))`,
+		}},
+	}
+	fmt.Println(fn)
+	// Output:
+	// printHash :: string -> ()
+	// printHash str = do
+	//     h := md5.New()
+	//     io.WriteString(h, str)
+	//     fmt.Printf("%x", h.Sum(nil))
 }

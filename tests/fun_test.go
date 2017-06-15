@@ -97,6 +97,7 @@ func ExampleCreateAST() {
 					Module:    "fmt",
 					Name:      "Println",
 					Arguments: []fun.Argument{fun.String("Hello World!")},
+					Kind:      fun.STATEMENT,
 				},
 			},
 		},
@@ -126,6 +127,7 @@ func ExampleFuncApplication_String_fmtPrintln() {
 		Name:      "Println",
 		Module:    "fmt",
 		Arguments: []fun.Argument{fun.Float(4.2)},
+		Kind:      fun.STATEMENT,
 	}
 	fmt.Println(fn)
 	// Output:
@@ -140,6 +142,7 @@ func ExampleFuncApplication_String_nestedFunction() {
 			fun.FuncApplication{
 				Name:      "reverse",
 				Arguments: []fun.Argument{fun.Var("xs")},
+				Kind:      fun.EXPRESSION,
 			},
 		},
 	}
@@ -153,6 +156,7 @@ func ExampleFuncDecl_String_statementBody() {
 		Name:      "Println",
 		Module:    "fmt",
 		Arguments: []fun.Argument{fun.Var("x")},
+		Kind:      fun.STATEMENT,
 	}
 	fn := fun.FuncDecl{
 		Name:   "printInt",

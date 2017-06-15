@@ -198,7 +198,16 @@ type FuncApplication struct {
 	Name      string
 	Module    string
 	Arguments []Argument
+	Kind      funcApplicationKind
 }
+
+type funcApplicationKind uint8
+
+// Kinds of a FuncApplication
+const (
+	EXPRESSION funcApplicationKind = iota
+	STATEMENT  funcApplicationKind = iota
+)
 
 func (fa FuncApplication) String() string {
 	var buf bytes.Buffer

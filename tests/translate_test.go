@@ -24,16 +24,16 @@ func main() {
 }
 `
 
-func parseTree(src string) *ast.File {
+func parseGo(src string) *ast.File {
 	fset := token.NewFileSet()
 	tree, _ := parser.ParseFile(fset, "source.go", src, 0)
 	return tree
 }
 
-func ExampleFromAST() {
-	golangTree := parseTree(source)
-	translated := translate.FromAST(golangTree)
-	fmt.Println(translated.PrettyPrint())
+func ExampleFromFile() {
+	golangFile := parseGo(source)
+	module, _ := translate.FromFile(golangFile)
+	fmt.Print(module)
 	// Output:
 	// module Main where
 	//

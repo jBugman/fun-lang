@@ -1,130 +1,88 @@
 package translate
 
 import (
-	"bytes"
 	"fmt"
 	"go/ast"
+	"go/token"
 	"strings"
+
+	"../fun"
 )
 
-const (
-	unit      = "()"
-	undefined = "undefined"
-)
+// FromFile converts Go ast.File to Fun Module
+func FromFile(src *ast.File) (fun.Module, error) {
 
-// Module represents single source file
-type Module interface {
-	PrettyPrint() string
-}
-
-type module struct {
-	*ast.File
-}
-
-// FromAST converts Go ast.File to Fun module
-func FromAST(src *ast.File) Module {
-	return module{src}
-}
-
-type importStmt struct {
-	*ast.ImportSpec
-}
-
-func (i importStmt) String() string {
-	return i.ImportSpec.Path.Value
-}
-
-type ident struct {
-	*ast.Ident
-}
-
-func (i ident) String() string {
-	return i.Name
-}
-
-type funcDecl struct {
-	*ast.FuncDecl
-}
-
-func (fd funcDecl) String() string {
-	var out bytes.Buffer
-	name := fd.FuncDecl.Name
-	fmt.Fprintf(&out, "%s :: ", name)
-	params := parameterList{fd.Type.Params}.String()
-	if params != "" {
-		fmt.Fprintf(&out, "%s -> ", params)
-	}
-	result := resultList{fd.Type.Results}.String()
-	fmt.Fprintf(&out, "%s\n", result)
-
-	fmt.Fprintf(&out, "%s = %s\n", name, undefined) // TODO implement body
-
-	return out.String()
-}
-
-func types(fl *ast.FieldList) []string {
-	if fl == nil {
-		return []string{}
-	}
-	fs := fl.List
-	types := make([]string, len(fs))
-	for i, field := range fs {
-		switch t := field.Type.(type) {
-		case *ast.Ident:
-			types[i] = t.Name
-		}
-	}
-	return types
-}
-
-type parameterList struct {
-	*ast.FieldList
-}
-
-func (fl parameterList) String() string {
-	ts := types(fl.FieldList)
-	return strings.Join(ts, " -> ")
-}
-
-type resultList struct {
-	*ast.FieldList
-}
-
-func (fl resultList) String() string {
-	ts := types(fl.FieldList)
-	switch len(ts) {
-	case 0:
-		return unit
-	case 1:
-		return ts[0]
-	default:
-		return "(" + strings.Join(ts, ", ") + ")"
-	}
-}
-
-// PrettyPrint prints File as Fun source code
-func (m module) PrettyPrint() string {
-	var out bytes.Buffer
-
+	var module fun.Module
 	// Module name
-	fmt.Fprintf(&out, "module %s where\n\n", strings.Title(ident{m.File.Name}.String()))
-
+	module.Name = strings.Title(identToString(src.Name))
 	// Imports
-	if len(m.File.Imports) > 0 {
-		for _, imp := range m.File.Imports {
-			fmt.Fprintf(&out, "import %s\n", importStmt{imp}.String())
+	for _, imp := range src.Imports {
+		funImp, err := ConvertImport(imp)
+		if err != nil {
+			return module, err
 		}
-		fmt.Fprintln(&out)
+		module.Imports = append(module.Imports, funImp)
 	}
-
 	// Top-level declarations
-	for _, decl := range m.File.Decls {
-		switch d := decl.(type) {
+	for _, gd := range src.Decls {
+		switch d := gd.(type) {
 		case *ast.FuncDecl:
-			fun := funcDecl{d}
-			fmt.Fprintln(&out, fun)
+			fn := ConvertFuncDecl(d)
+			module.Decls = append(module.Decls, fn)
 		}
 	}
+	return module, nil
+}
 
-	return out.String()
+// ConvertImport converts Go import to Fun Import
+func ConvertImport(imp *ast.ImportSpec) (fun.Import, error) {
+	var result fun.Import
+	var err error
+	result.Path, err = litStringToString(imp.Path)
+	if err != nil {
+		return result, err
+	}
+	// TODO aliases
+	return result, nil
+}
+
+// ConvertFuncDecl converts Go function declaration to the Fun one
+func ConvertFuncDecl(fd *ast.FuncDecl) fun.FuncDecl {
+	// Name
+	fn := fun.FuncDecl{Name: identToString(fd.Name)}
+	// Parameters
+	if fd.Type.Params.List != nil {
+		for _, p := range fd.Type.Params.List {
+			tp := identToString(p.Type.(*ast.Ident))
+			for _, n := range p.Names {
+				fn.Params = append(fn.Params, fun.Parameter{Name: identToString(n), Type: fun.Type(tp)})
+			}
+		}
+	}
+	// Results
+	if fd.Type.Results != nil {
+		for _, p := range fd.Type.Results.List {
+			tp := identToString(p.Type.(*ast.Ident))
+			fn.Results = append(fn.Results, fun.Type(tp))
+		}
+	}
+	// Body
+	fn.Body = fun.Undefined // TODO implement body
+
+	return fn
+}
+
+func identToString(ident *ast.Ident) string {
+	return ident.Name
+}
+
+func litStringToString(lit *ast.BasicLit) (string, error) {
+	switch lit.Kind {
+	case token.STRING:
+		return strings.Trim(lit.Value, `"`), nil
+	case token.CHAR:
+		return strings.Trim(lit.Value, "'"), nil
+	default:
+		return "", fmt.Errorf("not a string or char literal: %v", lit)
+	}
 }

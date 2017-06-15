@@ -197,7 +197,12 @@ func (fa FuncApplication) String() string {
 	if len(fa.Arguments) > 0 {
 		args := make([]string, len(fa.Arguments))
 		for i := 0; i < len(args); i++ {
-			args[i] = fmt.Sprint(fa.Arguments[i])
+			switch arg := fa.Arguments[i].(type) {
+			case FuncApplication:
+				args[i] = fmt.Sprintf("(%s)", arg)
+			default:
+				args[i] = fmt.Sprint(arg)
+			}
 		}
 		fmt.Fprint(&buf, space, strings.Join(args, space))
 	}

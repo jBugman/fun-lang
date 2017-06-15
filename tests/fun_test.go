@@ -132,6 +132,22 @@ func ExampleFuncApplication_String_fmtPrintln() {
 	// fmt.Println 4.2
 }
 
+func ExampleFuncApplication_String_nestedFunction() {
+	fn := fun.FuncApplication{
+		Name: "take",
+		Arguments: []fun.Argument{
+			fun.Int(3),
+			fun.FuncApplication{
+				Name:      "reverse",
+				Arguments: []fun.Argument{fun.Var("xs")},
+			},
+		},
+	}
+	fmt.Println(fn)
+	// Output:
+	// take 3 (reverse xs)
+}
+
 func ExampleFuncDecl_String_statementBody() {
 	statement := fun.FuncApplication{
 		Name:      "Println",

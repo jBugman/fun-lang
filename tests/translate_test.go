@@ -2,14 +2,13 @@ package tests
 
 import (
 	"fmt"
-	"go/ast"
 	"go/parser"
 	"go/token"
 
 	"../translate"
 )
 
-const source = `
+const fullSource = `
 package main
 
 import "fmt"
@@ -19,20 +18,20 @@ func inc(val int) int {
 	return val + 1
 }
 
+func print42() {
+	fmt.Println(42)
+}
+
 func main() {
-	fmt.Fprintln(ioutil.Discard, "Hello World!")
+	line := "Hello World!"
+	fmt.Fprintln(ioutil.Discard, line)
 }
 `
 
-func parseGo(src string) *ast.File {
-	fset := token.NewFileSet()
-	tree, _ := parser.ParseFile(fset, "source.go", src, 0)
-	return tree
-}
-
 func ExampleFromFile() {
-	golangFile := parseGo(source)
-	module, _ := translate.FromFile(golangFile)
+	fset := token.NewFileSet()
+	goTree, _ := parser.ParseFile(fset, "source.go", fullSource, 0)
+	module, _ := translate.FromFile(fset, goTree)
 	fmt.Print(module)
 	// Output:
 	// module Main where
@@ -43,6 +42,11 @@ func ExampleFromFile() {
 	// inc :: int -> int
 	// inc val = val + 1
 	//
+	// print42 :: ()
+	// print42 = fmt.Println 42
+	//
 	// main :: ()
-	// main = fmt.Fprintln io.Discard "Hello World!"
+	// main = do
+	//     line := "Hello World!"
+	//     fmt.Fprintln(io.Discard, line)
 }

@@ -2,8 +2,10 @@
 package translate
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
+	"go/printer"
 	"go/token"
 	"strings"
 
@@ -11,8 +13,7 @@ import (
 )
 
 // FromFile converts Go ast.File to Fun Module.
-func FromFile(src *ast.File) (fun.Module, error) {
-
+func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
 	var module fun.Module
 	// Module name
 	module.Name = strings.Title(identToString(src.Name))
@@ -28,7 +29,10 @@ func FromFile(src *ast.File) (fun.Module, error) {
 	for _, gd := range src.Decls {
 		switch d := gd.(type) {
 		case *ast.FuncDecl:
-			fn := ConvertFuncDecl(d)
+			fn, err := ConvertFuncDecl(fset, d)
+			if err != nil {
+				return module, err
+			}
 			module.Decls = append(module.Decls, fn)
 		}
 	}
@@ -48,7 +52,7 @@ func ConvertImport(imp *ast.ImportSpec) (fun.Import, error) {
 }
 
 // ConvertFuncDecl converts Go function declaration to the Fun one.
-func ConvertFuncDecl(fd *ast.FuncDecl) fun.FuncDecl {
+func ConvertFuncDecl(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	// Name
 	fn := fun.FuncDecl{Name: identToString(fd.Name)}
 	// Parameters
@@ -68,9 +72,38 @@ func ConvertFuncDecl(fd *ast.FuncDecl) fun.FuncDecl {
 		}
 	}
 	// Body
-	fn.Body = fun.Undefined // TODO implement body
+	if fd.Body == nil {
+		return fn, fmt.Errorf("empty function body is not supported: %v", fd)
+	}
+	if len(fd.Body.List) == 1 {
+		// Convert to FuncApplication
+		fs := fun.FuncApplication{}
+		// Module:
+		// Name:
+		// Arguments:
+		stmt := fd.Body.List[0]
+		switch stmt.(type) {
+		case *ast.ReturnStmt:
+			fs.Kind = fun.EXPRESSION
+			// TODO binary expr
+		default:
+			fs.Kind = fun.STATEMENT
+			// TODO statements
+		}
+		ast.Print(fset, stmt)   // debug
+		fn.Body = fun.Undefined // TODO remove placeholder
+	} else {
+		// Convert to Fun DoBlock
+		db := fun.DoBlock{}
+		for _, stmt := range fd.Body.List {
+			var buf bytes.Buffer
+			printer.Fprint(&buf, fset, stmt)
+			db.Text = append(db.Text, buf.String())
+		}
+		fn.Body = db
+	}
 
-	return fn
+	return fn, nil
 }
 
 func identToString(ident *ast.Ident) string {

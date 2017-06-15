@@ -252,20 +252,20 @@ type Literal interface {
 
 func (fa FuncApplication) argumentMarker() {}
 
-// Int wraps Go int.
-type Int int
+// Int maps to Go int.
+type Int string
 
 func (t Int) literalMarker()  {}
 func (t Int) argumentMarker() {}
 
-// Float wraps Go float32.
-type Float float32
+// Float maps to Go float32.
+type Float string
 
 func (t Float) literalMarker()  {}
 func (t Float) argumentMarker() {}
 
-// Double wraps Go float64.
-type Double float64
+// Double maps to Go float64.
+type Double string
 
 func (t Double) literalMarker()  {}
 func (t Double) argumentMarker() {}
@@ -280,11 +280,17 @@ func (t String) String() string {
 	return fmt.Sprintf("%#v", t)
 }
 
-// Bool wraps Go bool.
-type Bool bool
+// Bool maps to Go bool.
+type Bool string
 
 func (t Bool) literalMarker()  {}
 func (t Bool) argumentMarker() {}
+
+// Char maps to Go char.
+type Char string
+
+func (t Char) literalMarker()  {}
+func (t Char) argumentMarker() {}
 
 // Var represents something passed by name.
 type Var string

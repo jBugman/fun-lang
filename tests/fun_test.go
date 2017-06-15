@@ -115,7 +115,7 @@ func ExampleCreateAST() {
 func ExampleFuncApplication_String_local() {
 	fn := fun.FuncApplication{
 		Name:      "sum",
-		Arguments: []fun.Argument{fun.Int(1), fun.Int(2)},
+		Arguments: []fun.Argument{fun.Int("1"), fun.Int("2")},
 	}
 	fmt.Println(fn)
 	// Output:
@@ -126,7 +126,7 @@ func ExampleFuncApplication_String_fmtPrintln() {
 	fn := fun.FuncApplication{
 		Name:      "Println",
 		Module:    "fmt",
-		Arguments: []fun.Argument{fun.Float(4.2)},
+		Arguments: []fun.Argument{fun.Float("4.2")},
 		Kind:      fun.STATEMENT,
 	}
 	fmt.Println(fn)
@@ -138,7 +138,7 @@ func ExampleFuncApplication_String_nestedFunction() {
 	fn := fun.FuncApplication{
 		Name: "take",
 		Arguments: []fun.Argument{
-			fun.Int(3),
+			fun.Int("3"),
 			fun.FuncApplication{
 				Name:      "reverse",
 				Arguments: []fun.Argument{fun.Var("xs")},

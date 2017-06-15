@@ -1,10 +1,12 @@
-package translate
+package tests
 
 import (
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+
+	"../translate"
 )
 
 const source = `
@@ -29,8 +31,8 @@ func parseTree(src string) *ast.File {
 }
 
 func ExampleFromAST() {
-	tree := parseTree(source)
-	translated := FromAST(tree)
+	golangTree := parseTree(source)
+	translated := translate.FromAST(golangTree)
 	fmt.Println(translated.PrettyPrint())
 	// Output:
 	// module Main where

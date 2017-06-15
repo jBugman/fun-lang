@@ -292,6 +292,12 @@ type Char string
 func (t Char) literalMarker()  {}
 func (t Char) argumentMarker() {}
 
+// Imaginary maps to Go imaginary double.
+type Imaginary string
+
+func (t Imaginary) literalMarker()  {}
+func (t Imaginary) argumentMarker() {}
+
 // Var represents something passed by name.
 type Var string
 

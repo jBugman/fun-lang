@@ -12,6 +12,9 @@ const (
 	arrow         = " -> "
 	typeSeparator = " :: "
 	unit          = "()"
+	space         = " "
+	comma         = ", "
+	binding       = " = "
 )
 
 // Module represents single source file
@@ -33,18 +36,27 @@ type Decl interface {
 	declMarker()
 }
 
+func (fd FuncDecl) declMarker() {}
+
+// FuncBody represents function body
+type FuncBody interface {
+	String() string
+	funcBodyMarker()
+}
+
 // FuncDecl represents function declaration
 type FuncDecl struct {
 	Name    string
-	Params  []Parameter
-	Results []Type
-	// TODO body
+	Params  Parameters
+	Results Results
+	Body    FuncBody
 }
 
-func (fd FuncDecl) declMarker() {}
-
 // Parameter represents function parameter
-type Parameter string
+type Parameter struct {
+	Name string
+	Type Type
+}
 
 // Type represents type
 type Type string
@@ -79,20 +91,28 @@ func (mod Module) String() string {
 
 func (fd FuncDecl) String() string {
 	var out bytes.Buffer
+	// Type signature
 	fmt.Fprint(&out, fd.Name)
 	fmt.Fprint(&out, typeSeparator)
-	fmt.Fprint(&out, Parameters(fd.Params))
+	fmt.Fprint(&out, fd.Params)
 	if len(fd.Params) > 0 {
 		fmt.Fprint(&out, arrow)
 	}
-	fmt.Fprint(&out, Results(fd.Results), lf)
+	fmt.Fprint(&out, fd.Results, lf)
 
-	if fd.Results == nil {
-		fmt.Fprintf(&out, "%s = %s\n", fd.Name, undefined)
+	// Name and parameters
+	fmt.Fprint(&out, fd.Name)
+	if len(fd.Params) > 0 {
+		fmt.Fprint(&out, space, fd.Params.Names())
 	}
-	// TODO implement body
+	fmt.Fprint(&out, binding)
 
-	return out.String()
+	// TODO implement body
+	if fd.Body == nil {
+		fmt.Fprint(&out, undefined)
+	}
+
+	return out.String() + lf
 }
 
 // Parameters represents function parameters
@@ -101,9 +121,18 @@ type Parameters []Parameter // TODO not only types
 func (ps Parameters) String() string {
 	ss := make([]string, len(ps))
 	for i := 0; i < len(ps); i++ {
-		ss[i] = string(ps[i])
+		ss[i] = string(ps[i].Type)
 	}
 	return strings.Join(ss, arrow)
+}
+
+// Names build parameter list for binding
+func (ps Parameters) Names() string {
+	ss := make([]string, len(ps))
+	for i := 0; i < len(ps); i++ {
+		ss[i] = string(ps[i].Name)
+	}
+	return strings.Join(ss, space)
 }
 
 // Results represents function result list
@@ -120,6 +149,6 @@ func (ts Results) String() string {
 		for i := 0; i < len(ts); i++ {
 			ss[i] = string(ts[i])
 		}
-		return "(" + strings.Join(ss, ", ") + ")"
+		return "(" + strings.Join(ss, comma) + ")"
 	}
 }

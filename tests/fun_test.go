@@ -7,13 +7,13 @@ import (
 )
 
 func ExampleParameters_String_single() {
-	fmt.Println(fun.Parameters{"string"})
+	fmt.Println(fun.Parameters{{Name: "s", Type: "string"}})
 	// Output:
 	// string
 }
 
 func ExampleParameters_String_two() {
-	fmt.Println(fun.Parameters{"int", "int"})
+	fmt.Println(fun.Parameters{{"x", "int"}, {"y", "int"}})
 	// Output:
 	// int -> int
 }
@@ -52,24 +52,36 @@ func ExampleFuncDecl_String_unit_undefined() {
 func ExampleFuncDecl_String_int_unit_undefined() {
 	fn := fun.FuncDecl{
 		Name:   "print",
-		Params: fun.Parameters{"int"},
+		Params: fun.Parameters{{"n", "int"}},
 	}
 	fmt.Println(fn)
 	// Output:
 	// print :: int -> ()
-	// print = undefined
+	// print n = undefined
 }
 
 func ExampleFuncDecl_String_head_undefined() {
 	fn := fun.FuncDecl{
 		Name:    "head",
-		Params:  fun.Parameters{"[int]"},
+		Params:  fun.Parameters{{"xs", "[int]"}},
 		Results: fun.Results{"int", "error"},
 	}
 	fmt.Println(fn)
 	// Output:
 	// head :: [int] -> (int, error)
-	// head = undefined
+	// head xs = undefined
+}
+
+func ExampleFuncDecl_String_params() {
+	fn := fun.FuncDecl{
+		Name:    "enumFromTo",
+		Params:  fun.Parameters{{"x", "a"}, {"y", "a"}},
+		Results: fun.Results{"[a]"},
+	}
+	fmt.Println(fn)
+	// Output:
+	// enumFromTo :: a -> a -> [a]
+	// enumFromTo x y = undefined
 }
 
 func ExampleCreateAST() {

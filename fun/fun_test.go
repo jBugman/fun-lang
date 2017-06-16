@@ -13,7 +13,7 @@ func ExampleParameters_String_single() {
 }
 
 func ExampleParameters_String_two() {
-	fmt.Println(fun.Parameters{{"x", "int"}, {"y", "int"}})
+	fmt.Println(fun.Parameters{fun.NewParam("x", "int"), fun.NewParam("y", "int")})
 	// Output:
 	// int -> int
 }
@@ -52,7 +52,7 @@ func ExampleFuncDecl_String_unit_undefined() {
 func ExampleFuncDecl_String_int_unit_undefined() {
 	fn := fun.FuncDecl{
 		Name:   "print",
-		Params: fun.Parameters{{"n", "int"}},
+		Params: fun.Parameters{{Name: "n", Type: "int"}},
 	}
 	fmt.Println(fn)
 	// Output:
@@ -63,7 +63,7 @@ func ExampleFuncDecl_String_int_unit_undefined() {
 func ExampleFuncDecl_String_head_undefined() {
 	fn := fun.FuncDecl{
 		Name:    "head",
-		Params:  fun.Parameters{{"xs", "[int]"}},
+		Params:  fun.Parameters{{Name: "xs", Type: "[int]"}},
 		Results: fun.Results{"int", "error"},
 	}
 	fmt.Println(fn)
@@ -75,7 +75,7 @@ func ExampleFuncDecl_String_head_undefined() {
 func ExampleFuncDecl_String_params() {
 	fn := fun.FuncDecl{
 		Name:    "enumFromTo",
-		Params:  fun.Parameters{{"x", "a"}, {"y", "a"}},
+		Params:  fun.Parameters{fun.NewParam("x", "a"), fun.NewParam("y", "a")},
 		Results: fun.Results{"[a]"},
 	}
 	fmt.Println(fn)
@@ -164,8 +164,8 @@ func ExampleFuncDecl_String_singleExprBody() {
 	}
 	fn := fun.FuncDecl{
 		Name:   "printInt",
-		Params: fun.Parameters{{"x", "int"}},
-		Body:   fun.SingleExprBody{expr},
+		Params: fun.Parameters{fun.NewParam("x", "int")},
+		Body:   fun.SingleExprBody{Expr: expr},
 	}
 	fmt.Println(fn)
 	// Output:
@@ -174,7 +174,7 @@ func ExampleFuncDecl_String_singleExprBody() {
 }
 
 func ExampleDoBlock_String_oneLine() {
-	fn := fun.DoBlock{[]string{`fmt.Fprintf(&b, "world!")`}}
+	fn := fun.DoBlock{Text: []string{`fmt.Fprintf(&b, "world!")`}}
 	fmt.Println(fn)
 	// Output:
 	// do
@@ -184,8 +184,8 @@ func ExampleDoBlock_String_oneLine() {
 func ExampleFuncDecl_String_doBlock_multiline() {
 	fn := fun.FuncDecl{
 		Name:   "printHash",
-		Params: fun.Parameters{{"str", "string"}},
-		Body: fun.DoBlock{[]string{
+		Params: fun.Parameters{fun.NewParam("str", "string")},
+		Body: fun.DoBlock{Text: []string{
 			`h := md5.New()`,
 			`io.WriteString(h, str)`,
 			`fmt.Printf("%x", h.Sum(nil))`,

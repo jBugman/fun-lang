@@ -19,7 +19,7 @@ func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
 	module.Name = strings.Title(identToString(src.Name))
 	// Imports
 	for _, imp := range src.Imports {
-		funImp, err := Import(imp)
+		funImp, err := Import(fset, imp)
 		if err != nil {
 			return module, err
 		}
@@ -40,13 +40,13 @@ func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
 }
 
 // Import converts Go import to Fun Import.
-func Import(imp *ast.ImportSpec) (fun.Import, error) {
+func Import(fset *token.FileSet, imp *ast.ImportSpec) (fun.Import, error) {
 	var result fun.Import
-	var err error
-	result.Path, err = litStringToString(imp.Path)
-	if err != nil {
-		return result, err
+	s, ok := litToExpression(imp.Path).(fun.String)
+	if !ok {
+		return result, errorWithAST("not a string or char literal", imp.Path, fset)
 	}
+	result.Path = string(s)
 	// TODO aliases
 	return result, nil
 }
@@ -188,11 +188,9 @@ func litToExpression(lit *ast.BasicLit) fun.Expression {
 	case token.FLOAT:
 		return fun.Double(lit.Value)
 	case token.STRING:
-		s, _ := litStringToString(lit) // should not be error
-		return fun.String(s)
+		return fun.String(strings.Trim(lit.Value, `"`))
 	case token.CHAR:
-		s, _ := litStringToString(lit) // should not be error
-		return fun.Char(s)
+		return fun.Char(strings.Trim(lit.Value, "'"))
 	case token.IMAG:
 		return fun.Imaginary(lit.Value)
 	default:
@@ -202,15 +200,4 @@ func litToExpression(lit *ast.BasicLit) fun.Expression {
 
 func identToString(ident *ast.Ident) string {
 	return ident.Name
-}
-
-func litStringToString(lit *ast.BasicLit) (string, error) {
-	switch lit.Kind {
-	case token.STRING:
-		return strings.Trim(lit.Value, `"`), nil
-	case token.CHAR:
-		return strings.Trim(lit.Value, "'"), nil
-	default:
-		return "", fmt.Errorf("not a string or char literal: %v", lit)
-	}
 }

@@ -57,14 +57,14 @@ func ExampleFromFile() {
 }
 
 func ExampleImport() {
-	// fset := token.NewFileSet()
-	tree := ast.ImportSpec{
+	fset := token.NewFileSet()
+	tree := &ast.ImportSpec{
 		Path: &ast.BasicLit{
 			Kind:  token.STRING,
 			Value: "fmt",
 		},
 	}
-	result, err := translate.Import(&tree)
+	result, err := translate.Import(fset, tree)
 	if err != nil {
 		fmt.Print(err)
 	} else {

@@ -1,7 +1,8 @@
-package tests
+package translate_test
 
 import (
 	"fmt"
+	"go/ast"
 	"go/parser"
 	"go/token"
 
@@ -49,4 +50,18 @@ func ExampleFromFile() {
 	// main = do
 	//     line := "Hello World!"
 	//     fmt.Fprintln(io.Discard, line)
+}
+
+func ExampleConvertImport() {
+	// fset := token.NewFileSet()
+	tree := ast.ImportSpec{
+		Path: &ast.BasicLit{
+			Kind:  token.STRING,
+			Value: "fmt",
+		},
+	}
+	imp, _ := translate.ConvertImport(&tree)
+	fmt.Print(imp)
+	// Output:
+	// import "fmt"
 }

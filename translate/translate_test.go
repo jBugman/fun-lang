@@ -29,10 +29,10 @@ func main() {
 }
 `
 
-func ExampleFromFile() {
+func ExampleFun_Module() {
 	fset := token.NewFileSet()
-	goTree, _ := parser.ParseFile(fset, "source.go", fullSource, 0)
-	result, err := translate.FromFile(fset, goTree)
+	tree, _ := parser.ParseFile(fset, "source.go", fullSource, 0)
+	result, err := translate.NewFun(fset).Module(tree)
 	if err != nil {
 		fmt.Print(err)
 	} else {
@@ -56,7 +56,7 @@ func ExampleFromFile() {
 	//     fmt.Fprintln(io.Discard, line)
 }
 
-func ExampleImport() {
+func ExampleFun_Import() {
 	fset := token.NewFileSet()
 	tree := &ast.ImportSpec{
 		Path: &ast.BasicLit{
@@ -64,7 +64,7 @@ func ExampleImport() {
 			Value: "fmt",
 		},
 	}
-	result, err := translate.Import(fset, tree)
+	result, err := translate.NewFun(fset).Import(tree)
 	if err != nil {
 		fmt.Print(err)
 	} else {
@@ -74,13 +74,13 @@ func ExampleImport() {
 	// import "fmt"
 }
 
-func ExampleExpression_selector() {
+func ExampleFun_Expression_selector() {
 	fset := token.NewFileSet()
-	tree := ast.SelectorExpr{
+	tree := &ast.SelectorExpr{
 		X:   &ast.Ident{Name: "fmt"},
 		Sel: &ast.Ident{Name: "Println"},
 	}
-	result, err := translate.Expression(fset, &tree)
+	result, err := translate.NewFun(fset).Expression(tree)
 	if err != nil {
 		fmt.Print(err)
 	} else {
@@ -90,9 +90,9 @@ func ExampleExpression_selector() {
 	// fmt.Println
 }
 
-func ExampleExpression_binary() {
+func ExampleFun_Expression_binary() {
 	fset := token.NewFileSet()
-	tree := ast.BinaryExpr{
+	tree := &ast.BinaryExpr{
 		X: &ast.Ident{
 			Name: "val",
 			Obj:  &ast.Object{Kind: ast.Var, Name: "val"},
@@ -100,7 +100,7 @@ func ExampleExpression_binary() {
 		Op: token.ADD,
 		Y:  &ast.BasicLit{Kind: token.INT, Value: "1"},
 	}
-	result, err := translate.Expression(fset, &tree)
+	result, err := translate.NewFun(fset).Expression(tree)
 	if err != nil {
 		fmt.Print(err)
 	} else {
@@ -110,14 +110,14 @@ func ExampleExpression_binary() {
 	// val + 1
 }
 
-func ExampleStatement_return() {
+func ExampleFun_Statement_return() {
 	fset := token.NewFileSet()
 	tree := &ast.ReturnStmt{
 		Results: []ast.Expr{
 			&ast.BasicLit{Kind: token.INT, Value: "42"},
 		},
 	}
-	result, err := translate.Statement(fset, tree)
+	result, err := translate.NewFun(fset).Statement(tree)
 	if err != nil {
 		fmt.Print(err)
 	} else {

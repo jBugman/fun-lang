@@ -12,14 +12,32 @@ import (
 	"github.com/jBugman/fun-lang/fun"
 )
 
-// FromFile converts Go ast.File to Fun Module.
-func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
+// NewFun creates new translator with provided fileset
+func NewFun(fset *token.FileSet) Fun {
+	return funC{fset}
+}
+
+// Fun provides methods for translation
+type Fun interface {
+	Module(src *ast.File) (fun.Module, error)
+	Import(imp *ast.ImportSpec) (fun.Import, error)
+	Function(fd *ast.FuncDecl) (fun.FuncDecl, error)
+	Statement(stmt ast.Stmt) (fun.Expression, error)
+	Expression(expr ast.Expr) (fun.Expression, error)
+}
+
+type funC struct {
+	fset *token.FileSet
+}
+
+// Module converts Go ast.File to Fun Module.
+func (conv funC) Module(src *ast.File) (fun.Module, error) {
 	var module fun.Module
 	// Module name
 	module.Name = strings.Title(identToString(src.Name))
 	// Imports
 	for _, imp := range src.Imports {
-		funImp, err := Import(fset, imp)
+		funImp, err := conv.Import(imp)
 		if err != nil {
 			return module, err
 		}
@@ -29,7 +47,7 @@ func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
 	for _, gd := range src.Decls {
 		switch d := gd.(type) {
 		case *ast.FuncDecl:
-			fn, err := Function(fset, d)
+			fn, err := conv.Function(d)
 			if err != nil {
 				return module, err
 			}
@@ -40,11 +58,11 @@ func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
 }
 
 // Import converts Go import to Fun Import.
-func Import(fset *token.FileSet, imp *ast.ImportSpec) (fun.Import, error) {
+func (conv funC) Import(imp *ast.ImportSpec) (fun.Import, error) {
 	var result fun.Import
 	s, ok := litToExpression(imp.Path).(fun.String)
 	if !ok {
-		return result, errorWithAST("not a string or char literal", imp.Path, fset)
+		return result, conv.errorWithAST("not a string or char literal", imp.Path)
 	}
 	result.Path = string(s)
 	// TODO aliases
@@ -52,7 +70,7 @@ func Import(fset *token.FileSet, imp *ast.ImportSpec) (fun.Import, error) {
 }
 
 // Function converts Go function declaration to the Fun one.
-func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
+func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	// Name
 	fn := fun.FuncDecl{Name: identToString(fd.Name)}
 	// Parameters
@@ -73,11 +91,11 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	}
 	// Body
 	if fd.Body == nil {
-		return fn, errorWithAST("empty function body is not supported", fd, fset)
+		return fn, conv.errorWithAST("empty function body is not supported", fd)
 	}
 	if len(fd.Body.List) == 1 {
 		// Convert to FuncApplication
-		stmt, err := Statement(fset, fd.Body.List[0])
+		stmt, err := conv.Statement(fd.Body.List[0])
 		if err != nil {
 			return fn, err
 		}
@@ -87,7 +105,7 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 		db := fun.DoBlock{}
 		for _, stmt := range fd.Body.List {
 			var buf bytes.Buffer
-			printer.Fprint(&buf, fset, stmt)
+			printer.Fprint(&buf, conv.fset, stmt)
 			db.Text = append(db.Text, buf.String())
 		}
 		fn.Body = db
@@ -97,16 +115,16 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 }
 
 // Statement converts Go statement to a corresponding Fun Expression depending on type
-func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
+func (conv funC) Statement(stmt ast.Stmt) (fun.Expression, error) {
 	switch st := stmt.(type) {
 	case *ast.ReturnStmt:
 		lr := len(st.Results)
 		switch lr {
 		case 0:
-			return nil, errorWithAST("result list of zero length is not supported", st, fset)
+			return nil, conv.errorWithAST("result list of zero length is not supported", st)
 		case 1:
 			// Single expression
-			result, err := Expression(fset, st.Results[0])
+			result, err := conv.Expression(st.Results[0])
 			if err != nil {
 				return nil, err
 			}
@@ -115,7 +133,7 @@ func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
 			// Tuple
 			result := make(fun.Tuple, lr)
 			for i := 0; i < lr; i++ {
-				expr, err := Expression(fset, st.Results[i])
+				expr, err := conv.Expression(st.Results[i])
 				if err != nil {
 					return nil, err
 				}
@@ -124,18 +142,18 @@ func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
 			return result, nil
 		}
 	case *ast.ExprStmt:
-		result, err := Expression(fset, st.X)
+		result, err := conv.Expression(st.X)
 		if err != nil {
 			return nil, err
 		}
 		return result, nil
 	default:
-		return nil, errorWithAST("ast.Stmt type not supported", st, fset)
+		return nil, conv.errorWithAST("ast.Stmt type not supported", st)
 	}
 }
 
 // Expression converts Go expression to a Fun one.
-func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
+func (conv funC) Expression(expr ast.Expr) (fun.Expression, error) {
 	switch ex := expr.(type) {
 	// case *ast.BinaryExpr:
 	// 	result := fun.InfixOperation{}
@@ -146,17 +164,17 @@ func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 		case *ast.Ident:
 			result.Module = identToString(x)
 		default:
-			return nil, errorWithAST("argument type not supported", x, fset)
+			return nil, conv.errorWithAST("argument type not supported", x)
 		}
 		return result, nil
 	case *ast.CallExpr:
-		e, err := Expression(fset, ex.Fun)
+		e, err := conv.Expression(ex.Fun)
 		if err != nil {
 			return nil, err
 		}
 		funcVal, ok := e.(fun.FunctionVal)
 		if !ok {
-			return nil, errorWithAST("expected FunctionVal but got", e, fset)
+			return nil, conv.errorWithAST("expected FunctionVal but got", e)
 		}
 		result := fun.FuncApplication{Func: funcVal}
 		var arg fun.Expression
@@ -165,19 +183,19 @@ func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 			case *ast.BasicLit:
 				arg = litToExpression(a)
 			default:
-				return nil, errorWithAST("argument type not supported", ea, fset)
+				return nil, conv.errorWithAST("argument type not supported", ea)
 			}
 			result.Arguments = append(result.Arguments, arg)
 		}
 		return result, nil
 	default:
-		return nil, errorWithAST("Expr type not supported", ex, fset)
+		return nil, conv.errorWithAST("Expr type not supported", ex)
 	}
 }
 
-func errorWithAST(message string, obj interface{}, fset *token.FileSet) error {
+func (conv funC) errorWithAST(message string, obj interface{}) error {
 	var buf bytes.Buffer
-	ast.Fprint(&buf, fset, obj, ast.NotNilFilter)
+	ast.Fprint(&buf, conv.fset, obj, ast.NotNilFilter)
 	return fmt.Errorf("%s:\n%s", message, buf.String())
 }
 

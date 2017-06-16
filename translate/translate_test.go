@@ -32,11 +32,11 @@ func main() {
 func ExampleFromFile() {
 	fset := token.NewFileSet()
 	goTree, _ := parser.ParseFile(fset, "source.go", fullSource, 0)
-	module, err := translate.FromFile(fset, goTree)
+	result, err := translate.FromFile(fset, goTree)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 	} else {
-		fmt.Print(module)
+		fmt.Print(result)
 	}
 	// Output:
 	// module Main where
@@ -64,8 +64,12 @@ func ExampleImport() {
 			Value: "fmt",
 		},
 	}
-	imp, _ := translate.Import(&tree)
-	fmt.Print(imp)
+	result, err := translate.Import(&tree)
+	if err != nil {
+		fmt.Print(err)
+	} else {
+		fmt.Print(result)
+	}
 	// Output:
 	// import "fmt"
 }
@@ -76,11 +80,11 @@ func ExampleExpression_selector() {
 		X:   &ast.Ident{Name: "fmt"},
 		Sel: &ast.Ident{Name: "Println"},
 	}
-	expr, err := translate.Expression(fset, &tree)
+	result, err := translate.Expression(fset, &tree)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 	} else {
-		fmt.Print(expr)
+		fmt.Print(result)
 	}
 	// Output:
 	// fmt.Println
@@ -96,11 +100,11 @@ func ExampleExpression_binary() {
 		Op: token.ADD,
 		Y:  &ast.BasicLit{Kind: token.INT, Value: "1"},
 	}
-	expr, err := translate.Expression(fset, &tree)
+	result, err := translate.Expression(fset, &tree)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 	} else {
-		fmt.Print(expr)
+		fmt.Print(result)
 	}
 	// Output:
 	// val + 1
@@ -113,11 +117,11 @@ func ExampleStatement_return() {
 			&ast.BasicLit{Kind: token.INT, Value: "42"},
 		},
 	}
-	stmt, err := translate.Statement(fset, tree)
+	result, err := translate.Statement(fset, tree)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 	} else {
-		fmt.Print(stmt)
+		fmt.Print(result)
 	}
 	// Output:
 	// 42

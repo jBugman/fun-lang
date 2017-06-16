@@ -73,7 +73,7 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	}
 	// Body
 	if fd.Body == nil {
-		return fn, fmt.Errorf("empty function body is not supported: %v", fd)
+		return fn, errorWithAST("empty function body is not supported", fd, fset)
 	}
 	if len(fd.Body.List) == 1 {
 		// Convert to FuncApplication
@@ -103,7 +103,7 @@ func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
 		lr := len(st.Results)
 		switch lr {
 		case 0:
-			return nil, fmt.Errorf("result list of zero length is not supported: %+v", st)
+			return nil, errorWithAST("result list of zero length is not supported", st, fset)
 		case 1:
 			// Single expression
 			result, err := Expression(fset, st.Results[0])
@@ -130,9 +130,7 @@ func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
 		}
 		return result, nil
 	default:
-		// debug
-		ast.Print(fset, st)
-		return nil, fmt.Errorf("ast.Stmt type not supported: %v", st) // TODO add more
+		return nil, errorWithAST("ast.Stmt type not supported", st, fset)
 	}
 }
 
@@ -148,8 +146,7 @@ func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 		case *ast.Ident:
 			result.Module = identToString(x)
 		default:
-			ast.Print(fset, x)
-			return result, fmt.Errorf("argument type not supported: %v", x) // TODO add more
+			return nil, errorWithAST("argument type not supported", x, fset)
 		}
 		return result, nil
 	case *ast.CallExpr:
@@ -159,7 +156,7 @@ func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 		}
 		funcVal, ok := e.(fun.FunctionVal)
 		if !ok {
-			return nil, fmt.Errorf("expected FunctionVal but got %+v", e)
+			return nil, errorWithAST("expected FunctionVal but got", e, fset)
 		}
 		result := fun.FuncApplication{Func: funcVal}
 		var arg fun.Expression
@@ -168,17 +165,20 @@ func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 			case *ast.BasicLit:
 				arg = litToExpression(a)
 			default:
-				ast.Print(fset, ea)
-				return nil, fmt.Errorf("argument type not supported: %v", ea) // TODO add more
+				return nil, errorWithAST("argument type not supported", ea, fset)
 			}
 			result.Arguments = append(result.Arguments, arg)
 		}
 		return result, nil
 	default:
-		// debug
-		ast.Print(fset, ex)
-		return nil, fmt.Errorf("Expr type not supported: %v", ex) // TODO add more
+		return nil, errorWithAST("Expr type not supported", ex, fset)
 	}
+}
+
+func errorWithAST(message string, obj interface{}, fset *token.FileSet) error {
+	var buf bytes.Buffer
+	ast.Fprint(&buf, fset, obj, ast.NotNilFilter)
+	return fmt.Errorf("%s:\n%s", message, buf.String())
 }
 
 func litToExpression(lit *ast.BasicLit) fun.Expression {

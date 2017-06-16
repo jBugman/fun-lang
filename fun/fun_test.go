@@ -6,6 +6,12 @@ import (
 	"github.com/jBugman/fun-lang/fun"
 )
 
+func ExampleImport_String_single() {
+	fmt.Println(fun.Import{Path: "github.com/awesome/lib/fmt", Alias: "awfmt"})
+	// Output:
+	// import "github.com/awesome/lib/fmt" as "awfmt"
+}
+
 func ExampleParameters_String_single() {
 	fmt.Println(fun.Parameters{{Name: "s", Type: "string"}})
 	// Output:
@@ -41,12 +47,24 @@ func ExampleResults_String_zero() {
 	// ()
 }
 
-func ExampleFuncDecl_String_unit_undefined() {
+func ExampleFuncDecl_String_unit_implicit_undefined() {
 	fn := fun.FuncDecl{Name: "main"}
 	fmt.Println(fn)
 	// Output:
 	// main :: ()
 	// main = undefined
+}
+
+func ExampleFuncDecl_String_unit_explicit_undefined() {
+	fn := fun.FuncDecl{
+		Name:   "newFunc",
+		Params: fun.Parameters{fun.NewParam("launchMissles", "bool")},
+		Body:   fun.Undefined,
+	}
+	fmt.Println(fn)
+	// Output:
+	// newFunc :: bool -> ()
+	// newFunc launchMissles = undefined
 }
 
 func ExampleFuncDecl_String_int_unit_undefined() {
@@ -198,4 +216,25 @@ func ExampleFuncDecl_String_doBlock_multiline() {
 	//     h := md5.New()
 	//     io.WriteString(h, str)
 	//     fmt.Printf("%x", h.Sum(nil))
+}
+
+func ExampleInfixOperation_String() {
+	op := fun.InfixOperation{
+		X:        fun.Val("x"),
+		Operator: fun.Operator("+"),
+		Y:        fun.Int("2"),
+	}
+	fmt.Println(op)
+	// Output:
+	// x + 2
+}
+
+func ExampleTuple_String() {
+	t := fun.Tuple{
+		fun.Val("operator"),
+		fun.String("plus"),
+	}
+	fmt.Println(t)
+	// Output:
+	// (operator, "plus")
 }

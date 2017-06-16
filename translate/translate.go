@@ -80,7 +80,11 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	// Parameters
 	if fd.Type.Params.List != nil {
 		for _, p := range fd.Type.Params.List {
-			tp := identToString(p.Type.(*ast.Ident))
+			ex, ok := p.Type.(*ast.Ident)
+			if !ok {
+				return fn, conv.errorWithAST("not supported type", p.Type)
+			}
+			tp := identToString(ex)
 			for _, n := range p.Names {
 				fn.Params = append(fn.Params, fun.Parameter{Name: identToString(n), Type: fun.Type(tp)})
 			}

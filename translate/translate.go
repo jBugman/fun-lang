@@ -60,7 +60,11 @@ func (conv funC) Module(src *ast.File) (fun.Module, error) {
 // Import converts Go import to Fun Import.
 func (conv funC) Import(imp *ast.ImportSpec) (fun.Import, error) {
 	var result fun.Import
-	s, ok := litToExpression(imp.Path).(fun.String)
+	ex, err := conv.Expression(imp.Path)
+	if err != nil {
+		return result, err
+	}
+	s, ok := ex.(fun.String)
 	if !ok {
 		return result, conv.errorWithAST("not a string or char literal", imp.Path)
 	}
@@ -177,17 +181,29 @@ func (conv funC) Expression(expr ast.Expr) (fun.Expression, error) {
 			return nil, conv.errorWithAST("expected FunctionVal but got", e)
 		}
 		result := fun.FuncApplication{Func: funcVal}
-		var arg fun.Expression
-		for _, ea := range ex.Args {
-			switch a := ea.(type) {
-			case *ast.BasicLit:
-				arg = litToExpression(a)
-			default:
-				return nil, conv.errorWithAST("argument type not supported", ea)
+		for _, aex := range ex.Args {
+			arg, err := conv.Expression(aex)
+			if err != nil {
+				return nil, err
 			}
 			result.Arguments = append(result.Arguments, arg)
 		}
 		return result, nil
+	case *ast.BasicLit:
+		switch ex.Kind {
+		case token.INT:
+			return fun.Int(ex.Value), nil
+		case token.FLOAT:
+			return fun.Double(ex.Value), nil
+		case token.STRING:
+			return fun.String(strings.Trim(ex.Value, `"`)), nil
+		case token.CHAR:
+			return fun.Char(strings.Trim(ex.Value, "'")), nil
+		case token.IMAG:
+			return fun.Imaginary(ex.Value), nil
+		default:
+			return nil, conv.errorWithAST("unexpected literal type", ex)
+		}
 	default:
 		return nil, conv.errorWithAST("Expr type not supported", ex)
 	}
@@ -197,23 +213,6 @@ func (conv funC) errorWithAST(message string, obj interface{}) error {
 	var buf bytes.Buffer
 	ast.Fprint(&buf, conv.fset, obj, ast.NotNilFilter)
 	return fmt.Errorf("%s:\n%s", message, buf.String())
-}
-
-func litToExpression(lit *ast.BasicLit) fun.Expression {
-	switch lit.Kind {
-	case token.INT:
-		return fun.Int(lit.Value)
-	case token.FLOAT:
-		return fun.Double(lit.Value)
-	case token.STRING:
-		return fun.String(strings.Trim(lit.Value, `"`))
-	case token.CHAR:
-		return fun.Char(strings.Trim(lit.Value, "'"))
-	case token.IMAG:
-		return fun.Imaginary(lit.Value)
-	default:
-		panic(fmt.Sprintf("unexpected type: %v", lit))
-	}
 }
 
 func identToString(ident *ast.Ident) string {

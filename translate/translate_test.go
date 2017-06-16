@@ -32,8 +32,12 @@ func main() {
 func ExampleFromFile() {
 	fset := token.NewFileSet()
 	goTree, _ := parser.ParseFile(fset, "source.go", fullSource, 0)
-	module, _ := translate.FromFile(fset, goTree)
-	fmt.Print(module)
+	module, err := translate.FromFile(fset, goTree)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Print(module)
+	}
 	// Output:
 	// module Main where
 	//

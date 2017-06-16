@@ -81,7 +81,7 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 		if err != nil {
 			return fn, err
 		}
-		fn.Body = fun.SingleExprBody{stmt}
+		fn.Body = fun.SingleExprBody{Expr: stmt}
 	} else {
 		// Convert to Fun DoBlock
 		db := fun.DoBlock{}
@@ -98,57 +98,21 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 
 // Statement converts Go statement to a corresponding Fun Expression depending on type
 func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
-	result := fun.FuncApplication{}
 	switch st := stmt.(type) {
 	case *ast.ReturnStmt:
-		// result.Kind = fun.EXPRESSION
-		// TODO at least binary expr
-		// Module:
-		// Name:
-		// Arguments:
-		ast.Print(fset, st)       // debug
-		return fun.Undefined, nil // TODO change return type to FuncApplication
+		ast.Print(fset, st)
+		return fun.Undefined, nil // TODO binary expr
 	case *ast.ExprStmt:
-		// result.Kind = fun.STATEMENT
-		switch expr := st.X.(type) {
-		case *ast.CallExpr:
-			switch f := expr.Fun.(type) {
-			case *ast.SelectorExpr:
-				// result.Name = identToString(f.Sel)
-				// Module (only?)
-				switch x := f.X.(type) {
-				case *ast.Ident:
-					// result.Module = identToString(x)
-				default:
-					ast.Print(fset, x)                                          // debug
-					return result, fmt.Errorf("call type not supported: %v", x) // TODO add more
-				}
-			default:
-				ast.Print(fset, f)                                          // debug
-				return result, fmt.Errorf("call type not supported: %v", f) // TODO add more
-			}
-			// result.Name = f.Fun.Sel.Name
-			// Arguments
-			for _, e := range expr.Args {
-				var arg fun.Expression
-				switch a := e.(type) {
-				case *ast.BasicLit:
-					arg = litToExpression(a)
-				default:
-					ast.Print(fset, e)                                              // debug
-					return result, fmt.Errorf("argument type not supported: %v", e) // TODO add more
-				}
-				result.Arguments = append(result.Arguments, arg)
-			}
-		default:
-			ast.Print(fset, expr)                                              // debug
-			return result, fmt.Errorf("ast.Expr type not supported: %v", expr) // TODO add more
+		result, err := Expression(fset, st.X)
+		if err != nil {
+			return nil, err
 		}
+		return result, nil
 	default:
-		ast.Print(fset, st)                                              // debug
-		return result, fmt.Errorf("ast.Stmt type not supported: %v", st) // TODO add more
+		// debug
+		ast.Print(fset, st)
+		return nil, fmt.Errorf("ast.Stmt type not supported: %v", st) // TODO add more
 	}
-	return result, nil
 }
 
 // Expression converts Go expression to a Fun one.
@@ -165,6 +129,28 @@ func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 		default:
 			ast.Print(fset, x)
 			return result, fmt.Errorf("argument type not supported: %v", x) // TODO add more
+		}
+		return result, nil
+	case *ast.CallExpr:
+		e, err := Expression(fset, ex.Fun)
+		if err != nil {
+			return nil, err
+		}
+		funcVal, ok := e.(fun.FunctionVal)
+		if !ok {
+			return nil, fmt.Errorf("expected FunctionVal but got %+v", e)
+		}
+		result := fun.FuncApplication{Func: funcVal}
+		var arg fun.Expression
+		for _, ea := range ex.Args {
+			switch a := ea.(type) {
+			case *ast.BasicLit:
+				arg = litToExpression(a)
+			default:
+				ast.Print(fset, ea)
+				return nil, fmt.Errorf("argument type not supported: %v", ea) // TODO add more
+			}
+			result.Arguments = append(result.Arguments, arg)
 		}
 		return result, nil
 	default:

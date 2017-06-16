@@ -135,7 +135,11 @@ func (do DoBlock) String() string {
 }
 
 func (t String) String() string {
-	return fmt.Sprintf("%#v", t)
+	return fmt.Sprintf(`"%s"`, string(t))
+}
+
+func (t Char) String() string {
+	return fmt.Sprintf("'%s'", string(t))
 }
 
 func (op InfixOperation) String() string {

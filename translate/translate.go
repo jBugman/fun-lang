@@ -141,7 +141,7 @@ func (conv funC) Statement(stmt ast.Stmt) (fun.Expression, error) {
 				if err != nil {
 					return nil, err
 				}
-				result = append(result, expr)
+				result[i] = expr
 			}
 			return result, nil
 		}

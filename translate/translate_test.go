@@ -128,3 +128,34 @@ func ExampleFun_Statement_return() {
 	// Output:
 	// 42
 }
+
+func ExampleFun_Statement_tuple() {
+	fset := token.NewFileSet()
+	expr, err := parser.ParseExpr("func() {return 'a', 9.99}")
+	returnExpr := expr.(*ast.FuncLit).Body.List[0]
+	result, err := translate.NewFun(fset).Statement(returnExpr)
+	if err != nil {
+		fmt.Print(err)
+	} else {
+		fmt.Print(result)
+	}
+	// Output:
+	// ('a', 9.99)
+}
+
+func ExampleFun_Expression_brokenLiteral_testError() {
+	fset := token.NewFileSet()
+	tree := &ast.BasicLit{
+		Kind:  token.BREAK,
+		Value: "SNAKE!",
+	}
+	_, err := translate.NewFun(fset).Expression(tree)
+	fmt.Print(err)
+	// Output:
+	// unexpected literal type:
+	//      0  *ast.BasicLit {
+	//      1  .  ValuePos: -
+	//      2  .  Kind: break
+	//      3  .  Value: "snake!"
+	//      4  }
+}

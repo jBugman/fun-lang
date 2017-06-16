@@ -52,7 +52,7 @@ func ExampleFromFile() {
 	//     fmt.Fprintln(io.Discard, line)
 }
 
-func ExampleConvertImport() {
+func ExampleImport() {
 	// fset := token.NewFileSet()
 	tree := ast.ImportSpec{
 		Path: &ast.BasicLit{
@@ -60,8 +60,44 @@ func ExampleConvertImport() {
 			Value: "fmt",
 		},
 	}
-	imp, _ := translate.ConvertImport(&tree)
+	imp, _ := translate.Import(&tree)
 	fmt.Print(imp)
 	// Output:
 	// import "fmt"
+}
+
+func ExampleExpression_selector() {
+	fset := token.NewFileSet()
+	tree := ast.SelectorExpr{
+		X:   &ast.Ident{Name: "fmt"},
+		Sel: &ast.Ident{Name: "Println"},
+	}
+	expr, err := translate.Expression(fset, &tree)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Print(expr)
+	}
+	// Output:
+	// fmt.Println
+}
+
+func ExampleExpression_binary() {
+	fset := token.NewFileSet()
+	tree := ast.BinaryExpr{
+		X: &ast.Ident{
+			Name: "val",
+			Obj:  &ast.Object{Kind: ast.Var, Name: "val"},
+		},
+		Op: token.ADD,
+		Y:  &ast.BasicLit{Kind: token.INT, Value: "1"},
+	}
+	expr, err := translate.Expression(fset, &tree)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Print(expr)
+	}
+	// Output:
+	// val + 1
 }

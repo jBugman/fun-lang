@@ -19,7 +19,7 @@ func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
 	module.Name = strings.Title(identToString(src.Name))
 	// Imports
 	for _, imp := range src.Imports {
-		funImp, err := ConvertImport(imp)
+		funImp, err := Import(imp)
 		if err != nil {
 			return module, err
 		}
@@ -29,7 +29,7 @@ func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
 	for _, gd := range src.Decls {
 		switch d := gd.(type) {
 		case *ast.FuncDecl:
-			fn, err := ConvertFuncDecl(fset, d)
+			fn, err := Function(fset, d)
 			if err != nil {
 				return module, err
 			}
@@ -39,8 +39,8 @@ func FromFile(fset *token.FileSet, src *ast.File) (fun.Module, error) {
 	return module, nil
 }
 
-// ConvertImport converts Go import to Fun Import.
-func ConvertImport(imp *ast.ImportSpec) (fun.Import, error) {
+// Import converts Go import to Fun Import.
+func Import(imp *ast.ImportSpec) (fun.Import, error) {
 	var result fun.Import
 	var err error
 	result.Path, err = litStringToString(imp.Path)
@@ -51,8 +51,8 @@ func ConvertImport(imp *ast.ImportSpec) (fun.Import, error) {
 	return result, nil
 }
 
-// ConvertFuncDecl converts Go function declaration to the Fun one.
-func ConvertFuncDecl(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
+// Function converts Go function declaration to the Fun one.
+func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	// Name
 	fn := fun.FuncDecl{Name: identToString(fd.Name)}
 	// Parameters
@@ -77,7 +77,7 @@ func ConvertFuncDecl(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error
 	}
 	if len(fd.Body.List) == 1 {
 		// Convert to FuncApplication
-		fa, err := ConvertStmt(fset, fd.Body.List[0])
+		fa, err := Statement(fset, fd.Body.List[0])
 		if err != nil {
 			return fn, err
 		}
@@ -96,8 +96,8 @@ func ConvertFuncDecl(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error
 	return fn, nil
 }
 
-// ConvertStmt converts Go statement to a corresponding FuncApplication depending on type
-func ConvertStmt(fset *token.FileSet, stmt ast.Stmt) (fun.FuncBody, error) {
+// Statement converts Go statement to a corresponding FuncApplication depending on type
+func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.FuncBody, error) {
 	result := fun.FuncApplication{}
 	switch st := stmt.(type) {
 	case *ast.ReturnStmt:
@@ -149,6 +149,29 @@ func ConvertStmt(fset *token.FileSet, stmt ast.Stmt) (fun.FuncBody, error) {
 		return result, fmt.Errorf("ast.Stmt type not supported: %v", st) // TODO add more
 	}
 	return result, nil
+}
+
+// Expression converts Go expression to a Fun one.
+func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
+	switch ex := expr.(type) {
+	case *ast.BinaryExpr:
+		// TODO
+		return nil, fmt.Errorf("BinaryExpr is not implemented yet")
+	case *ast.SelectorExpr:
+		result := fun.FuncApplication{Name: identToString(ex.Sel)}
+		switch x := ex.X.(type) {
+		case *ast.Ident:
+			result.Module = identToString(x)
+		default:
+			ast.Print(fset, x)
+			return result, fmt.Errorf("argument type not supported: %v", x) // TODO add more
+		}
+		return result, nil
+	default:
+		// debug
+		ast.Print(fset, ex)
+		return nil, fmt.Errorf("Expr type not supported: %v", ex) // TODO add more
+	}
 }
 
 func litToArgument(lit *ast.BasicLit) fun.Argument {

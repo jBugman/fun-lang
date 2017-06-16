@@ -38,7 +38,6 @@ type Import struct {
 
 // Decl represents declaration.
 type Decl interface {
-	String() string
 	declMarker()
 }
 
@@ -46,7 +45,6 @@ func (fd FuncDecl) declMarker() {}
 
 // FuncBody represents function body.
 type FuncBody interface {
-	String() string
 	funcBodyMarker()
 }
 
@@ -103,7 +101,7 @@ func (mod Module) String() string {
 
 	// Top-level declarations
 	for i, decl := range mod.Decls {
-		topLevels[2+i] = decl.String()
+		topLevels[2+i] = fmt.Sprint(decl)
 	}
 
 	return strings.Join(topLevels, lf) + lf
@@ -302,3 +300,29 @@ func (t Imaginary) argumentMarker() {}
 type Var string
 
 func (v Var) argumentMarker() {}
+
+// InfixOperation represents
+type InfixOperation struct {
+	X, Y     Expression
+	Operator Operator
+}
+
+func (op InfixOperation) funcBodyMarker() {}
+
+func (op InfixOperation) String() string {
+	return fmt.Sprintf("%s %s %s", op.X, op.Operator, op.Y)
+}
+
+// Operator represents binary operator
+type Operator string
+
+// Tuple represents a group of values
+type Tuple []Expression
+
+func (t Tuple) String() string {
+	ss := make([]string, len(t))
+	for i := 0; i < len(t); i++ {
+		ss[i] = fmt.Sprint(t[i])
+	}
+	return openBracket + strings.Join(ss, comma) + closeBracket
+}

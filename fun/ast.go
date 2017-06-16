@@ -181,6 +181,8 @@ type Expression interface {
 
 // Statement just performs side effects.
 type Statement interface {
+	// TODO looks like it will be used to describe syntax constructs
+	// but all 'statements' are really expressions
 	funcBodyMarker()
 	// statementMarker()
 }
@@ -191,7 +193,6 @@ type DoBlock struct {
 }
 
 // FuncApplication represents function application.
-// At least for now it may be both Statement and Expression.
 type FuncApplication struct {
 	Name      string
 	Module    string

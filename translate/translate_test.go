@@ -101,3 +101,20 @@ func ExampleExpression_binary() {
 	// Output:
 	// val + 1
 }
+
+func ExampleStatement_return() {
+	fset := token.NewFileSet()
+	tree := &ast.ReturnStmt{
+		Results: []ast.Expr{
+			&ast.BasicLit{Kind: token.INT, Value: "42"},
+		},
+	}
+	stmt, err := translate.Statement(fset, tree)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Print(stmt)
+	}
+	// Output:
+	// 42
+}

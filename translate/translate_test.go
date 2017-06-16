@@ -12,8 +12,10 @@ import (
 const fullSource = `
 package main
 
-import "fmt"
-import "io/ioutil"
+import (
+	"fmt"
+	"io"
+)
 
 func inc(val int) int {
 	return val + 1
@@ -25,7 +27,7 @@ func print42() {
 
 func main() {
 	line := "Hello World!"
-	fmt.Fprintln(ioutil.Discard, line)
+	fmt.Fprintln(io.Discard, line)
 }
 `
 
@@ -42,7 +44,7 @@ func ExampleFun_Module() {
 	// module Main where
 	//
 	// import "fmt"
-	// import "io/ioutil"
+	// import "io"
 	//
 	// inc :: int -> int
 	// inc val = val + 1

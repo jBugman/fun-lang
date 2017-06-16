@@ -159,9 +159,27 @@ func (conv funC) Statement(stmt ast.Stmt) (fun.Expression, error) {
 // Expression converts Go expression to a Fun one.
 func (conv funC) Expression(expr ast.Expr) (fun.Expression, error) {
 	switch ex := expr.(type) {
-	// case *ast.BinaryExpr:
-	// 	result := fun.InfixOperation{}
-	// 	return result, nil
+	case *ast.Ident:
+		if ex.Obj == nil {
+			return nil, conv.errorWithAST("Ident with empty Obj is not supported", ex)
+		}
+		switch ex.Obj.Kind {
+		case ast.Var:
+			return fun.Val(ex.Name), nil
+		default:
+			return nil, conv.errorWithAST("unsupported Obj kind", ex.Obj)
+		}
+	case *ast.BinaryExpr:
+		x, err := conv.Expression(ex.X)
+		if err != nil {
+			return nil, err
+		}
+		y, err := conv.Expression(ex.Y)
+		if err != nil {
+			return nil, err
+		}
+		result := fun.InfixOperation{X: x, Y: y, Operator: fun.Operator(ex.Op.String())}
+		return result, nil
 	case *ast.SelectorExpr:
 		result := fun.FunctionVal{Name: identToString(ex.Sel)}
 		switch x := ex.X.(type) {
@@ -215,6 +233,7 @@ func (conv funC) errorWithAST(message string, obj interface{}) error {
 	return fmt.Errorf("%s:\n%s", message, buf.String())
 }
 
+// Shortcut for cases there Ident.Obj is not relevant
 func identToString(ident *ast.Ident) string {
 	return ident.Name
 }

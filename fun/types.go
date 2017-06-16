@@ -123,7 +123,7 @@ type InfixOperation struct {
 	Operator Operator
 }
 
-func (op InfixOperation) funcBodyMarker() {}
+func (op InfixOperation) expressionMarker() {}
 
 // Tuple represents a group of values
 type Tuple []Expression

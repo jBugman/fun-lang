@@ -100,8 +100,29 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
 	switch st := stmt.(type) {
 	case *ast.ReturnStmt:
-		ast.Print(fset, st)
-		return fun.Undefined, nil // TODO binary expr
+		lr := len(st.Results)
+		switch lr {
+		case 0:
+			return nil, fmt.Errorf("result list of zero length is not supported: %+v", st)
+		case 1:
+			// Single expression
+			result, err := Expression(fset, st.Results[0])
+			if err != nil {
+				return nil, err
+			}
+			return result, nil
+		default:
+			// Tuple
+			result := make(fun.Tuple, lr)
+			for i := 0; i < lr; i++ {
+				expr, err := Expression(fset, st.Results[i])
+				if err != nil {
+					return nil, err
+				}
+				result = append(result, expr)
+			}
+			return result, nil
+		}
 	case *ast.ExprStmt:
 		result, err := Expression(fset, st.X)
 		if err != nil {
@@ -118,9 +139,9 @@ func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
 // Expression converts Go expression to a Fun one.
 func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 	switch ex := expr.(type) {
-	case *ast.BinaryExpr:
-		// TODO
-		return nil, fmt.Errorf("BinaryExpr is not implemented yet")
+	// case *ast.BinaryExpr:
+	// 	result := fun.InfixOperation{}
+	// 	return result, nil
 	case *ast.SelectorExpr:
 		result := fun.FunctionVal{Name: identToString(ex.Sel)}
 		switch x := ex.X.(type) {

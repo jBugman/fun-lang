@@ -6,7 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 
-	"../translate"
+	"github.com/jBugman/fun-lang/translate"
 )
 
 const fullSource = `

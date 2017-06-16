@@ -17,6 +17,9 @@ const (
 	closeBracket  = ")"
 )
 
+// Type represents type.
+type Type string
+
 // Module represents single source file.
 type Module struct {
 	Name    string
@@ -30,27 +33,12 @@ type Import struct {
 	Alias string
 }
 
+/*** Top-level declarations ***/
+
 // Decl represents top-level declaration.
 type Decl interface {
 	declMarker()
 }
-
-func (fd FuncDecl) declMarker() {}
-
-// FuncBody represents function body.
-type FuncBody interface {
-	funcBodyMarker()
-}
-
-func (fa FuncApplication) funcBodyMarker() {}
-func (do DoBlock) funcBodyMarker()         {}
-func (u Undef) funcBodyMarker()            {}
-
-// Undef represents function body placeholder.
-type Undef bool
-
-// Undefined is an Undef singleton.
-const Undefined Undef = true
 
 // FuncDecl represents function declaration.
 type FuncDecl struct {
@@ -60,115 +48,74 @@ type FuncDecl struct {
 	Body    FuncBody
 }
 
+func (fd FuncDecl) declMarker() {}
+
+/*** Function declaration ***/
+
 // Parameter represents function parameter.
 type Parameter struct {
 	Name string
 	Type Type
 }
 
-// Type represents type.
-type Type string
-
 // Parameters represents function parameters.
-type Parameters []Parameter // TODO not only types
+type Parameters []Parameter
 
 // Results represents function result list.
 type Results []Type
 
-// Expression is a pure function.
-type Expression interface {
+// FuncBody represents function body.
+type FuncBody interface {
 	funcBodyMarker()
-	// expressionMarker()
 }
 
-// Statement just performs side effects.
-type Statement interface {
-	// TODO looks like it will be used to describe syntax constructs
-	// but all 'statements' are really expressions
-	funcBodyMarker()
-	// statementMarker()
-}
+/*** Function body ***/
+
+// Undef represents function body placeholder.
+type Undef bool
+
+func (u Undef) funcBodyMarker()   {}
+func (u Undef) expressionMarker() {}
+
+// Undefined is an Undef singleton.
+const Undefined Undef = true
 
 // DoBlock represents raw Go code as a function body.
 type DoBlock struct {
 	Text []string
 }
 
+func (do DoBlock) funcBodyMarker() {}
+
+// SingleExprBody represents sungle expression as a function body.
+type SingleExprBody struct {
+	Expr Expression
+}
+
+func (b SingleExprBody) funcBodyMarker() {}
+
+// Expression is something that has value
+type Expression interface {
+	expressionMarker()
+}
+
+/*** Expresstions ***/
+
 // FuncApplication represents function application.
 type FuncApplication struct {
-	Name      string
-	Module    string
-	Arguments []Argument
-	Kind      funcApplicationKind
+	Func      FunctionVal
+	Arguments []Expression
 }
 
-type funcApplicationKind uint8
+func (fa FuncApplication) expressionMarker() {}
 
-// Kinds of a FuncApplication
-const (
-	EXPRESSION funcApplicationKind = iota
-	STATEMENT  funcApplicationKind = iota
-)
-
-// Argument represents argument to which a function is applied.
-type Argument interface {
-	argumentMarker()
+// FunctionVal represents function addressed by name.
+type FunctionVal struct {
+	Name   string
+	Module string
 }
 
-// Literal represents language literals.
-type Literal interface {
-	argumentMarker()
-	literalMarker()
-}
-
-func (fa FuncApplication) argumentMarker() {}
-
-// Int maps to Go int.
-type Int string
-
-func (t Int) literalMarker()  {}
-func (t Int) argumentMarker() {}
-
-// Float maps to Go float32.
-type Float string
-
-func (t Float) literalMarker()  {}
-func (t Float) argumentMarker() {}
-
-// Double maps to Go float64.
-type Double string
-
-func (t Double) literalMarker()  {}
-func (t Double) argumentMarker() {}
-
-// String wraps Go string.
-type String string
-
-func (t String) literalMarker()  {}
-func (t String) argumentMarker() {}
-
-// Bool maps to Go bool.
-type Bool string
-
-func (t Bool) literalMarker()  {}
-func (t Bool) argumentMarker() {}
-
-// Char maps to Go char.
-type Char string
-
-func (t Char) literalMarker()  {}
-func (t Char) argumentMarker() {}
-
-// Imaginary maps to Go imaginary double.
-type Imaginary string
-
-func (t Imaginary) literalMarker()  {}
-func (t Imaginary) argumentMarker() {}
-
-// Var represents something passed by name.
-type Var string
-
-func (v Var) argumentMarker() {}
+func (fa FunctionVal) expressionMarker() {}
 
 // InfixOperation represents
 type InfixOperation struct {
@@ -178,8 +125,66 @@ type InfixOperation struct {
 
 func (op InfixOperation) funcBodyMarker() {}
 
+// Tuple represents a group of values
+type Tuple []Expression
+
+func (t Tuple) expressionMarker() {}
+
 // Operator represents binary operator
 type Operator string
 
-// Tuple represents a group of values
-type Tuple []Expression
+// Val represents something passed by name.
+type Val string
+
+func (v Val) argumentMarker()   {}
+func (v Val) expressionMarker() {}
+
+/*** Literals ***/
+
+// Literal represents language literals.
+type Literal interface {
+	Expression
+	literalMarker()
+}
+
+// Int maps to Go int.
+type Int string
+
+func (t Int) literalMarker()    {}
+func (t Int) expressionMarker() {}
+
+// Float maps to Go float32.
+type Float string
+
+func (t Float) literalMarker()    {}
+func (t Float) expressionMarker() {}
+
+// Double maps to Go float64.
+type Double string
+
+func (t Double) literalMarker()    {}
+func (t Double) expressionMarker() {}
+
+// String wraps Go string.
+type String string
+
+func (t String) literalMarker()    {}
+func (t String) expressionMarker() {}
+
+// Bool maps to Go bool.
+type Bool string
+
+func (t Bool) literalMarker()    {}
+func (t Bool) expressionMarker() {}
+
+// Char maps to Go char.
+type Char string
+
+func (t Char) literalMarker()    {}
+func (t Char) expressionMarker() {}
+
+// Imaginary maps to Go imaginary double.
+type Imaginary string
+
+func (t Imaginary) literalMarker()    {}
+func (t Imaginary) expressionMarker() {}

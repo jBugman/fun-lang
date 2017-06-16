@@ -9,7 +9,7 @@ import (
 	"go/token"
 	"strings"
 
-	"../fun"
+	"github.com/jBugman/fun-lang/fun"
 )
 
 // FromFile converts Go ast.File to Fun Module.
@@ -77,11 +77,11 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	}
 	if len(fd.Body.List) == 1 {
 		// Convert to FuncApplication
-		fa, err := Statement(fset, fd.Body.List[0])
+		stmt, err := Statement(fset, fd.Body.List[0])
 		if err != nil {
 			return fn, err
 		}
-		fn.Body = fa
+		fn.Body = fun.SingleExprBody{stmt}
 	} else {
 		// Convert to Fun DoBlock
 		db := fun.DoBlock{}
@@ -96,12 +96,12 @@ func Function(fset *token.FileSet, fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	return fn, nil
 }
 
-// Statement converts Go statement to a corresponding FuncApplication depending on type
-func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.FuncBody, error) {
+// Statement converts Go statement to a corresponding Fun Expression depending on type
+func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.Expression, error) {
 	result := fun.FuncApplication{}
 	switch st := stmt.(type) {
 	case *ast.ReturnStmt:
-		result.Kind = fun.EXPRESSION
+		// result.Kind = fun.EXPRESSION
 		// TODO at least binary expr
 		// Module:
 		// Name:
@@ -109,19 +109,19 @@ func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.FuncBody, error) {
 		ast.Print(fset, st)       // debug
 		return fun.Undefined, nil // TODO change return type to FuncApplication
 	case *ast.ExprStmt:
-		result.Kind = fun.STATEMENT
+		// result.Kind = fun.STATEMENT
 		switch expr := st.X.(type) {
 		case *ast.CallExpr:
 			switch f := expr.Fun.(type) {
 			case *ast.SelectorExpr:
-				result.Name = identToString(f.Sel)
+				// result.Name = identToString(f.Sel)
 				// Module (only?)
 				switch x := f.X.(type) {
 				case *ast.Ident:
-					result.Module = identToString(x)
+					// result.Module = identToString(x)
 				default:
-					ast.Print(fset, f)                                          // debug
-					return result, fmt.Errorf("call type not supported: %v", f) // TODO add more
+					ast.Print(fset, x)                                          // debug
+					return result, fmt.Errorf("call type not supported: %v", x) // TODO add more
 				}
 			default:
 				ast.Print(fset, f)                                          // debug
@@ -130,10 +130,10 @@ func Statement(fset *token.FileSet, stmt ast.Stmt) (fun.FuncBody, error) {
 			// result.Name = f.Fun.Sel.Name
 			// Arguments
 			for _, e := range expr.Args {
-				var arg fun.Argument
+				var arg fun.Expression
 				switch a := e.(type) {
 				case *ast.BasicLit:
-					arg = litToArgument(a)
+					arg = litToExpression(a)
 				default:
 					ast.Print(fset, e)                                              // debug
 					return result, fmt.Errorf("argument type not supported: %v", e) // TODO add more
@@ -158,7 +158,7 @@ func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 		// TODO
 		return nil, fmt.Errorf("BinaryExpr is not implemented yet")
 	case *ast.SelectorExpr:
-		result := fun.FuncApplication{Name: identToString(ex.Sel)}
+		result := fun.FunctionVal{Name: identToString(ex.Sel)}
 		switch x := ex.X.(type) {
 		case *ast.Ident:
 			result.Module = identToString(x)
@@ -174,25 +174,23 @@ func Expression(fset *token.FileSet, expr ast.Expr) (fun.Expression, error) {
 	}
 }
 
-func litToArgument(lit *ast.BasicLit) fun.Argument {
-	var arg fun.Argument
+func litToExpression(lit *ast.BasicLit) fun.Expression {
 	switch lit.Kind {
 	case token.INT:
-		arg = fun.Int(lit.Value)
+		return fun.Int(lit.Value)
 	case token.FLOAT:
-		arg = fun.Double(lit.Value)
+		return fun.Double(lit.Value)
 	case token.STRING:
 		s, _ := litStringToString(lit) // should not be error
-		arg = fun.String(s)
+		return fun.String(s)
 	case token.CHAR:
 		s, _ := litStringToString(lit) // should not be error
-		arg = fun.Char(s)
+		return fun.Char(s)
 	case token.IMAG:
-		arg = fun.Imaginary(lit.Value)
+		return fun.Imaginary(lit.Value)
 	default:
 		panic(fmt.Sprintf("unexpected type: %v", lit))
 	}
-	return arg
 }
 
 func identToString(ident *ast.Ident) string {

@@ -100,10 +100,7 @@ func (ts Results) String() string {
 
 func (fa FuncApplication) String() string {
 	var buf bytes.Buffer
-	if fa.Module != "" {
-		fmt.Fprint(&buf, fa.Module, dot)
-	}
-	fmt.Fprint(&buf, fa.Name)
+	fmt.Fprint(&buf, fa.Func)
 	if len(fa.Arguments) > 0 {
 		args := make([]string, len(fa.Arguments))
 		for i := 0; i < len(args); i++ {
@@ -116,6 +113,15 @@ func (fa FuncApplication) String() string {
 		}
 		fmt.Fprint(&buf, space, strings.Join(args, space))
 	}
+	return buf.String()
+}
+
+func (v FunctionVal) String() string {
+	var buf bytes.Buffer
+	if v.Module != "" {
+		fmt.Fprint(&buf, v.Module, dot)
+	}
+	fmt.Fprint(&buf, v.Name)
 	return buf.String()
 }
 
@@ -142,4 +148,8 @@ func (t Tuple) String() string {
 		ss[i] = fmt.Sprint(t[i])
 	}
 	return openBracket + strings.Join(ss, comma) + closeBracket
+}
+
+func (b SingleExprBody) String() string {
+	return fmt.Sprint(b.Expr)
 }

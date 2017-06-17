@@ -156,6 +156,6 @@ func ExampleFun_Expression_brokenLiteral_testError() {
 	//      0  *ast.BasicLit {
 	//      1  .  ValuePos: -
 	//      2  .  Kind: break
-	//      3  .  Value: "snake!"
+	//      3  .  Value: "SNAKE!"
 	//      4  }
 }

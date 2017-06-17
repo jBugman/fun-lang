@@ -87,7 +87,7 @@ func (rs Results) String() string {
 	var result string
 	switch len(rs.Types) {
 	case 0:
-		panic("empty Results")
+		result = fmt.Sprint(Unit)
 	case 1:
 		result = fmt.Sprint(rs.Types[0])
 	default:
@@ -97,7 +97,7 @@ func (rs Results) String() string {
 		}
 		result = OPENBR + strings.Join(ss, COMMA) + CLOSEBR
 	}
-	if rs.IO {
+	if !rs.Pure {
 		return fmt.Sprintf("%s %s", IO, result)
 	}
 	return result

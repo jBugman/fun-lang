@@ -80,7 +80,7 @@ type Parameters []Parameter
 // IO a
 // IO (a, b)
 type Results struct {
-	IO    bool
+	Pure  bool
 	Types []Type
 }
 

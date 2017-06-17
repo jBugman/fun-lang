@@ -90,7 +90,7 @@ func Results(results fun.Results) string {
 	rs := results.Types
 	switch len(rs) {
 	case 0:
-		panic("empty result list")
+		return "" // Empty result == IO ()
 	case 1:
 		return fmt.Sprint(rs[0])
 	default:

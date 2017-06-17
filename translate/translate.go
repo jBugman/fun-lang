@@ -97,10 +97,7 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 			fn.Results.Types = append(fn.Results.Types, fun.AtomicType(tp))
 		}
 	}
-	if len(fn.Results.Types) == 0 {
-		fn.Results.Types = append(fn.Results.Types, fun.Unit)
-	}
-	fn.Results.IO = true // TODO validate purity, but by default all Go code is marked inpure
+	fn.Results.Pure = false // TODO validate purity, but by default all Go code is marked inpure
 	// Body
 	if fd.Body == nil {
 		return fn, conv.errorWithAST("empty function body is not supported", fd)

@@ -32,13 +32,18 @@ func ExampleParameters_String_zero() {
 }
 
 func ExampleResults_String_one() {
-	fmt.Println(fun.SingleResult(fun.ObjectType("io.Writer")))
+	r := fun.Results{
+		Pure:  true,
+		Types: []fun.Type{fun.ObjectType("io.Writer")},
+	}
+	fmt.Println(r)
 	// Output:
 	// io.Writer
 }
 
-func ExampleResults_String_two() {
+func ExampleResults_String_pureTwo() {
 	r := fun.Results{
+		Pure: true,
 		Types: []fun.Type{
 			fun.AtomicType("int"),
 			fun.AtomicType("error"),
@@ -49,16 +54,13 @@ func ExampleResults_String_two() {
 	// (int, error)
 }
 func ExampleResults_String_zero() {
-	fmt.Println(fun.EmptyResults())
+	fmt.Println(fun.Results{})
 	// Output:
 	// IO ()
 }
 
 func ExampleFuncDecl_String_unit_implicit_undefined() {
-	fn := fun.FuncDecl{
-		Name:    "main",
-		Results: fun.EmptyResults(),
-	}
+	fn := fun.FuncDecl{Name: "main"}
 	fmt.Println(fn)
 	// Output:
 	// main :: IO ()
@@ -67,10 +69,9 @@ func ExampleFuncDecl_String_unit_implicit_undefined() {
 
 func ExampleFuncDecl_String_unit_explicit_undefined() {
 	fn := fun.FuncDecl{
-		Name:    "newFunc",
-		Results: fun.EmptyResults(),
-		Params:  fun.Parameters{fun.NewParam("launchMissles", "bool")},
-		Body:    fun.Undefined,
+		Name:   "newFunc",
+		Params: fun.Parameters{fun.NewParam("launchMissles", "bool")},
+		Body:   fun.Undefined,
 	}
 	fmt.Println(fn)
 	// Output:
@@ -80,9 +81,8 @@ func ExampleFuncDecl_String_unit_explicit_undefined() {
 
 func ExampleFuncDecl_String_int_unit_undefined() {
 	fn := fun.FuncDecl{
-		Name:    "print",
-		Results: fun.EmptyResults(),
-		Params:  fun.Parameters{{Name: "n", Type: fun.AtomicType("int")}},
+		Name:   "print",
+		Params: fun.Parameters{{Name: "n", Type: fun.AtomicType("int")}},
 	}
 	fmt.Println(fn)
 	// Output:
@@ -101,7 +101,7 @@ func ExampleFuncDecl_String_head_undefined() {
 	}
 	fmt.Println(fn)
 	// Output:
-	// head :: [int] -> (int, error)
+	// head :: [int] -> IO (int, error)
 	// head xs = undefined
 }
 
@@ -113,7 +113,7 @@ func ExampleFuncDecl_String_params() {
 	}
 	fmt.Println(fn)
 	// Output:
-	// enumFromTo :: a -> a -> [a]
+	// enumFromTo :: a -> a -> IO [a]
 	// enumFromTo x y = undefined
 }
 
@@ -125,8 +125,7 @@ func ExampleCreateAST() {
 		},
 		Decls: []fun.Decl{
 			fun.FuncDecl{
-				Name:    "main",
-				Results: fun.EmptyResults(),
+				Name: "main",
 				Body: fun.SingleExprBody{
 					Expr: fun.FuncApplication{
 						Func: fun.FunctionVal{
@@ -190,9 +189,8 @@ func ExampleFuncApplication_String_nestedFunction() {
 
 func ExampleFuncDecl_String_singleExprBody() {
 	fn := fun.FuncDecl{
-		Name:    "printInt",
-		Params:  fun.Parameters{fun.NewParam("x", "int")},
-		Results: fun.EmptyResults(),
+		Name:   "printInt",
+		Params: fun.Parameters{fun.NewParam("x", "int")},
 		Body: fun.SingleExprBody{
 			Expr: fun.FuncApplication{
 				Func: fun.FunctionVal{
@@ -219,9 +217,8 @@ func ExampleDoBlock_String_oneLine() {
 
 func ExampleFuncDecl_String_doBlock_multiline() {
 	fn := fun.FuncDecl{
-		Name:    "printHash",
-		Params:  fun.Parameters{fun.NewParam("str", "string")},
-		Results: fun.EmptyResults(),
+		Name:   "printHash",
+		Params: fun.Parameters{fun.NewParam("str", "string")},
 		Body: fun.DoBlock{Text: []string{
 			`h := md5.New()`,
 			`io.WriteString(h, str)`,
@@ -258,15 +255,15 @@ func ExampleTuple_String() {
 	// (operator, "plus")
 }
 
-func TestResults_ShouldReturn_t0(t *testing.T) {
-	r := fun.EmptyResults()
+func TestResults_ShouldReturn_empty(t *testing.T) {
+	r := fun.Results{}
 	if r.ShouldReturn() {
 		t.Fail()
 	}
 }
 
-func TestResults_ShouldReturn_t1(t *testing.T) {
-	r := fun.Results{Types: []fun.Type{fun.AtomicType("int")}}
+func TestResults_ShouldReturn_(t *testing.T) {
+	r := fun.SingleResult(fun.AtomicType("int"))
 	if !r.ShouldReturn() {
 		t.Fail()
 	}

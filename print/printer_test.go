@@ -150,3 +150,30 @@ func ExampleFuncDecl_doBlock_multiline() {
 	// 	fmt.Printf("%x", h.Sum(nil))
 	// }
 }
+
+func ExampleFuncDecl_multiReturn() {
+	tree := fun.FuncDecl{
+		Name:   "swap",
+		Params: fun.Parameters{fun.NewParam("x", "int"), fun.NewParam("y", "int")},
+		Results: fun.Results{
+			Pure:  true,
+			Types: []fun.Type{fun.AtomicType("int"), fun.AtomicType("int")},
+		},
+		Body: fun.SingleExprBody{
+			Expr: fun.ReturnList{
+				fun.Val("y"),
+				fun.Val("x"),
+			},
+		},
+	}
+	source, err := print.FuncDecl(tree)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	gofmt(source)
+	// Output:
+	// func swap(x int, y int) (int, int) {
+	//	return y, x
+	// }
+}

@@ -246,7 +246,7 @@ func ExampleInfixOperation_String() {
 }
 
 func ExampleTuple_String() {
-	t := fun.Tuple{
+	t := fun.ReturnList{
 		fun.Val("operator"),
 		fun.String("plus"),
 	}

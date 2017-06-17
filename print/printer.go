@@ -126,8 +126,9 @@ func Expression(e fun.Expression) (string, error) {
 		return InfixOperation(expr)
 	case fun.Val:
 		return fmt.Sprint(expr), nil
+	case fun.ReturnList:
+		return ReturnList(expr), nil
 	default:
-		_ = expr
 		return "", fmt.Errorf("NOT IMPLEMENTED %s", expr)
 	}
 }
@@ -168,4 +169,13 @@ func ObjectType(t fun.ObjectType) string {
 // ListType prints fun.ListType
 func ListType(t fun.ListType) string {
 	return fmt.Sprintf("[]%s", t.T)
+}
+
+// ReturnList prints multiple values to return
+func ReturnList(t fun.ReturnList) string {
+	ss := make([]string, len(t))
+	for i := 0; i < len(t); i++ {
+		ss[i] = fmt.Sprint(t[i])
+	}
+	return strings.Join(ss, fun.COMMA)
 }

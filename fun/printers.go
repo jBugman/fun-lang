@@ -151,7 +151,7 @@ func (op InfixOperation) String() string {
 	return fmt.Sprintf("%s %s %s", op.X, op.Operator, op.Y)
 }
 
-func (t Tuple) String() string {
+func (t ReturnList) String() string {
 	ss := make([]string, len(t))
 	for i := 0; i < len(t); i++ {
 		ss[i] = fmt.Sprint(t[i])

@@ -145,10 +145,10 @@ type InfixOperation struct {
 
 func (op InfixOperation) expressionMarker() {}
 
-// Tuple represents a group of values
-type Tuple []Expression
+// ReturnList represents a group of values
+type ReturnList []Expression
 
-func (t Tuple) expressionMarker() {}
+func (t ReturnList) expressionMarker() {}
 
 // Operator represents binary operator
 type Operator string

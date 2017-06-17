@@ -139,8 +139,8 @@ func (conv funC) Statement(stmt ast.Stmt) (fun.Expression, error) {
 			}
 			return result, nil
 		default:
-			// Tuple
-			result := make(fun.Tuple, lr)
+			//  ReturnList
+			result := make(fun.ReturnList, lr)
 			for i := 0; i < lr; i++ {
 				expr, err := conv.Expression(st.Results[i])
 				if err != nil {

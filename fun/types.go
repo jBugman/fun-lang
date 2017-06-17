@@ -1,22 +1,6 @@
 // Package fun contains Fun language AST and means to prettyprint its source code.
 package fun
 
-const (
-	lf            = "\n"
-	undefined     = "undefined"
-	arrow         = " -> "
-	typeSeparator = " :: "
-	unit          = "()"
-	space         = " "
-	comma         = ", "
-	binding       = " = "
-	dot           = "."
-	intendation   = "    "
-	doDecl        = "do" + lf
-	openBracket   = "("
-	closeBracket  = ")"
-)
-
 // Type represents type.
 type Type string
 

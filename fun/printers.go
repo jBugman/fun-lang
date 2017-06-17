@@ -7,7 +7,7 @@ import (
 )
 
 func (u Undef) String() string {
-	return undefined
+	return UNDEFINED
 }
 
 func (imp Import) String() string {
@@ -28,42 +28,42 @@ func (mod Module) String() string {
 	for i, imp := range mod.Imports {
 		imports[i] = imp.String()
 	}
-	topLevels[1] = strings.Join(imports, lf) + lf
+	topLevels[1] = strings.Join(imports, LF) + LF
 
 	// Top-level declarations
 	for i, decl := range mod.Decls {
 		topLevels[2+i] = fmt.Sprint(decl)
 	}
 
-	return strings.Join(topLevels, lf) + lf
+	return strings.Join(topLevels, LF) + LF
 }
 
 func (fd FuncDecl) String() string {
 	var out bytes.Buffer
 	// Type signature
 	fmt.Fprint(&out, fd.Name)
-	fmt.Fprint(&out, typeSeparator)
+	fmt.Fprint(&out, COLONS)
 	fmt.Fprint(&out, fd.Params)
 	if len(fd.Params) > 0 {
-		fmt.Fprint(&out, arrow)
+		fmt.Fprint(&out, ARROW)
 	}
-	fmt.Fprint(&out, fd.Results, lf)
+	fmt.Fprint(&out, fd.Results, LF)
 
 	// Name and parameters
 	fmt.Fprint(&out, fd.Name)
 	if len(fd.Params) > 0 {
-		fmt.Fprint(&out, space, fd.Params.Names())
+		fmt.Fprint(&out, SPACE, fd.Params.Names())
 	}
-	fmt.Fprint(&out, binding)
+	fmt.Fprint(&out, BINDING)
 
 	// TODO implement body
 	if fd.Body == nil {
-		fmt.Fprint(&out, undefined)
+		fmt.Fprint(&out, UNDEFINED)
 	} else {
 		fmt.Fprint(&out, fd.Body)
 	}
 
-	return out.String() + lf
+	return out.String() + LF
 }
 
 func (ps Parameters) String() string {
@@ -71,7 +71,7 @@ func (ps Parameters) String() string {
 	for i := 0; i < len(ps); i++ {
 		ss[i] = string(ps[i].Type)
 	}
-	return strings.Join(ss, arrow)
+	return strings.Join(ss, ARROW)
 }
 
 // Names build parameter list for binding.
@@ -80,13 +80,13 @@ func (ps Parameters) Names() string {
 	for i := 0; i < len(ps); i++ {
 		ss[i] = string(ps[i].Name)
 	}
-	return strings.Join(ss, space)
+	return strings.Join(ss, SPACE)
 }
 
 func (ts Results) String() string {
 	switch len(ts) {
 	case 0:
-		return unit
+		return UNIT
 	case 1:
 		return string(ts[0])
 	default:
@@ -94,7 +94,7 @@ func (ts Results) String() string {
 		for i := 0; i < len(ts); i++ {
 			ss[i] = string(ts[i])
 		}
-		return openBracket + strings.Join(ss, comma) + closeBracket
+		return OPENBR + strings.Join(ss, COMMA) + CLOSEBR
 	}
 }
 
@@ -111,7 +111,7 @@ func (fa FuncApplication) String() string {
 				args[i] = fmt.Sprint(arg)
 			}
 		}
-		fmt.Fprint(&buf, space, strings.Join(args, space))
+		fmt.Fprint(&buf, SPACE, strings.Join(args, SPACE))
 	}
 	return buf.String()
 }
@@ -119,7 +119,7 @@ func (fa FuncApplication) String() string {
 func (v FunctionVal) String() string {
 	var buf bytes.Buffer
 	if v.Module != "" {
-		fmt.Fprint(&buf, v.Module, dot)
+		fmt.Fprint(&buf, v.Module, DOT)
 	}
 	fmt.Fprint(&buf, v.Name)
 	return buf.String()
@@ -127,11 +127,11 @@ func (v FunctionVal) String() string {
 
 // Assuming non-empty body, empty do block does not really makes sense.
 func (do DoBlock) String() string {
-	buf := bytes.NewBufferString(doDecl)
+	buf := bytes.NewBufferString(DO)
 	for _, line := range do.Text {
-		fmt.Fprint(buf, intendation, line, lf)
+		fmt.Fprint(buf, INTENDATION, line, LF)
 	}
-	return strings.TrimSuffix(buf.String(), lf)
+	return strings.TrimSuffix(buf.String(), LF)
 }
 
 func (t String) String() string {
@@ -151,7 +151,7 @@ func (t Tuple) String() string {
 	for i := 0; i < len(t); i++ {
 		ss[i] = fmt.Sprint(t[i])
 	}
-	return openBracket + strings.Join(ss, comma) + closeBracket
+	return OPENBR + strings.Join(ss, COMMA) + CLOSEBR
 }
 
 func (b SingleExprBody) String() string {

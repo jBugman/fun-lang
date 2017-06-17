@@ -118,6 +118,10 @@ func Expression(e fun.Expression) (string, error) {
 		return FuncApplication(expr)
 	case fun.Literal:
 		return fmt.Sprint(expr), nil
+	case fun.InfixOperation:
+		return InfixOperation(expr)
+	case fun.Val:
+		return fmt.Sprint(expr), nil
 	default:
 		_ = expr
 		return "", fmt.Errorf("NOT IMPLEMENTED %s", expr)

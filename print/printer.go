@@ -58,11 +58,15 @@ func Import(imp fun.Import) string {
 // FuncDecl prints fun.Decl
 func FuncDecl(f fun.FuncDecl) (string, error) {
 	var body string
+	var err error
 	switch b := f.Body.(type) {
 	case fun.DoBlock:
 		body = strings.Join(b.Text, fun.LF)
 	case fun.SingleExprBody:
-		body = Expression(b.Expr)
+		body, err = Expression(b.Expr)
+		if err != nil {
+			return "", err
+		}
 	default:
 		return "", fmt.Errorf("body type is not supported: %s", b)
 	}
@@ -95,15 +99,50 @@ func Results(rs fun.Results) string {
 }
 
 // InfixOperation prints fun.InfixOperation
-func InfixOperation(op fun.InfixOperation) string {
-	return fmt.Sprintf("%s %s %s", Expression(op.X), op.Operator, Expression(op.Y))
+func InfixOperation(op fun.InfixOperation) (string, error) {
+	x, err := Expression(op.X)
+	if err != nil {
+		return "", err
+	}
+	y, err := Expression(op.Y)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s %s %s", x, op.Operator, y), nil
 }
 
 // Expression dispatches printers for concrete expression types
-func Expression(e fun.Expression) string {
+func Expression(e fun.Expression) (string, error) {
 	switch expr := e.(type) {
+	case fun.FuncApplication:
+		return FuncApplication(expr)
+	case fun.Literal:
+		return fmt.Sprint(expr), nil
 	default:
 		_ = expr
-		return "// NOT IMPLEMENTED"
+		return "", fmt.Errorf("NOT IMPLEMENTED %s", expr)
 	}
+}
+
+// FuncApplication prints fun.FuncApplication
+func FuncApplication(fa fun.FuncApplication) (string, error) {
+	var err error
+	ss := make([]string, len(fa.Arguments))
+	for i := 0; i < len(fa.Arguments); i++ {
+		ss[i], err = Expression(fa.Arguments[i])
+		if err != nil {
+			return "", err
+		}
+	}
+	return fmt.Sprintf("%s(%s)", FunctionVal(fa.Func), strings.Join(ss, fun.COMMA)), nil
+}
+
+// FunctionVal prints fun.FunctionVal
+func FunctionVal(v fun.FunctionVal) string {
+	var buf bytes.Buffer
+	if v.Module != "" {
+		fmt.Fprint(&buf, v.Module, fun.DOT)
+	}
+	fmt.Fprint(&buf, v.Name)
+	return buf.String()
 }

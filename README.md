@@ -11,10 +11,10 @@ Idea is to provide cleaner (subjective) syntax and later some code-generation fe
     inc :: int -> int
     inc val = val + 1
 
-    print42 :: ()
+    print42 :: IO ()
     print42 = fmt.Println 42
 
-    main :: ()
+    main :: IO ()
     main = do
         line := "Hello World!"
         fmt.Fprintln(io.Discard, line)

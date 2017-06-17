@@ -2,6 +2,7 @@ package fun_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/jBugman/fun-lang/fun"
 )
@@ -31,50 +32,61 @@ func ExampleParameters_String_zero() {
 }
 
 func ExampleResults_String_one() {
-	fmt.Println(fun.Results{fun.ObjectType("io.Writer")})
+	fmt.Println(fun.SingleResult(fun.ObjectType("io.Writer")))
 	// Output:
 	// io.Writer
 }
 
 func ExampleResults_String_two() {
-	fmt.Println(fun.Results{fun.AtomicType("int"), fun.AtomicType("error")})
+	r := fun.Results{
+		Types: []fun.Type{
+			fun.AtomicType("int"),
+			fun.AtomicType("error"),
+		},
+	}
+	fmt.Println(r)
 	// Output:
 	// (int, error)
 }
 func ExampleResults_String_zero() {
-	fmt.Println(fun.Results{})
+	fmt.Println(fun.EmptyResults())
 	// Output:
-	// ()
+	// IO ()
 }
 
 func ExampleFuncDecl_String_unit_implicit_undefined() {
-	fn := fun.FuncDecl{Name: "main"}
+	fn := fun.FuncDecl{
+		Name:    "main",
+		Results: fun.EmptyResults(),
+	}
 	fmt.Println(fn)
 	// Output:
-	// main :: ()
+	// main :: IO ()
 	// main = undefined
 }
 
 func ExampleFuncDecl_String_unit_explicit_undefined() {
 	fn := fun.FuncDecl{
-		Name:   "newFunc",
-		Params: fun.Parameters{fun.NewParam("launchMissles", "bool")},
-		Body:   fun.Undefined,
+		Name:    "newFunc",
+		Results: fun.EmptyResults(),
+		Params:  fun.Parameters{fun.NewParam("launchMissles", "bool")},
+		Body:    fun.Undefined,
 	}
 	fmt.Println(fn)
 	// Output:
-	// newFunc :: bool -> ()
+	// newFunc :: bool -> IO ()
 	// newFunc launchMissles = undefined
 }
 
 func ExampleFuncDecl_String_int_unit_undefined() {
 	fn := fun.FuncDecl{
-		Name:   "print",
-		Params: fun.Parameters{{Name: "n", Type: fun.AtomicType("int")}},
+		Name:    "print",
+		Results: fun.EmptyResults(),
+		Params:  fun.Parameters{{Name: "n", Type: fun.AtomicType("int")}},
 	}
 	fmt.Println(fn)
 	// Output:
-	// print :: int -> ()
+	// print :: int -> IO ()
 	// print n = undefined
 }
 
@@ -82,10 +94,10 @@ func ExampleFuncDecl_String_head_undefined() {
 	fn := fun.FuncDecl{
 		Name:   "head",
 		Params: fun.Parameters{{Name: "xs", Type: fun.NewList("int")}},
-		Results: fun.Results{
+		Results: fun.Results{Types: []fun.Type{
 			fun.AtomicType("int"),
 			fun.AtomicType("error"),
-		},
+		}},
 	}
 	fmt.Println(fn)
 	// Output:
@@ -97,7 +109,7 @@ func ExampleFuncDecl_String_params() {
 	fn := fun.FuncDecl{
 		Name:    "enumFromTo",
 		Params:  fun.Parameters{fun.NewParam("x", "a"), fun.NewParam("y", "a")},
-		Results: fun.Results{fun.NewList("a")},
+		Results: fun.SingleResult(fun.NewList("a")),
 	}
 	fmt.Println(fn)
 	// Output:
@@ -240,4 +252,18 @@ func ExampleTuple_String() {
 	fmt.Println(t)
 	// Output:
 	// (operator, "plus")
+}
+
+func TestResults_ShouldReturn_t0(t *testing.T) {
+	r := fun.EmptyResults()
+	if r.ShouldReturn() {
+		t.Fail()
+	}
+}
+
+func TestResults_ShouldReturn_t1(t *testing.T) {
+	r := fun.Results{Types: []fun.Type{fun.AtomicType("int")}}
+	if !r.ShouldReturn() {
+		t.Fail()
+	}
 }

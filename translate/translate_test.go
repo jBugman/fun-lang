@@ -46,13 +46,13 @@ func ExampleFun_Module() {
 	// import "fmt"
 	// import "io"
 	//
-	// inc :: int -> int
+	// inc :: int -> IO int
 	// inc val = val + 1
 	//
-	// print42 :: ()
+	// print42 :: IO ()
 	// print42 = fmt.Println 42
 	//
-	// main :: ()
+	// main :: IO ()
 	// main = do
 	//     line := "Hello World!"
 	//     fmt.Fprintln(io.Discard, line)

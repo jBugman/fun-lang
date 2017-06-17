@@ -16,4 +16,5 @@ const (
 	OPENBR      = "("
 	CLOSEBR     = ")"
 	IO          = "IO"
+	RETURN      = "return"
 )

@@ -83,19 +83,24 @@ func (ps Parameters) Names() string {
 	return strings.Join(ss, SPACE)
 }
 
-func (ts Results) String() string {
-	switch len(ts) {
+func (rs Results) String() string {
+	var result string
+	switch len(rs.Types) {
 	case 0:
-		return UNIT
+		panic("empty Results")
 	case 1:
-		return fmt.Sprint(ts[0])
+		result = fmt.Sprint(rs.Types[0])
 	default:
-		ss := make([]string, len(ts))
-		for i := 0; i < len(ts); i++ {
-			ss[i] = fmt.Sprint(ts[i])
+		ss := make([]string, len(rs.Types))
+		for i := 0; i < len(rs.Types); i++ {
+			ss[i] = fmt.Sprint(rs.Types[i])
 		}
-		return OPENBR + strings.Join(ss, COMMA) + CLOSEBR
+		result = OPENBR + strings.Join(ss, COMMA) + CLOSEBR
 	}
+	if rs.IO {
+		return fmt.Sprintf("%s %s", IO, result)
+	}
+	return result
 }
 
 func (fa FuncApplication) String() string {
@@ -166,10 +171,10 @@ func (t ObjectType) String() string {
 	return string(t)
 }
 
-func (t IOType) String() string {
-	return fmt.Sprintf("%s %s", IO, t.T)
-}
-
 func (t ListType) String() string {
 	return fmt.Sprintf("[%s]", t.T)
+}
+
+func (t UnitType) String() string {
+	return UNIT
 }

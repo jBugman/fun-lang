@@ -67,6 +67,9 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		if f.Results.ShouldReturn() {
+			body = fmt.Sprintf("%s %s", fun.RETURN, body)
+		}
 	default:
 		return "", fmt.Errorf("body type is not supported: %s", b)
 	}
@@ -83,10 +86,11 @@ func Parameters(ps fun.Parameters) string {
 }
 
 // Results prints fun.Results
-func Results(rs fun.Results) string {
+func Results(results fun.Results) string {
+	rs := results.Types
 	switch len(rs) {
 	case 0:
-		return ""
+		panic("empty result list")
 	case 1:
 		return fmt.Sprint(rs[0])
 	default:

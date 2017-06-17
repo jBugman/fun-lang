@@ -6,6 +6,14 @@ type Type interface {
 	typeMarker()
 }
 
+// UnitType represents Unit
+type UnitType bool
+
+func (t UnitType) typeMarker() {}
+
+// Unit is an UnitType singleton.
+const Unit UnitType = true
+
 // AtomicType represents
 type AtomicType string
 
@@ -16,14 +24,7 @@ type ObjectType string
 
 func (t ObjectType) typeMarker() {}
 
-// IOType marks function with side effects
-type IOType struct {
-	T AtomicType
-}
-
-func (t IOType) typeMarker() {}
-
-// ListType represents list of
+// ListType represents list of any type
 type ListType struct {
 	T Type
 }
@@ -72,7 +73,16 @@ type Parameter struct {
 type Parameters []Parameter
 
 // Results represents function result list.
-type Results []Type
+// Examples:
+// IO ()
+// a
+// (a, b)
+// IO a
+// IO (a, b)
+type Results struct {
+	IO    bool
+	Types []Type
+}
 
 // FuncBody represents function body.
 type FuncBody interface {

@@ -50,7 +50,8 @@ func ExampleModule() {
 		},
 		Decls: []fun.Decl{
 			fun.FuncDecl{
-				Name: "main",
+				Name:    "main",
+				Results: fun.EmptyResults(),
 				Body: fun.SingleExprBody{
 					Expr: fun.FuncApplication{
 						Func: fun.FunctionVal{
@@ -107,7 +108,7 @@ func ExampleModule_multiImports() {
 func ExampleFuncDecl_infixReturn() {
 	tree := fun.FuncDecl{
 		Name:    "myFunc",
-		Results: fun.Results{fun.AtomicType("int")},
+		Results: fun.SingleResult(fun.AtomicType("int")),
 		Body: fun.SingleExprBody{
 			Expr: fun.InfixOperation{
 				X:        fun.Val("x"),
@@ -129,8 +130,9 @@ func ExampleFuncDecl_infixReturn() {
 
 func ExampleFuncDecl_doBlock_multiline() {
 	tree := fun.FuncDecl{
-		Name:   "printHash",
-		Params: fun.Parameters{fun.NewParam("str", "string")},
+		Name:    "printHash",
+		Params:  fun.Parameters{fun.NewParam("str", "string")},
+		Results: fun.EmptyResults(),
 		Body: fun.DoBlock{Text: []string{
 			`h := md5.New()`,
 			`io.WriteString(h, str)`,

@@ -107,7 +107,7 @@ func ExampleModule_multiImports() {
 func ExampleFuncDecl_infixReturn() {
 	tree := fun.FuncDecl{
 		Name:    "myFunc",
-		Results: fun.Results{fun.Type("int")},
+		Results: fun.Results{fun.AtomicType("int")},
 		Body: fun.SingleExprBody{
 			Expr: fun.InfixOperation{
 				X:        fun.Val("x"),

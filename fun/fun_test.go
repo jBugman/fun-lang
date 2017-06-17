@@ -13,7 +13,7 @@ func ExampleImport_String_single() {
 }
 
 func ExampleParameters_String_single() {
-	fmt.Println(fun.Parameters{{Name: "s", Type: "string"}})
+	fmt.Println(fun.Parameters{{Name: "s", Type: fun.AtomicType("string")}})
 	// Output:
 	// string
 }
@@ -31,13 +31,13 @@ func ExampleParameters_String_zero() {
 }
 
 func ExampleResults_String_one() {
-	fmt.Println(fun.Results{"io.Writer"})
+	fmt.Println(fun.Results{fun.ObjectType("io.Writer")})
 	// Output:
 	// io.Writer
 }
 
 func ExampleResults_String_two() {
-	fmt.Println(fun.Results{"int", "error"})
+	fmt.Println(fun.Results{fun.AtomicType("int"), fun.AtomicType("error")})
 	// Output:
 	// (int, error)
 }
@@ -70,7 +70,7 @@ func ExampleFuncDecl_String_unit_explicit_undefined() {
 func ExampleFuncDecl_String_int_unit_undefined() {
 	fn := fun.FuncDecl{
 		Name:   "print",
-		Params: fun.Parameters{{Name: "n", Type: "int"}},
+		Params: fun.Parameters{{Name: "n", Type: fun.AtomicType("int")}},
 	}
 	fmt.Println(fn)
 	// Output:
@@ -80,9 +80,12 @@ func ExampleFuncDecl_String_int_unit_undefined() {
 
 func ExampleFuncDecl_String_head_undefined() {
 	fn := fun.FuncDecl{
-		Name:    "head",
-		Params:  fun.Parameters{{Name: "xs", Type: "[int]"}},
-		Results: fun.Results{"int", "error"},
+		Name:   "head",
+		Params: fun.Parameters{{Name: "xs", Type: fun.NewList("int")}},
+		Results: fun.Results{
+			fun.AtomicType("int"),
+			fun.AtomicType("error"),
+		},
 	}
 	fmt.Println(fn)
 	// Output:
@@ -94,7 +97,7 @@ func ExampleFuncDecl_String_params() {
 	fn := fun.FuncDecl{
 		Name:    "enumFromTo",
 		Params:  fun.Parameters{fun.NewParam("x", "a"), fun.NewParam("y", "a")},
-		Results: fun.Results{"[a]"},
+		Results: fun.Results{fun.NewList("a")},
 	}
 	fmt.Println(fn)
 	// Output:

@@ -77,7 +77,7 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 func Parameters(ps fun.Parameters) string {
 	ss := make([]string, len(ps))
 	for i := 0; i < len(ps); i++ {
-		ss[i] = fmt.Sprintf("%s %s", ps[i].Name, string(ps[i].Type))
+		ss[i] = fmt.Sprintf("%s %s", ps[i].Name, ps[i].Type)
 	}
 	return strings.Join(ss, fun.COMMA)
 }
@@ -88,11 +88,11 @@ func Results(rs fun.Results) string {
 	case 0:
 		return ""
 	case 1:
-		return string(rs[0])
+		return fmt.Sprint(rs[0])
 	default:
 		ss := make([]string, len(rs))
 		for i := 0; i < len(rs); i++ {
-			ss[i] = string(rs[i])
+			ss[i] = fmt.Sprint(rs[i])
 		}
 		return fun.OPENBR + strings.Join(ss, fun.COMMA) + fun.CLOSEBR
 	}
@@ -149,4 +149,19 @@ func FunctionVal(v fun.FunctionVal) string {
 	}
 	fmt.Fprint(&buf, v.Name)
 	return buf.String()
+}
+
+// AtomicType prints fun.AtomicType
+func AtomicType(t fun.AtomicType) string {
+	return string(t)
+}
+
+// ObjectType prints fun.ObjectType
+func ObjectType(t fun.ObjectType) string {
+	return string(t)
+}
+
+// ListType prints fun.ListType
+func ListType(t fun.ListType) string {
+	return fmt.Sprintf("[]%s", t.T)
 }

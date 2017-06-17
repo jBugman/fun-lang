@@ -15,4 +15,5 @@ const (
 	DO          = "do" + LF
 	OPENBR      = "("
 	CLOSEBR     = ")"
+	IO          = "IO"
 )

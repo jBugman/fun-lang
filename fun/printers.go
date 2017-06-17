@@ -69,7 +69,7 @@ func (fd FuncDecl) String() string {
 func (ps Parameters) String() string {
 	ss := make([]string, len(ps))
 	for i := 0; i < len(ps); i++ {
-		ss[i] = string(ps[i].Type)
+		ss[i] = fmt.Sprint(ps[i].Type)
 	}
 	return strings.Join(ss, ARROW)
 }
@@ -88,11 +88,11 @@ func (ts Results) String() string {
 	case 0:
 		return UNIT
 	case 1:
-		return string(ts[0])
+		return fmt.Sprint(ts[0])
 	default:
 		ss := make([]string, len(ts))
 		for i := 0; i < len(ts); i++ {
-			ss[i] = string(ts[i])
+			ss[i] = fmt.Sprint(ts[i])
 		}
 		return OPENBR + strings.Join(ss, COMMA) + CLOSEBR
 	}
@@ -156,4 +156,20 @@ func (t Tuple) String() string {
 
 func (b SingleExprBody) String() string {
 	return fmt.Sprint(b.Expr)
+}
+
+func (t AtomicType) String() string {
+	return string(t)
+}
+
+func (t ObjectType) String() string {
+	return string(t)
+}
+
+func (t IOType) String() string {
+	return fmt.Sprintf("%s %s", IO, t.T)
+}
+
+func (t ListType) String() string {
+	return fmt.Sprintf("[%s]", t.T)
 }

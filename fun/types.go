@@ -2,7 +2,33 @@
 package fun
 
 // Type represents type.
-type Type string
+type Type interface {
+	typeMarker()
+}
+
+// AtomicType represents
+type AtomicType string
+
+func (t AtomicType) typeMarker() {}
+
+// ObjectType represents
+type ObjectType string
+
+func (t ObjectType) typeMarker() {}
+
+// IOType marks function with side effects
+type IOType struct {
+	T AtomicType
+}
+
+func (t IOType) typeMarker() {}
+
+// ListType represents list of
+type ListType struct {
+	T Type
+}
+
+func (t ListType) typeMarker() {}
 
 // Module represents single source file.
 type Module struct {

@@ -86,7 +86,7 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 			}
 			tp := identToString(ex)
 			for _, n := range p.Names {
-				fn.Params = append(fn.Params, fun.Parameter{Name: identToString(n), Type: fun.Type(tp)})
+				fn.Params = append(fn.Params, fun.Parameter{Name: identToString(n), Type: fun.AtomicType(tp)})
 			}
 		}
 	}
@@ -94,7 +94,7 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	if fd.Type.Results != nil {
 		for _, p := range fd.Type.Results.List {
 			tp := identToString(p.Type.(*ast.Ident))
-			fn.Results = append(fn.Results, fun.Type(tp))
+			fn.Results = append(fn.Results, fun.AtomicType(tp))
 		}
 	}
 	// Body

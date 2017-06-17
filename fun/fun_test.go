@@ -125,7 +125,8 @@ func ExampleCreateAST() {
 		},
 		Decls: []fun.Decl{
 			fun.FuncDecl{
-				Name: "main",
+				Name:    "main",
+				Results: fun.EmptyResults(),
 				Body: fun.SingleExprBody{
 					Expr: fun.FuncApplication{
 						Func: fun.FunctionVal{
@@ -144,7 +145,7 @@ func ExampleCreateAST() {
 	//
 	// import "fmt"
 	//
-	// main :: ()
+	// main :: IO ()
 	// main = fmt.Println "Hello World!"
 }
 
@@ -188,21 +189,23 @@ func ExampleFuncApplication_String_nestedFunction() {
 }
 
 func ExampleFuncDecl_String_singleExprBody() {
-	expr := fun.FuncApplication{
-		Func: fun.FunctionVal{
-			Name:   "Println",
-			Module: "fmt",
-		},
-		Arguments: []fun.Expression{fun.Val("x")},
-	}
 	fn := fun.FuncDecl{
-		Name:   "printInt",
-		Params: fun.Parameters{fun.NewParam("x", "int")},
-		Body:   fun.SingleExprBody{Expr: expr},
+		Name:    "printInt",
+		Params:  fun.Parameters{fun.NewParam("x", "int")},
+		Results: fun.EmptyResults(),
+		Body: fun.SingleExprBody{
+			Expr: fun.FuncApplication{
+				Func: fun.FunctionVal{
+					Name:   "Println",
+					Module: "fmt",
+				},
+				Arguments: []fun.Expression{fun.Val("x")},
+			},
+		},
 	}
 	fmt.Println(fn)
 	// Output:
-	// printInt :: int -> ()
+	// printInt :: int -> IO ()
 	// printInt x = fmt.Println x
 }
 
@@ -216,8 +219,9 @@ func ExampleDoBlock_String_oneLine() {
 
 func ExampleFuncDecl_String_doBlock_multiline() {
 	fn := fun.FuncDecl{
-		Name:   "printHash",
-		Params: fun.Parameters{fun.NewParam("str", "string")},
+		Name:    "printHash",
+		Params:  fun.Parameters{fun.NewParam("str", "string")},
+		Results: fun.EmptyResults(),
 		Body: fun.DoBlock{Text: []string{
 			`h := md5.New()`,
 			`io.WriteString(h, str)`,
@@ -226,7 +230,7 @@ func ExampleFuncDecl_String_doBlock_multiline() {
 	}
 	fmt.Println(fn)
 	// Output:
-	// printHash :: string -> ()
+	// printHash :: string -> IO ()
 	// printHash str = do
 	//     h := md5.New()
 	//     io.WriteString(h, str)

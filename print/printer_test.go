@@ -51,12 +51,12 @@ func ExampleModule() {
 	source, err := print.Module(tree)
 	if err != nil {
 		fmt.Println(err)
-		fmt.Print(string(source))
 		return
 	}
 	result, err := print.FixFormat(source)
 	if err != nil {
 		fmt.Print(err)
+		fmt.Print(string(source))
 	} else {
 		fmt.Print(result)
 	}

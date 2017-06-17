@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/jBugman/fun-lang/translate"
@@ -69,11 +70,7 @@ func parseArgs(infile, outfile *string, useStdout *bool) {
 	}
 	*infile = flag.Arg(0)
 	if *outfile == "" {
-		fname := strings.TrimSuffix(*infile, ".go")
-		if fname == *infile {
-			exit("not a .go file")
-		}
-		*outfile = fname + ".fun"
+		*outfile = strings.TrimSuffix(*infile, filepath.Ext(*infile)) + ".fun"
 	}
 }
 

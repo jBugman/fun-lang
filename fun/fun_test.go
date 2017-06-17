@@ -4,59 +4,55 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/jBugman/fun-lang/fun"
 )
 
-func ExampleImport_String_single() {
-	fmt.Println(fun.Import{Path: "github.com/awesome/lib/fmt", Alias: "awfmt"})
-	// Output:
-	// import "github.com/awesome/lib/fmt" as "awfmt"
+func TestImport_String_single(t *testing.T) {
+	tree := fun.Import{Path: "github.com/awesome/lib/fmt", Alias: "awfmt"}
+	assert.Equal(t, `import "github.com/awesome/lib/fmt" as "awfmt"`, fmt.Sprint(tree))
 }
 
-func ExampleParameters_String_single() {
-	fmt.Println(fun.Parameters{{Name: "s", Type: fun.AtomicType("string")}})
-	// Output:
-	// string
+func TestParameters_String_single(t *testing.T) {
+	tree := fun.Parameters{{
+		Name: "s",
+		Type: fun.AtomicType("string"),
+	}}
+	assert.Equal(t, "string", fmt.Sprint(tree))
 }
 
-func ExampleParameters_String_two() {
-	fmt.Println(fun.Parameters{fun.NewParam("x", "int"), fun.NewParam("y", "int")})
-	// Output:
-	// int -> int
+func TestParameters_String_two(t *testing.T) {
+	tree := fun.Parameters{fun.NewParam("x", "int"), fun.NewParam("y", "int")}
+	assert.Equal(t, "int -> int", fmt.Sprint(tree))
 }
 
-func ExampleParameters_String_zero() {
-	fmt.Println(fun.Parameters{})
-	// Output:
-	//
+func TestParameters_String_zero(t *testing.T) {
+	tree := fun.Parameters{}
+	assert.Empty(t, fmt.Sprint(tree))
 }
 
-func ExampleResults_String_one() {
-	r := fun.Results{
+func TestResults_String_one(t *testing.T) {
+	tree := fun.Results{
 		Pure:  true,
 		Types: []fun.Type{fun.ObjectType("io.Writer")},
 	}
-	fmt.Println(r)
-	// Output:
-	// io.Writer
+	assert.Equal(t, "io.Writer", fmt.Sprint(tree))
 }
 
-func ExampleResults_String_pureTwo() {
-	r := fun.Results{
+func TreeResults_String_pureTwo(t *testing.T) {
+	tree := fun.Results{
 		Pure: true,
 		Types: []fun.Type{
 			fun.AtomicType("int"),
 			fun.AtomicType("error"),
 		},
 	}
-	fmt.Println(r)
-	// Output:
-	// (int, error)
+	assert.Equal(t, "(int, error)", fmt.Sprint(tree))
 }
-func ExampleResults_String_zero() {
-	fmt.Println(fun.Results{})
-	// Output:
-	// IO ()
+func TestResults_String_zero(t *testing.T) {
+	tree := fun.Results{}
+	assert.Equal(t, "IO ()", fmt.Sprint(tree))
 }
 
 func ExampleFuncDecl_String_unit_implicit_undefined() {
@@ -148,31 +144,27 @@ func ExampleCreateAST() {
 	// main = fmt.Println "Hello World!"
 }
 
-func ExampleFuncApplication_String_local() {
-	fn := fun.FuncApplication{
+func TestFuncApplication_String_local(t *testing.T) {
+	tree := fun.FuncApplication{
 		Func:      fun.FunctionVal{Name: "sum"},
 		Arguments: []fun.Expression{fun.Int("1"), fun.Int("2")},
 	}
-	fmt.Println(fn)
-	// Output:
-	// sum 1 2
+	assert.Equal(t, "sum 1 2", fmt.Sprint(tree))
 }
 
-func ExampleFuncApplication_String_fmtPrintln() {
-	fn := fun.FuncApplication{
+func TestFuncApplication_String_fmtPrintln(t *testing.T) {
+	tree := fun.FuncApplication{
 		Func: fun.FunctionVal{
 			Name:   "Println",
 			Module: "fmt",
 		},
 		Arguments: []fun.Expression{fun.Float("4.2")},
 	}
-	fmt.Println(fn)
-	// Output:
-	// fmt.Println 4.2
+	assert.Equal(t, "fmt.Println 4.2", fmt.Sprint(tree))
 }
 
-func ExampleFuncApplication_String_nestedFunction() {
-	fn := fun.FuncApplication{
+func TestFuncApplication_String_nestedFunction(t *testing.T) {
+	tree := fun.FuncApplication{
 		Func: fun.FunctionVal{Name: "take"},
 		Arguments: []fun.Expression{
 			fun.Int("3"),
@@ -182,9 +174,7 @@ func ExampleFuncApplication_String_nestedFunction() {
 			},
 		},
 	}
-	fmt.Println(fn)
-	// Output:
-	// take 3 (reverse xs)
+	assert.Equal(t, "take 3 (reverse xs)", fmt.Sprint(tree))
 }
 
 func ExampleFuncDecl_String_singleExprBody() {
@@ -234,37 +224,29 @@ func ExampleFuncDecl_String_doBlock_multiline() {
 	//     fmt.Printf("%x", h.Sum(nil))
 }
 
-func ExampleInfixOperation_String() {
-	op := fun.InfixOperation{
+func TestInfixOperation_String(t *testing.T) {
+	tree := fun.InfixOperation{
 		X:        fun.Val("x"),
 		Operator: fun.Operator("+"),
 		Y:        fun.Int("2"),
 	}
-	fmt.Println(op)
-	// Output:
-	// x + 2
+	assert.Equal(t, "x + 2", fmt.Sprint(tree))
 }
 
-func ExampleTuple_String() {
-	t := fun.ReturnList{
+func TestReturnList_String(t *testing.T) {
+	tree := fun.ReturnList{
 		fun.Val("operator"),
 		fun.String("plus"),
 	}
-	fmt.Println(t)
-	// Output:
-	// (operator, "plus")
+	assert.Equal(t, `(operator, "plus")`, fmt.Sprint(tree))
 }
 
 func TestResults_ShouldReturn_empty(t *testing.T) {
 	r := fun.Results{}
-	if r.ShouldReturn() {
-		t.Fail()
-	}
+	assert.False(t, r.ShouldReturn())
 }
 
 func TestResults_ShouldReturn_(t *testing.T) {
 	r := fun.SingleResult(fun.AtomicType("int"))
-	if !r.ShouldReturn() {
-		t.Fail()
-	}
+	assert.True(t, r.ShouldReturn())
 }

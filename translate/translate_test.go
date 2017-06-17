@@ -5,6 +5,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/jBugman/fun-lang/translate"
 )
@@ -76,23 +79,19 @@ func ExampleFun_Import() {
 	// import "fmt"
 }
 
-func ExampleFun_Expression_selector() {
+func TestFun_Expression_selector(t *testing.T) {
 	fset := token.NewFileSet()
 	tree := &ast.SelectorExpr{
 		X:   &ast.Ident{Name: "fmt"},
 		Sel: &ast.Ident{Name: "Println"},
 	}
 	result, err := translate.NewFun(fset).Expression(tree)
-	if err != nil {
-		fmt.Print(err)
-	} else {
-		fmt.Print(result)
+	if assert.NoError(t, err) {
+		assert.Equal(t, "fmt.Println", fmt.Sprint(result))
 	}
-	// Output:
-	// fmt.Println
 }
 
-func ExampleFun_Expression_binary() {
+func TestFun_Expression_binary(t *testing.T) {
 	fset := token.NewFileSet()
 	tree := &ast.BinaryExpr{
 		X: &ast.Ident{
@@ -103,16 +102,12 @@ func ExampleFun_Expression_binary() {
 		Y:  &ast.BasicLit{Kind: token.INT, Value: "1"},
 	}
 	result, err := translate.NewFun(fset).Expression(tree)
-	if err != nil {
-		fmt.Print(err)
-	} else {
-		fmt.Print(result)
+	if assert.NoError(t, err) {
+		assert.Equal(t, "val + 1", fmt.Sprint(result))
 	}
-	// Output:
-	// val + 1
 }
 
-func ExampleFun_Statement_return() {
+func TestFun_Statement_return(t *testing.T) {
 	fset := token.NewFileSet()
 	tree := &ast.ReturnStmt{
 		Results: []ast.Expr{
@@ -120,27 +115,19 @@ func ExampleFun_Statement_return() {
 		},
 	}
 	result, err := translate.NewFun(fset).Statement(tree)
-	if err != nil {
-		fmt.Print(err)
-	} else {
-		fmt.Print(result)
+	if assert.NoError(t, err) {
+		assert.Equal(t, "42", fmt.Sprint(result))
 	}
-	// Output:
-	// 42
 }
 
-func ExampleFun_Statement_tuple() {
+func TestFun_Statement_tuple(t *testing.T) {
 	fset := token.NewFileSet()
 	expr, err := parser.ParseExpr("func() {return 'a', 9.99}")
 	returnExpr := expr.(*ast.FuncLit).Body.List[0]
 	result, err := translate.NewFun(fset).Statement(returnExpr)
-	if err != nil {
-		fmt.Print(err)
-	} else {
-		fmt.Print(result)
+	if assert.NoError(t, err) {
+		assert.Equal(t, "('a', 9.99)", fmt.Sprint(result))
 	}
-	// Output:
-	// ('a', 9.99)
 }
 
 func ExampleFun_Expression_brokenLiteral_testError() {

@@ -6,7 +6,7 @@ type Type interface {
 	typeMarker()
 }
 
-// UnitType represents Unit
+// UnitType represents Unit.
 type UnitType bool
 
 func (t UnitType) typeMarker() {}
@@ -14,17 +14,17 @@ func (t UnitType) typeMarker() {}
 // Unit is an UnitType singleton.
 const Unit UnitType = true
 
-// AtomicType represents
+// AtomicType represents bacic type.
 type AtomicType string
 
 func (t AtomicType) typeMarker() {}
 
-// ObjectType represents
+// ObjectType represents an object (mostly Go struct).
 type ObjectType string
 
 func (t ObjectType) typeMarker() {}
 
-// ListType represents list of any type
+// ListType represents list of any type.
 type ListType struct {
 	T Type
 }
@@ -114,7 +114,7 @@ type SingleExprBody struct {
 
 func (b SingleExprBody) funcBodyMarker() {}
 
-// Expression is something that has value
+// Expression is something that has value.
 type Expression interface {
 	expressionMarker()
 }
@@ -137,7 +137,7 @@ type FunctionVal struct {
 
 func (fa FunctionVal) expressionMarker() {}
 
-// InfixOperation represents
+// InfixOperation represents.
 type InfixOperation struct {
 	X, Y     Expression
 	Operator Operator
@@ -145,12 +145,12 @@ type InfixOperation struct {
 
 func (op InfixOperation) expressionMarker() {}
 
-// ReturnList represents a group of values
+// ReturnList represents a group of values.
 type ReturnList []Expression
 
 func (t ReturnList) expressionMarker() {}
 
-// Operator represents binary operator
+// Operator represents binary operator.
 type Operator string
 
 // Val represents something passed by name.

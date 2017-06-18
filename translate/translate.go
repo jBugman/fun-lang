@@ -12,12 +12,12 @@ import (
 	"github.com/jBugman/fun-lang/fun"
 )
 
-// NewFun creates new translator with provided fileset
+// NewFun creates new translator with provided fileset.
 func NewFun(fset *token.FileSet) Fun {
 	return funC{fset}
 }
 
-// Fun provides methods for translation
+// Fun provides methods for translation.
 type Fun interface {
 	Module(src *ast.File) (fun.Module, error)
 	Import(imp *ast.ImportSpec) (fun.Import, error)
@@ -123,7 +123,7 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	return fn, nil
 }
 
-// Statement converts Go statement to a corresponding Fun Expression depending on type
+// Statement converts Go statement to a corresponding Fun Expression depending on type.
 func (conv funC) Statement(stmt ast.Stmt) (fun.Expression, error) {
 	switch st := stmt.(type) {
 	case *ast.ReturnStmt:
@@ -238,7 +238,7 @@ func (conv funC) errorWithAST(message string, obj interface{}) error {
 	return fmt.Errorf("%s:\n%s", message, buf.String())
 }
 
-// Shortcut for cases there Ident.Obj is not relevant
+// Shortcut for cases there Ident.Obj is not relevant.
 func identToString(ident *ast.Ident) string {
 	return ident.Name
 }

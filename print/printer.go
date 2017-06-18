@@ -9,13 +9,13 @@ import (
 	"github.com/jBugman/fun-lang/fun"
 )
 
-// FixFormat formats valid Go code
+// FixFormat formats valid Go code.
 func FixFormat(source []byte) (string, error) {
 	result, err := format.Source(source)
 	return string(result), err
 }
 
-// Module prints fun.Module
+// Module prints fun.Module.
 func Module(mod fun.Module) ([]byte, error) {
 	var err error
 	var buf bytes.Buffer
@@ -50,12 +50,12 @@ func Module(mod fun.Module) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Import prints fun.Import
+// Import prints fun.Import.
 func Import(imp fun.Import) string {
 	return fmt.Sprintf("%s \"%s\"", imp.Alias, imp.Path)
 }
 
-// FuncDecl prints fun.Decl
+// FuncDecl prints fun.Decl.
 func FuncDecl(f fun.FuncDecl) (string, error) {
 	var body string
 	var err error
@@ -76,7 +76,7 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 	return fmt.Sprintf("func %s(%s) %s {\n%s\n}", f.Name, Parameters(f.Params), Results(f.Results), body), nil
 }
 
-// Parameters prints fun.Parameters
+// Parameters prints fun.Parameters.
 func Parameters(ps fun.Parameters) string {
 	ss := make([]string, len(ps))
 	for i := 0; i < len(ps); i++ {
@@ -85,7 +85,7 @@ func Parameters(ps fun.Parameters) string {
 	return strings.Join(ss, fun.COMMA)
 }
 
-// Results prints fun.Results
+// Results prints fun.Results.
 func Results(results fun.Results) string {
 	rs := results.Types
 	switch len(rs) {
@@ -102,7 +102,7 @@ func Results(results fun.Results) string {
 	}
 }
 
-// InfixOperation prints fun.InfixOperation
+// InfixOperation prints fun.InfixOperation.
 func InfixOperation(op fun.InfixOperation) (string, error) {
 	x, err := Expression(op.X)
 	if err != nil {
@@ -115,7 +115,7 @@ func InfixOperation(op fun.InfixOperation) (string, error) {
 	return fmt.Sprintf("%s %s %s", x, op.Operator, y), nil
 }
 
-// Expression dispatches printers for concrete expression types
+// Expression dispatches printers for concrete expression types.
 func Expression(e fun.Expression) (string, error) {
 	switch expr := e.(type) {
 	case fun.FuncApplication:
@@ -133,7 +133,7 @@ func Expression(e fun.Expression) (string, error) {
 	}
 }
 
-// FuncApplication prints fun.FuncApplication
+// FuncApplication prints fun.FuncApplication.
 func FuncApplication(fa fun.FuncApplication) (string, error) {
 	var err error
 	ss := make([]string, len(fa.Arguments))
@@ -146,7 +146,7 @@ func FuncApplication(fa fun.FuncApplication) (string, error) {
 	return fmt.Sprintf("%s(%s)", FunctionVal(fa.Func), strings.Join(ss, fun.COMMA)), nil
 }
 
-// FunctionVal prints fun.FunctionVal
+// FunctionVal prints fun.FunctionVal.
 func FunctionVal(v fun.FunctionVal) string {
 	var buf bytes.Buffer
 	if v.Module != "" {
@@ -156,22 +156,22 @@ func FunctionVal(v fun.FunctionVal) string {
 	return buf.String()
 }
 
-// AtomicType prints fun.AtomicType
+// AtomicType prints fun.AtomicType.
 func AtomicType(t fun.AtomicType) string {
 	return string(t)
 }
 
-// ObjectType prints fun.ObjectType
+// ObjectType prints fun.ObjectType.
 func ObjectType(t fun.ObjectType) string {
 	return string(t)
 }
 
-// ListType prints fun.ListType
+// ListType prints fun.ListType.
 func ListType(t fun.ListType) string {
 	return fmt.Sprintf("[]%s", t.T)
 }
 
-// ReturnList prints multiple values to return
+// ReturnList prints multiple values to return.
 func ReturnList(t fun.ReturnList) string {
 	ss := make([]string, len(t))
 	for i := 0; i < len(t); i++ {

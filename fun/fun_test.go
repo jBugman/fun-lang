@@ -246,7 +246,40 @@ func TestResults_ShouldReturn_empty(t *testing.T) {
 	assert.False(t, r.ShouldReturn())
 }
 
-func TestResults_ShouldReturn_(t *testing.T) {
+func TestResults_ShouldReturn_single(t *testing.T) {
 	r := fun.SingleResult(fun.AtomicType("int"))
 	assert.True(t, r.ShouldReturn())
+}
+
+func TestResults_ShouldReturn_tuple(t *testing.T) {
+	r := fun.Results{Types: []fun.Type{
+		fun.IntT, fun.ObjectType("foo"), fun.StringT,
+	}}
+	assert.True(t, r.ShouldReturn())
+}
+
+func ExampleFuncDecl_multipleReturnValues() {
+	tree := fun.FuncDecl{
+		Name:   "fun",
+		Params: fun.Parameters{fun.NewParam("x", "char")},
+		Results: fun.Results{
+			Pure: true,
+			Types: []fun.Type{
+				fun.AtomicType("char"),
+				fun.StringT,
+				fun.ObjectType("apples"),
+			},
+		},
+		Body: fun.SingleExprBody{
+			Expr: fun.ReturnList{
+				fun.Char("a"),
+				fun.String("word"),
+				fun.Val("aapl"),
+			},
+		},
+	}
+	fmt.Print(tree)
+	// Output:
+	// fun :: char -> (char, string, apples)
+	// fun x = ('a', "word", aapl)
 }

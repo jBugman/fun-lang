@@ -61,8 +61,7 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 
 // consumeWS consumes the current rune and all contiguous whitespace.
 func (s *Scanner) consumeWS() (tokens.Token, string) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
+	s.read()
 LOOP:
 	for {
 		c := s.read()
@@ -72,11 +71,9 @@ LOOP:
 		case !isWhitespace(c):
 			s.unread()
 			break LOOP
-		default:
-			buf.WriteRune(c)
 		}
 	}
-	return tokens.WS, buf.String()
+	return tokens.WS, " " // Collapse all whitespace characters into a single space.
 }
 
 // consumeWord consumes the current rune and all contiguous letter runes.
@@ -119,6 +116,7 @@ LOOP:
 			isFloat = true
 		case !isDigit(c):
 			s.unread()
+			isFloat = false
 			break LOOP
 		default:
 			buf.WriteRune(c)

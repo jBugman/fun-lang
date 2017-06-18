@@ -1,68 +1,30 @@
 package tokens
 
 // Token represents valid Fun token
-type Token uint8
+type Token string
 
 // Possible Token values
 const (
 	// Special tokens
-	ILLEGAL Token = iota
-	EOF
-	WS
-	LF
-	// Literals
-	IDENT // identifier
-	INTEGER
-	FLOAT
-	// Misc characters
-	ASTERISK // *
-	PERIOD   // .
-	COMMA    // ,
-	EQ       // =
-	// Keywords
-	MODULE
-	WHERE
-	IMPORT
-	IO
-)
+	ILLEGAL Token = "#ILLEGAL"
+	EOF     Token = "EOF"
+	WS      Token = "WS"
+	LF      Token = "LF"
 
-func (t Token) String() string {
-	switch t {
-	// Special
-	case ILLEGAL:
-		return "#illegal"
-	case EOF:
-		return "#eof"
-	case WS:
-		return " "
-	case LF:
-		return "\n"
 	// Literals
-	case IDENT:
-		return "#ident"
-	case INTEGER:
-		return "#int"
-	case FLOAT:
-		return "#float"
-	// Characters
-	case ASTERISK:
-		return "*"
-	case PERIOD:
-		return "."
-	case COMMA:
-		return ","
-	case EQ:
-		return "="
-		// Keywords
-	case MODULE:
-		return "module"
-	case WHERE:
-		return "where"
-	case IMPORT:
-		return "import"
-	case IO:
-		return "IO"
-	default:
-		return "#undefined"
-	}
-}
+	IDENT   Token = "#IDENT"
+	INTEGER Token = "#INT"
+	FLOAT   Token = "#FLOAT"
+
+	// Misc characters
+	ASTERISK Token = "*"
+	PERIOD   Token = "."
+	COMMA    Token = ","
+	EQ       Token = "="
+
+	// Keywords
+	MODULE Token = "module"
+	WHERE  Token = "where"
+	IMPORT Token = "import"
+	IO     Token = "IO"
+)

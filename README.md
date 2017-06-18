@@ -23,5 +23,5 @@ Package purpose
 
     /fun        Language definitions
     /translate  Translation from Go to Fun
-    /parser     Parsing Fun source code
+    /parse      Parsing Fun source code
     /printer    Translation from Fun to Go

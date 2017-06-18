@@ -55,6 +55,12 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 		return tokens.PERIOD, string(c)
 	case '=':
 		return tokens.EQ, string(c)
+	case ':':
+		return tokens.COLON, string(c)
+	case '(':
+		return tokens.OPENBR, string(c)
+	case ')':
+		return tokens.CLOSEBR, string(c)
 	case ',':
 		return tokens.COMMA, string(c)
 	}
@@ -148,6 +154,8 @@ func checkKeywords(word string) (tokens.Token, string) {
 		return tokens.IO, word
 	case string(tokens.IMPORT):
 		return tokens.IMPORT, word
+	case string(tokens.UNDEFINED):
+		return tokens.UNDEFINED, word
 	case string(tokens.WHERE):
 		return tokens.WHERE, word
 	case string(tokens.MODULE):

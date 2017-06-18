@@ -4,10 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"github.com/jBugman/fun-lang/fun/tokens"
 )
 
+const lf = "\n"
+
 func (u Undef) String() string {
-	return UNDEFINED
+	return string(tokens.UNDEFINED)
 }
 
 func (imp Import) String() string {
@@ -21,49 +25,47 @@ func (mod Module) String() string {
 	topLevels := make([]string, 1+1+len(mod.Decls))
 
 	// Module name
-	topLevels[0] = fmt.Sprintf("module %s where\n", mod.Name)
+	topLevels[0] = fmt.Sprintf("module %s where%s", mod.Name, lf)
 
 	// Imports
 	imports := make([]string, len(mod.Imports))
 	for i, imp := range mod.Imports {
 		imports[i] = imp.String()
 	}
-	topLevels[1] = strings.Join(imports, LF) + LF
+	topLevels[1] = strings.Join(imports, lf) + lf
 
 	// Top-level declarations
 	for i, decl := range mod.Decls {
 		topLevels[2+i] = fmt.Sprint(decl)
 	}
 
-	return strings.Join(topLevels, LF) + LF
+	return strings.Join(topLevels, lf) + lf
 }
 
 func (fd FuncDecl) String() string {
 	var out bytes.Buffer
 	// Type signature
-	fmt.Fprint(&out, fd.Name)
-	fmt.Fprint(&out, COLONS)
-	fmt.Fprint(&out, fd.Params)
+	fmt.Fprintf(&out, "%s :: %s", fd.Name, fd.Params)
 	if len(fd.Params) > 0 {
-		fmt.Fprint(&out, ARROW)
+		fmt.Fprintf(&out, " %s ", tokens.ARROW)
 	}
-	fmt.Fprint(&out, fd.Results, LF)
+	fmt.Fprint(&out, fd.Results, lf)
 
 	// Name and parameters
 	fmt.Fprint(&out, fd.Name)
 	if len(fd.Params) > 0 {
-		fmt.Fprint(&out, SPACE, fd.Params.Names())
+		fmt.Fprint(&out, " ", fd.Params.Names())
 	}
-	fmt.Fprint(&out, BINDING)
+	fmt.Fprint(&out, " = ")
 
 	// TODO implement body
 	if fd.Body == nil {
-		fmt.Fprint(&out, UNDEFINED)
+		fmt.Fprint(&out, tokens.UNDEFINED)
 	} else {
 		fmt.Fprint(&out, fd.Body)
 	}
 
-	return out.String() + LF
+	return out.String() + lf
 }
 
 func (ps Parameters) String() string {
@@ -71,7 +73,8 @@ func (ps Parameters) String() string {
 	for i := 0; i < len(ps); i++ {
 		ss[i] = fmt.Sprint(ps[i].Type)
 	}
-	return strings.Join(ss, ARROW)
+	const sep = " " + string(tokens.ARROW) + " "
+	return strings.Join(ss, sep)
 }
 
 // Names build parameter list for binding.
@@ -80,7 +83,7 @@ func (ps Parameters) Names() string {
 	for i := 0; i < len(ps); i++ {
 		ss[i] = string(ps[i].Name)
 	}
-	return strings.Join(ss, SPACE)
+	return strings.Join(ss, " ")
 }
 
 func (rs Results) String() string {
@@ -95,10 +98,10 @@ func (rs Results) String() string {
 		for i := 0; i < len(rs.Types); i++ {
 			ss[i] = fmt.Sprint(rs.Types[i])
 		}
-		result = OPENBR + strings.Join(ss, COMMA) + CLOSEBR
+		result = fmt.Sprintf("(%s)", strings.Join(ss, ", "))
 	}
 	if !rs.Pure {
-		return fmt.Sprintf("%s %s", IO, result)
+		return fmt.Sprintf("%s %s", tokens.IO, result)
 	}
 	return result
 }
@@ -116,7 +119,7 @@ func (fa FuncApplication) String() string {
 				args[i] = fmt.Sprint(arg)
 			}
 		}
-		fmt.Fprint(&buf, SPACE, strings.Join(args, SPACE))
+		fmt.Fprint(&buf, " ", strings.Join(args, " "))
 	}
 	return buf.String()
 }
@@ -124,7 +127,7 @@ func (fa FuncApplication) String() string {
 func (v FunctionVal) String() string {
 	var buf bytes.Buffer
 	if v.Module != "" {
-		fmt.Fprint(&buf, v.Module, DOT)
+		fmt.Fprint(&buf, v.Module, tokens.PERIOD)
 	}
 	fmt.Fprint(&buf, v.Name)
 	return buf.String()
@@ -132,11 +135,11 @@ func (v FunctionVal) String() string {
 
 // Assuming non-empty body, empty do block does not really makes sense.
 func (do DoBlock) String() string {
-	buf := bytes.NewBufferString(DO)
+	buf := bytes.NewBufferString("do\n")
 	for _, line := range do.Text {
-		fmt.Fprint(buf, INTENDATION, line, LF)
+		fmt.Fprintf(buf, "    %s\n", line)
 	}
-	return strings.TrimSuffix(buf.String(), LF)
+	return strings.TrimSuffix(buf.String(), lf)
 }
 
 func (t String) String() string {
@@ -156,7 +159,7 @@ func (t ReturnList) String() string {
 	for i := 0; i < len(t); i++ {
 		ss[i] = fmt.Sprint(t[i])
 	}
-	return OPENBR + strings.Join(ss, COMMA) + CLOSEBR
+	return fmt.Sprintf("(%s)", strings.Join(ss, ", "))
 }
 
 func (b SingleExprBody) String() string {
@@ -176,5 +179,5 @@ func (t ListType) String() string {
 }
 
 func (t UnitType) String() string {
-	return UNIT
+	return string(tokens.UNIT)
 }

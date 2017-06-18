@@ -16,15 +16,24 @@ const (
 	INTEGER Token = "#INT"
 	FLOAT   Token = "#FLOAT"
 
+	// Language constructs
+	ARROW       Token = "->" // TODO add
+	DOUBLECOLON Token = "::" // TODO add
+	UNIT        Token = "()" // TODO add
+
 	// Misc characters
+	COLON    Token = ":"
 	ASTERISK Token = "*"
 	PERIOD   Token = "."
 	COMMA    Token = ","
 	EQ       Token = "="
+	OPENBR   Token = "("
+	CLOSEBR  Token = ")"
 
 	// Keywords
-	MODULE Token = "module"
-	WHERE  Token = "where"
-	IMPORT Token = "import"
-	IO     Token = "IO"
+	MODULE    Token = "module"
+	WHERE     Token = "where"
+	IMPORT    Token = "import"
+	IO        Token = "IO"
+	UNDEFINED Token = "undefined"
 )

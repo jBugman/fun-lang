@@ -25,13 +25,13 @@ func Module(mod fun.Module) ([]byte, error) {
 	switch len(mod.Imports) {
 	case 0: // do nothing
 	case 1:
-		fmt.Fprint(&buf, "import ", Import(mod.Imports[0]), fun.LF)
+		fmt.Fprintln(&buf, "import ", Import(mod.Imports[0]))
 	default:
-		fmt.Fprint(&buf, "import (\n")
+		fmt.Fprintln(&buf, "import (")
 		for _, imp := range mod.Imports {
-			fmt.Fprint(&buf, Import(imp), fun.LF)
+			fmt.Fprintln(&buf, Import(imp))
 		}
-		fmt.Fprint(&buf, ")\n")
+		fmt.Fprintln(&buf, ")")
 	}
 	// Top-level declarations
 	for _, decl := range mod.Decls {
@@ -45,7 +45,7 @@ func Module(mod fun.Module) ([]byte, error) {
 		default:
 			return nil, fmt.Errorf("unsupported type: %s", d)
 		}
-		fmt.Fprint(&buf, line, fun.LF)
+		fmt.Fprintln(&buf, line)
 	}
 	return buf.Bytes(), nil
 }
@@ -61,14 +61,14 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 	var err error
 	switch b := f.Body.(type) {
 	case fun.DoBlock:
-		body = strings.Join(b.Text, fun.LF)
+		body = strings.Join(b.Text, "\n")
 	case fun.SingleExprBody:
 		body, err = Expression(b.Expr)
 		if err != nil {
 			return "", err
 		}
 		if f.Results.ShouldReturn() {
-			body = fmt.Sprintf("%s %s", fun.RETURN, body)
+			body = fmt.Sprintf("return %s", body)
 		}
 	default:
 		return "", fmt.Errorf("body type is not supported: %s", b)
@@ -82,7 +82,7 @@ func Parameters(ps fun.Parameters) string {
 	for i := 0; i < len(ps); i++ {
 		ss[i] = fmt.Sprintf("%s %s", ps[i].Name, ps[i].Type)
 	}
-	return strings.Join(ss, fun.COMMA)
+	return strings.Join(ss, ", ")
 }
 
 // Results prints fun.Results.
@@ -98,7 +98,7 @@ func Results(results fun.Results) string {
 		for i := 0; i < len(rs); i++ {
 			ss[i] = fmt.Sprint(rs[i])
 		}
-		return fun.OPENBR + strings.Join(ss, fun.COMMA) + fun.CLOSEBR
+		return fmt.Sprintf("(%s)", strings.Join(ss, ", "))
 	}
 }
 
@@ -143,14 +143,14 @@ func FuncApplication(fa fun.FuncApplication) (string, error) {
 			return "", err
 		}
 	}
-	return fmt.Sprintf("%s(%s)", FunctionVal(fa.Func), strings.Join(ss, fun.COMMA)), nil
+	return fmt.Sprintf("%s(%s)", FunctionVal(fa.Func), strings.Join(ss, ", ")), nil
 }
 
 // FunctionVal prints fun.FunctionVal.
 func FunctionVal(v fun.FunctionVal) string {
 	var buf bytes.Buffer
 	if v.Module != "" {
-		fmt.Fprint(&buf, v.Module, fun.DOT)
+		fmt.Fprint(&buf, v.Module, ".")
 	}
 	fmt.Fprint(&buf, v.Name)
 	return buf.String()
@@ -177,5 +177,5 @@ func ReturnList(t fun.ReturnList) string {
 	for i := 0; i < len(t); i++ {
 		ss[i] = fmt.Sprint(t[i])
 	}
-	return strings.Join(ss, fun.COMMA)
+	return strings.Join(ss, ", ")
 }

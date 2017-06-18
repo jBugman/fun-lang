@@ -107,7 +107,7 @@ func ExampleModule_multiImports() {
 func ExampleFuncDecl_infixReturn() {
 	tree := fun.FuncDecl{
 		Name:    "myFunc",
-		Results: fun.SingleResult(fun.AtomicType("int")),
+		Results: fun.SingleResult(fun.IntT),
 		Body: fun.SingleExprBody{
 			Expr: fun.InfixOperation{
 				X:        fun.Val("x"),
@@ -157,7 +157,7 @@ func ExampleFuncDecl_multiReturn() {
 		Params: fun.Parameters{fun.NewParam("x", "int"), fun.NewParam("y", "int")},
 		Results: fun.Results{
 			Pure:  true,
-			Types: []fun.Type{fun.AtomicType("int"), fun.AtomicType("int")},
+			Types: []fun.Type{fun.IntT, fun.IntT},
 		},
 		Body: fun.SingleExprBody{
 			Expr: fun.ReturnList{
@@ -175,5 +175,37 @@ func ExampleFuncDecl_multiReturn() {
 	// Output:
 	// func swap(x int, y int) (int, int) {
 	//	return y, x
+	// }
+}
+
+func ExampleFuncDecl_charsAsBytes() {
+	tree := fun.FuncDecl{
+		Name:   "fun",
+		Params: fun.Parameters{fun.NewParam("x", "char")},
+		Results: fun.Results{
+			Pure: true,
+			Types: []fun.Type{
+				fun.AtomicType("char"),
+				fun.StringT,
+				fun.ObjectType("apples"),
+			},
+		},
+		Body: fun.SingleExprBody{
+			Expr: fun.ReturnList{
+				fun.Char("a"),
+				fun.String("word"),
+				fun.Val("aapl"),
+			},
+		},
+	}
+	source, err := print.FuncDecl(tree)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	gofmt(source)
+	// Output:
+	// func fun(x byte) (byte, string, apples) {
+	//	return 'a', "word", aapl
 	// }
 }

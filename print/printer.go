@@ -73,32 +73,63 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 	default:
 		return "", fmt.Errorf("body type is not supported: %s", b)
 	}
-	return fmt.Sprintf("func %s(%s) %s {\n%s\n}", f.Name, Parameters(f.Params), Results(f.Results), body), nil
+	var params, results string
+	params, err = Parameters(f.Params)
+	if err != nil {
+		return "", err
+	}
+	results, err = Results(f.Results)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("func %s(%s) %s {\n%s\n}", f.Name, params, results, body), nil
 }
 
 // Parameters prints fun.Parameters.
-func Parameters(ps fun.Parameters) string {
+func Parameters(ps fun.Parameters) (string, error) {
 	ss := make([]string, len(ps))
 	for i := 0; i < len(ps); i++ {
-		ss[i] = fmt.Sprintf("%s %s", ps[i].Name, ps[i].Type)
+		p, err := Type(ps[i].Type)
+		if err != nil {
+			return "", err
+		}
+		ss[i] = fmt.Sprintf("%s %s", ps[i].Name, p)
 	}
-	return strings.Join(ss, ", ")
+	return strings.Join(ss, ", "), nil
 }
 
 // Results prints fun.Results.
-func Results(results fun.Results) string {
+func Results(results fun.Results) (string, error) {
 	rs := results.Types
 	switch len(rs) {
 	case 0:
-		return "" // Empty result == IO ()
+		return "", nil // Empty result == IO ()
 	case 1:
-		return fmt.Sprint(rs[0])
+		return Type(rs[0])
 	default:
+		var err error
 		ss := make([]string, len(rs))
 		for i := 0; i < len(rs); i++ {
-			ss[i] = fmt.Sprint(rs[i])
+			ss[i], err = Type(rs[i])
+			if err != nil {
+				return "", err
+			}
 		}
-		return fmt.Sprintf("(%s)", strings.Join(ss, ", "))
+		return fmt.Sprintf("(%s)", strings.Join(ss, ", ")), nil
+	}
+}
+
+// Type prints instances of fun.Type interface
+func Type(arg fun.Type) (string, error) {
+	switch t := arg.(type) {
+	case fun.AtomicType:
+		return AtomicType(t), nil
+	case fun.ObjectType:
+		return ObjectType(t), nil
+	case fun.ListType:
+		return ListType(t), nil
+	default:
+		return "", fmt.Errorf("not supported: %s", t)
 	}
 }
 
@@ -158,6 +189,9 @@ func FunctionVal(v fun.FunctionVal) string {
 
 // AtomicType prints fun.AtomicType.
 func AtomicType(t fun.AtomicType) string {
+	if t == fun.CharT {
+		return "byte"
+	}
 	return string(t)
 }
 

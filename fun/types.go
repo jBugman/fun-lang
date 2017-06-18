@@ -19,6 +19,14 @@ type AtomicType string
 
 func (t AtomicType) typeMarker() {}
 
+// Supported atomic type singletons
+const (
+	IntT    = AtomicType("int")
+	DoubleT = AtomicType("double")
+	CharT   = AtomicType("char")
+	StringT = AtomicType("string")
+)
+
 // ObjectType represents an object (mostly Go struct).
 type ObjectType string
 

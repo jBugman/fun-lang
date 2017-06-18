@@ -2,6 +2,7 @@ package fun_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -282,4 +283,38 @@ func ExampleFuncDecl_multipleReturnValues() {
 	// Output:
 	// fun :: char -> (char, string, apples)
 	// fun x = ('a', "word", aapl)
+}
+
+func TestFuncDecl_listTypeArg(t *testing.T) {
+	tree := fun.FuncDecl{
+		Name: "size",
+		Params: fun.Parameters{
+			fun.Parameter{
+				Name: "xs",
+				Type: fun.ListType{T: fun.IntT},
+			},
+		},
+		Results: fun.Results{
+			Pure:  true,
+			Types: []fun.Type{fun.IntT},
+		},
+		Body: fun.SingleExprBody{
+			Expr: fun.FuncApplication{
+				Func:      fun.FunctionVal{Name: "len"},
+				Arguments: []fun.Expression{fun.Val("xs")},
+			},
+		},
+	}
+	assert.Equal(t, ex(`
+	size :: [int] -> int
+	size xs = len xs
+	`), fmt.Sprint(tree))
+}
+
+func ex(source string) string {
+	lines := strings.Split(strings.TrimSpace(source), "\n")
+	for i := 0; i < len(lines); i++ {
+		lines[i] = strings.TrimPrefix(lines[i], "\t")
+	}
+	return strings.Join(lines, "\n")
 }

@@ -36,10 +36,10 @@ func (mod Module) String() string {
 
 	// Top-level declarations
 	for i, decl := range mod.Decls {
-		topLevels[2+i] = fmt.Sprint(decl)
+		topLevels[2+i] = fmt.Sprint(decl) + lf
 	}
 
-	return strings.Join(topLevels, lf) + lf
+	return strings.Join(topLevels, lf)
 }
 
 func (fd FuncDecl) String() string {
@@ -58,14 +58,13 @@ func (fd FuncDecl) String() string {
 	}
 	fmt.Fprint(&out, " = ")
 
-	// TODO implement body
 	if fd.Body == nil {
 		fmt.Fprint(&out, tokens.UNDEFINED)
 	} else {
 		fmt.Fprint(&out, fd.Body)
 	}
 
-	return out.String() + lf
+	return out.String()
 }
 
 func (ps Parameters) String() string {

@@ -25,3 +25,7 @@ Package purpose
     /translate  Translation from Go to Fun
     /parse      Parsing Fun source code
     /printer    Translation from Fun to Go
+
+Tests
+
+    gocov test ./fun ./print ./translate ./parse/scanner | gocov-html > coverage.html && open coverage.html

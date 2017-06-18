@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,56 +13,52 @@ import (
 	"github.com/jBugman/fun-lang/translate"
 )
 
-const fullSource = `
-package main
+func TestFun_Module(t *testing.T) {
+	const fullSource = `
+	package main
 
-import (
-	"fmt"
-	"io"
-)
+	import (
+		"fmt"
+		"io"
+	)
 
-func inc(val int) int {
-	return val + 1
-}
+	func inc(val int) int {
+		return val + 1
+	}
 
-func print42() {
-	fmt.Println(42)
-}
+	func print42() {
+		fmt.Println(42)
+	}
 
-func main() {
-	line := "Hello World!"
-	fmt.Fprintln(io.Discard, line)
-}
-`
-
-func ExampleFun_Module() {
+	func main() {
+		line := "Hello World!"
+		fmt.Fprintln(io.Discard, line)
+	}
+	`
 	fset := token.NewFileSet()
 	tree, _ := parser.ParseFile(fset, "source.go", fullSource, 0)
 	result, err := translate.NewFun(fset).Module(tree)
-	if err != nil {
-		fmt.Print(err)
-	} else {
-		fmt.Print(result)
-	}
-	// Output:
-	// module Main where
-	//
-	// import "fmt"
-	// import "io"
-	//
-	// inc :: int -> IO int
-	// inc val = val + 1
-	//
-	// print42 :: IO ()
-	// print42 = fmt.Println 42
-	//
-	// main :: IO ()
-	// main = do
-	//     line := "Hello World!"
-	//     fmt.Fprintln(io.Discard, line)
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	module Main where
+	
+	import "fmt"
+	import "io"
+	
+	inc :: int -> IO int
+	inc val = val + 1
+	
+	print42 :: IO ()
+	print42 = fmt.Println 42
+	
+	main :: IO ()
+	main = do
+	    line := "Hello World!"
+	    fmt.Fprintln(io.Discard, line)
+	`)+"\n", fmt.Sprint(result))
 }
 
-func ExampleFun_Import() {
+func TestFun_Import(t *testing.T) {
 	fset := token.NewFileSet()
 	tree := &ast.ImportSpec{
 		Path: &ast.BasicLit{
@@ -70,13 +67,10 @@ func ExampleFun_Import() {
 		},
 	}
 	result, err := translate.NewFun(fset).Import(tree)
-	if err != nil {
-		fmt.Print(err)
-	} else {
-		fmt.Print(result)
-	}
-	// Output:
-	// import "fmt"
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	import "fmt"
+	`), fmt.Sprint(result))
 }
 
 func TestFun_Expression_selector(t *testing.T) {
@@ -130,19 +124,27 @@ func TestFun_Statement_tuple(t *testing.T) {
 	}
 }
 
-func ExampleFun_Expression_brokenLiteral_testError() {
+func TestFun_Expression_brokenLiteral_testError(t *testing.T) {
 	fset := token.NewFileSet()
 	tree := &ast.BasicLit{
 		Kind:  token.BREAK,
 		Value: "SNAKE!",
 	}
 	_, err := translate.NewFun(fset).Expression(tree)
-	fmt.Print(err)
-	// Output:
-	// unexpected literal type:
-	//      0  *ast.BasicLit {
-	//      1  .  ValuePos: -
-	//      2  .  Kind: break
-	//      3  .  Value: "SNAKE!"
-	//      4  }
+	assert.EqualError(t, err, ex(`
+	unexpected literal type:
+	     0  *ast.BasicLit {
+	     1  .  ValuePos: -
+	     2  .  Kind: break
+	     3  .  Value: "SNAKE!"
+	     4  }
+	`)+"\n")
+}
+
+func ex(source string) string {
+	lines := strings.Split(strings.TrimSpace(source), "\n")
+	for i := 0; i < len(lines); i++ {
+		lines[i] = strings.TrimPrefix(lines[i], "\t")
+	}
+	return strings.Join(lines, "\n")
 }

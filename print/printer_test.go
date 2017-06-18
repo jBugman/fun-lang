@@ -188,3 +188,31 @@ func TestFuncDecl_charsAsBytes(t *testing.T) {
 	}
 	`), fmt.Sprint(result))
 }
+
+func TestFuncDecl_listTypeArg(t *testing.T) {
+	tree := fun.FuncDecl{
+		Name: "size",
+		Params: fun.Parameters{
+			fun.Parameter{
+				Name: "xs",
+				Type: fun.ListType{T: fun.IntT},
+			},
+		},
+		Results: fun.SingleResult(fun.IntT),
+		Body: fun.SingleExprBody{
+			Expr: fun.FuncApplication{
+				Func:      fun.FunctionVal{Name: "len"},
+				Arguments: []fun.Expression{fun.Val("xs")},
+			},
+		},
+	}
+	source, err := print.FuncDecl(tree)
+	assert.NoError(t, err)
+	result, err := print.FixFormat([]byte(source))
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	func size(xs []int) int {
+		return len(xs)
+	}
+	`), fmt.Sprint(result))
+}

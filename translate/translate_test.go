@@ -55,7 +55,7 @@ func TestFun_Module(t *testing.T) {
 	main = do
 	    line := "Hello World!"
 	    fmt.Fprintln(io.Discard, line)
-	`)+"\n", fmt.Sprint(result))
+	`), fmt.Sprint(result))
 }
 
 func TestFun_Import(t *testing.T) {
@@ -68,9 +68,7 @@ func TestFun_Import(t *testing.T) {
 	}
 	result, err := translate.NewFun(fset).Import(tree)
 	assert.NoError(t, err)
-	assert.Equal(t, ex(`
-	import "fmt"
-	`), fmt.Sprint(result))
+	assert.Equal(t, `import "fmt"`, fmt.Sprint(result))
 }
 
 func TestFun_Expression_selector(t *testing.T) {
@@ -138,7 +136,7 @@ func TestFun_Expression_brokenLiteral_testError(t *testing.T) {
 	     2  .  Kind: break
 	     3  .  Value: "SNAKE!"
 	     4  }
-	`)+"\n")
+	`))
 }
 
 func ex(source string) string {
@@ -146,5 +144,38 @@ func ex(source string) string {
 	for i := 0; i < len(lines); i++ {
 		lines[i] = strings.TrimPrefix(lines[i], "\t")
 	}
-	return strings.Join(lines, "\n")
+	return strings.Join(lines, "\n") + "\n"
+}
+
+func TestFun_Module_unsupportedNakedReturn(t *testing.T) {
+	source := `
+	package foo
+
+	func noop() {
+		return
+	}
+	`
+	fset := token.NewFileSet()
+	tree, err := parser.ParseFile(fset, "", source, 0)
+	assert.NoError(t, err)
+	_, err = translate.NewFun(fset).Module(tree)
+	assert.EqualError(t, err, ex(`
+	result list of zero length is not supported:
+	     0  *ast.ReturnStmt {
+	     1  .  Return: 5:3
+	     2  }
+	`))
+}
+
+func TestFun_Module_unsupportedForwardDeclare(t *testing.T) {
+	source := `
+	package foo
+
+	func forwardDeclared() bool
+	`
+	fset := token.NewFileSet()
+	tree, err := parser.ParseFile(fset, "", source, 0)
+	assert.NoError(t, err)
+	_, err = translate.NewFun(fset).Module(tree)
+	assert.Error(t, err)
 }

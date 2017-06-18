@@ -39,7 +39,10 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 	case isDigit(c):
 		// If we see a digit we consume contiguous digits and such as a number.
 		s.unread()
-		return s.consumeNumber()
+		tok, txt := s.consumeNumber()
+		if tok != tokens.ILLEGAL {
+			return tok, txt
+		}
 	}
 
 	// Otherwise read the individual character.
@@ -104,6 +107,7 @@ func (s *Scanner) consumeNumber() (tokens.Token, string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
+	var n int
 	var isFloat bool
 LOOP:
 	for {
@@ -114,12 +118,20 @@ LOOP:
 		case c == '.' && !isFloat:
 			buf.WriteRune(c)
 			isFloat = true
-		case !isDigit(c):
+		case isWhitespace(c):
 			s.unread()
-			isFloat = false
 			break LOOP
+		case !isDigit(c):
+			// Not a number, rollback
+			for n > 0 {
+				s.unread()
+				n--
+			}
+			isFloat = false
+			return tokens.ILLEGAL, string(c)
 		default:
 			buf.WriteRune(c)
+			n++
 		}
 	}
 

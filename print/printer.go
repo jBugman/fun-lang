@@ -11,7 +11,7 @@ import (
 
 // FixFormat formats valid Go code.
 func FixFormat(source []byte) (string, error) {
-	result, err := format.Source(source)
+	result, err := format.Source(bytes.TrimSpace(source))
 	return string(result), err
 }
 

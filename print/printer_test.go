@@ -2,47 +2,32 @@ package print_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/jBugman/fun-lang/fun"
 	"github.com/jBugman/fun-lang/print"
+	"github.com/stretchr/testify/assert"
 )
 
-func ExampleFixFormat() {
+func TestFixFormat(t *testing.T) {
 	src := `func f ( 
 		
 	)   {  return 1   + 2
 		}
-		`
+			`
 	result, err := print.FixFormat([]byte(src))
-	if err != nil {
-		fmt.Print(err)
-	} else {
-		fmt.Print(result)
-	}
-	// Output:
-	// func f() {
-	// 	return 1 + 2
-	// }
+	assert.NoError(t, err)
+	assert.Equal(t, `func f() {
+	return 1 + 2
+}`, result)
 }
 
-func gofmt(src interface{}) {
-	var source []byte
-	switch s := src.(type) {
-	case string:
-		source = []byte(s)
-	case []byte:
-		source = s
-	}
-	result, err := print.FixFormat(source)
-	if err != nil {
-		fmt.Print(err)
-		fmt.Print(string(source))
-	} else {
-		fmt.Print(result)
-	}
+func ex(source string) string {
+	r, _ := print.FixFormat([]byte(source))
+	return r
 }
 
-func ExampleModule() {
+func TestModule(t *testing.T) {
 	tree := fun.Module{
 		Name: "Main",
 		Imports: []fun.Import{
@@ -66,22 +51,21 @@ func ExampleModule() {
 		},
 	}
 	source, err := print.Module(tree)
-	if err != nil {
-		fmt.Println(err)
-		return
+	assert.NoError(t, err)
+	result, err := print.FixFormat(source)
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	package main
+	
+	import "fmt"
+	
+	func main() {
+		fmt.Println("Hello World!")
 	}
-	gofmt(source)
-	// Output:
-	// package main
-	//
-	// import "fmt"
-	//
-	// func main() {
-	// 	fmt.Println("Hello World!")
-	// }
+	`), fmt.Sprint(string(result)))
 }
 
-func ExampleModule_multiImports() {
+func TestModule_multiImports(t *testing.T) {
 	tree := fun.Module{
 		Name: "Test",
 		Imports: []fun.Import{
@@ -90,21 +74,20 @@ func ExampleModule_multiImports() {
 		},
 	}
 	source, err := print.Module(tree)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	gofmt(source)
-	// Output:
-	// package test
-	//
-	// import (
-	//	myLog "./log"
-	//	"log"
-	// )
+	assert.NoError(t, err)
+	result, err := print.FixFormat(source)
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	package test
+	
+	import (
+		myLog "./log"
+		"log"
+	)
+	`), fmt.Sprint(result))
 }
 
-func ExampleFuncDecl_infixReturn() {
+func TestFuncDecl_infixReturn(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name:    "myFunc",
 		Results: fun.SingleResult(fun.IntT),
@@ -116,18 +99,17 @@ func ExampleFuncDecl_infixReturn() {
 			}},
 	}
 	source, err := print.FuncDecl(tree)
-	if err != nil {
-		fmt.Println(err)
-		return
+	assert.NoError(t, err)
+	result, err := print.FixFormat([]byte(source))
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	func myFunc() int {
+		return x + 2
 	}
-	gofmt(source)
-	// Output:
-	// func myFunc() int {
-	//	return x + 2
-	// }
+	`), fmt.Sprint(result))
 }
 
-func ExampleFuncDecl_doBlock_multiline() {
+func TestFuncDecl_doBlock_multiline(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name:   "printHash",
 		Params: fun.Parameters{fun.NewParam("str", "string")},
@@ -138,20 +120,19 @@ func ExampleFuncDecl_doBlock_multiline() {
 		}},
 	}
 	source, err := print.FuncDecl(tree)
-	if err != nil {
-		fmt.Println(err)
-		return
+	assert.NoError(t, err)
+	result, err := print.FixFormat([]byte(source))
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	func printHash(str string) {
+		h := md5.New()
+		io.WriteString(h, str)
+		fmt.Printf("%x", h.Sum(nil))
 	}
-	gofmt(source)
-	// Output:
-	// func printHash(str string) {
-	// 	h := md5.New()
-	// 	io.WriteString(h, str)
-	// 	fmt.Printf("%x", h.Sum(nil))
-	// }
+	`), fmt.Sprint(result))
 }
 
-func ExampleFuncDecl_multiReturn() {
+func TestFuncDecl_multiReturn(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name:   "swap",
 		Params: fun.Parameters{fun.NewParam("x", "int"), fun.NewParam("y", "int")},
@@ -167,18 +148,17 @@ func ExampleFuncDecl_multiReturn() {
 		},
 	}
 	source, err := print.FuncDecl(tree)
-	if err != nil {
-		fmt.Println(err)
-		return
+	assert.NoError(t, err)
+	result, err := print.FixFormat([]byte(source))
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	func swap(x int, y int) (int, int) {
+		return y, x
 	}
-	gofmt(source)
-	// Output:
-	// func swap(x int, y int) (int, int) {
-	//	return y, x
-	// }
+	`), fmt.Sprint(result))
 }
 
-func ExampleFuncDecl_charsAsBytes() {
+func TestFuncDecl_charsAsBytes(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name:   "fun",
 		Params: fun.Parameters{fun.NewParam("x", "char")},
@@ -199,13 +179,12 @@ func ExampleFuncDecl_charsAsBytes() {
 		},
 	}
 	source, err := print.FuncDecl(tree)
-	if err != nil {
-		fmt.Println(err)
-		return
+	assert.NoError(t, err)
+	result, err := print.FixFormat([]byte(source))
+	assert.NoError(t, err)
+	assert.Equal(t, ex(`
+	func fun(x byte) (byte, string, apples) {
+		return 'a', "word", aapl
 	}
-	gofmt(source)
-	// Output:
-	// func fun(x byte) (byte, string, apples) {
-	//	return 'a', "word", aapl
-	// }
+	`), fmt.Sprint(result))
 }

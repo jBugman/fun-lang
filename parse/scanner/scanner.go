@@ -6,7 +6,7 @@ import (
 	"io"
 	"unicode"
 
-	"github.com/jBugman/fun-lang/parse/tokens"
+	"github.com/jBugman/fun-lang/fun/tokens"
 )
 
 // Scanner eepresents Fun lexer.

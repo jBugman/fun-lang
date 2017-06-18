@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/jBugman/fun-lang/fun/tokens"
 	"github.com/jBugman/fun-lang/parse/scanner"
-	"github.com/jBugman/fun-lang/parse/tokens"
 )
 
 // stateless helper

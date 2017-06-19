@@ -13,6 +13,7 @@ import (
 // Scanner represents Fun lexer.
 type Scanner struct {
 	r *bufio.Reader
+	N int // read runes count
 }
 
 // NewScanner creates a Scanner.
@@ -201,6 +202,7 @@ func checkKeywords(word string) (tokens.Token, string) {
 
 // read reads and returns the next Unicode character.
 func (s *Scanner) read() rune {
+	s.N++
 	c, _, err := s.r.ReadRune()
 	if err != nil {
 		return eof
@@ -210,6 +212,7 @@ func (s *Scanner) read() rune {
 
 // unread places the previously read rune back on the reader.
 func (s *Scanner) unread() {
+	s.N--
 	s.r.UnreadRune()
 }
 

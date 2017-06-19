@@ -17,9 +17,9 @@ const (
 	FLOAT   Token = "#FLOAT"
 
 	// Language constructs
-	ARROW       Token = "->" // TODO add
-	DOUBLECOLON Token = "::" // TODO add
-	UNIT        Token = "()" // TODO add
+	ARROW       Token = "->"
+	DOUBLECOLON Token = "::"
+	UNIT        Token = "()"
 
 	// Misc characters
 	COLON    Token = ":"

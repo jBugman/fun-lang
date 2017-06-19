@@ -45,6 +45,11 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 		}
 	}
 
+	tok, txt := s.consumeCompounds(c)
+	if tok != tokens.ILLEGAL {
+		return tok, txt
+	}
+
 	// Otherwise read the individual character.
 	switch c {
 	case eof:
@@ -145,6 +150,30 @@ LOOP:
 		return tokens.FLOAT, buf.String()
 	}
 	return tokens.INTEGER, buf.String()
+}
+
+var compounds = []tokens.Token{}
+
+// consumeCompounds consumes the current rune and all contiguous runes representing non-letter language constructs.
+func (s *Scanner) consumeCompounds(c rune) (tokens.Token, string) {
+	// Create two-rune word and compare with compound tokens
+	var buf bytes.Buffer
+	buf.WriteRune(c)
+	buf.WriteRune(s.read())
+	word := buf.String()
+
+	switch tokens.Token(word) {
+	case tokens.ARROW:
+		return tokens.ARROW, word
+	case tokens.DOUBLECOLON:
+		return tokens.DOUBLECOLON, word
+	case tokens.UNIT:
+		return tokens.UNIT, word
+	default:
+		s.unread()
+		s.unread()
+		return tokens.ILLEGAL, string(c)
+	}
 }
 
 func checkKeywords(word string) (tokens.Token, string) {

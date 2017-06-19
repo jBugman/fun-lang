@@ -1,3 +1,4 @@
+// Package scanner provides Fun lexer.
 package scanner
 
 import (
@@ -9,7 +10,7 @@ import (
 	"github.com/jBugman/fun-lang/fun/tokens"
 )
 
-// Scanner eepresents Fun lexer.
+// Scanner represents Fun lexer.
 type Scanner struct {
 	r *bufio.Reader
 }
@@ -104,7 +105,7 @@ LOOP:
 		case c == eof:
 			break LOOP
 		case !isASCIILetter(c) && !isDigit(c):
-			// TOOD separate cases for identifiers and just unicode strings
+			// TODO separate cases for identifiers and just unicode strings
 			s.unread()
 			break LOOP
 		default:

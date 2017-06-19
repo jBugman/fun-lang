@@ -56,6 +56,8 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 		return tokens.EOF, ""
 	case '\n':
 		return tokens.LF, string(c)
+	case '"':
+		return tokens.QUOTE, string(c)
 	case '.':
 		return tokens.PERIOD, string(c)
 	case '=':
@@ -177,18 +179,19 @@ func (s *Scanner) consumeCompounds(c rune) (tokens.Token, string) {
 }
 
 func checkKeywords(word string) (tokens.Token, string) {
-	switch word {
-	// TODO consolidate literals into tokens package
-	case string(tokens.IO):
+	switch tokens.Token(word) {
+	case tokens.IO:
 		return tokens.IO, word
-	case string(tokens.IMPORT):
+	case tokens.IMPORT:
 		return tokens.IMPORT, word
-	case string(tokens.UNDEFINED):
+	case tokens.UNDEFINED:
 		return tokens.UNDEFINED, word
-	case string(tokens.WHERE):
+	case tokens.WHERE:
 		return tokens.WHERE, word
-	case string(tokens.MODULE):
+	case tokens.MODULE:
 		return tokens.MODULE, word
+	case tokens.AS:
+		return tokens.AS, word
 	default:
 		// If not a keyword it must be an identifier
 		return tokens.IDENT, word

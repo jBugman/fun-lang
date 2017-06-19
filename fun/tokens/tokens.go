@@ -22,6 +22,7 @@ const (
 	UNIT        Token = "()"
 
 	// Misc characters
+	QUOTE    Token = "\""
 	COLON    Token = ":"
 	ASTERISK Token = "*"
 	PERIOD   Token = "."
@@ -34,6 +35,7 @@ const (
 	MODULE    Token = "module"
 	WHERE     Token = "where"
 	IMPORT    Token = "import"
+	AS        Token = "as"
 	IO        Token = "IO"
 	UNDEFINED Token = "undefined"
 )

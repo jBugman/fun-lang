@@ -131,7 +131,7 @@ LOOP:
 		case c == '.' && !isFloat:
 			buf.WriteRune(c)
 			isFloat = true
-		case isWhitespace(c):
+		case isWhitespace(c) || c == '\n':
 			s.unread()
 			break LOOP
 		case !isDigit(c):

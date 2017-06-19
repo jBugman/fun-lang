@@ -189,3 +189,9 @@ func TestScanner_Scan_import(t *testing.T) {
 	tok, _ = s.Scan()
 	assert.Equal(t, tokens.QUOTE, tok)
 }
+
+func TestScanner_Scan_42(t *testing.T) {
+	tok, txt, _ := scan("42\n")
+	assert.Equal(t, tokens.INTEGER, tok)
+	assert.Equal(t, "42", txt)
+}

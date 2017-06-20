@@ -55,6 +55,7 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 	// Otherwise read the individual character.
 	switch c {
 	case eof:
+		s.unread()
 		return tokens.EOF, ""
 	case '\n':
 		return tokens.LF, string(c)
@@ -74,6 +75,7 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 		return tokens.COMMA, string(c)
 	}
 
+	s.unread()
 	return tokens.ILLEGAL, string(c)
 }
 
@@ -85,6 +87,7 @@ LOOP:
 		c := s.read()
 		switch {
 		case c == eof:
+			s.unread()
 			break LOOP
 		case !isWhitespace(c):
 			s.unread()
@@ -104,6 +107,7 @@ LOOP:
 		c := s.read()
 		switch {
 		case c == eof:
+			s.unread()
 			break LOOP
 		case !isASCIILetter(c) && !isDigit(c):
 			// TODO separate cases for identifiers and just unicode strings
@@ -129,6 +133,7 @@ LOOP:
 		c := s.read()
 		switch {
 		case c == eof:
+			s.unread()
 			break LOOP
 		case c == '.' && !isFloat:
 			buf.WriteRune(c)
@@ -174,7 +179,6 @@ func (s *Scanner) consumeCompounds(c rune) (tokens.Token, string) {
 	case tokens.UNIT:
 		return tokens.UNIT, word
 	default:
-		s.unread()
 		s.unread()
 		return tokens.ILLEGAL, string(c)
 	}

@@ -40,7 +40,7 @@ func readInput(filename string, useStdin bool) []byte {
 	return result
 }
 
-func writeOutput(text string, filename string, useStdout bool) {
+func writeOutput(text []byte, filename string, useStdout bool) {
 	var err error
 	var out io.WriteCloser
 	if useStdout {
@@ -51,7 +51,7 @@ func writeOutput(text string, filename string, useStdout bool) {
 			exit(err)
 		}
 	}
-	_, err = io.WriteString(out, text)
+	_, err = out.Write(text)
 	if err != nil {
 		exit(err)
 	}

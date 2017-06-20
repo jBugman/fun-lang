@@ -65,6 +65,12 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 		return tokens.PERIOD, string(c)
 	case '=':
 		return tokens.EQ, string(c)
+	case '+':
+		return tokens.PLUS, string(c)
+	case '-':
+		return tokens.DASH, string(c)
+	case '/':
+		return tokens.SLASH, string(c)
 	case ':':
 		return tokens.COLON, string(c)
 	case '(':
@@ -73,6 +79,8 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 		return tokens.CLOSEBR, string(c)
 	case ',':
 		return tokens.COMMA, string(c)
+	case '%':
+		return tokens.PERCENT, string(c)
 	}
 
 	s.unread()

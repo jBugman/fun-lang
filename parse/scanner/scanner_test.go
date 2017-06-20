@@ -420,15 +420,17 @@ func TestScanner_Scan_module(t *testing.T) {
 	tok, _ = s.Scan()
 	assert.Equal(t, tokens.WS, tok)
 	assert.Equal(t, 85, s.N)
-	// TODO add PLUS
-	// tok, txt = s.Scan()
-	// assert.Equal(t, tokens.PLUS, tok)
-	// assert.Equal(t, "+", txt)
-	// assert.Equal(t, 86, s.N)
-	// tok, _ = s.Scan()
-	// assert.Equal(t, tokens.INT, tok)
-	// assert.Equal(t, "1", txt)
-	// assert.Equal(t, 87, s.N)
+	tok, txt = s.Scan()
+	assert.Equal(t, tokens.PLUS, tok)
+	assert.Equal(t, "+", txt)
+	assert.Equal(t, 86, s.N)
+	tok, _ = s.Scan()
+	assert.Equal(t, tokens.WS, tok)
+	assert.Equal(t, 87, s.N)
+	tok, txt = s.Scan()
+	assert.Equal(t, tokens.INTEGER, tok)
+	assert.Equal(t, "1", txt)
+	assert.Equal(t, 88, s.N)
 }
 
 func ex(source string) string {

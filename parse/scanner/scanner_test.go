@@ -62,9 +62,13 @@ func TestScanner_Scan_Float(t *testing.T) {
 
 func TestScanner_Scan_fakeNumber(t *testing.T) {
 	tok, txt, s := scan("99bottles")
-	assert.Equal(t, tokens.ILLEGAL, tok)
-	assert.Equal(t, "9", txt)
-	assert.Equal(t, 1, s.N)
+	assert.Equal(t, tokens.INTEGER, tok)
+	assert.Equal(t, "99", txt)
+	assert.Equal(t, 2, s.N)
+	tok, txt = s.Scan()
+	assert.Equal(t, tokens.IDENT, tok)
+	assert.Equal(t, "bottles", txt)
+	assert.Equal(t, 9, s.N)
 }
 
 func TestScanner_Scan_words(t *testing.T) {

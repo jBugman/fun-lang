@@ -33,7 +33,7 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 		// If we see whitespace we consume all contiguous whitespace.
 		s.unread()
 		return s.consumeWS()
-		// If we see an ASCII letter wr consume contiguous letteers as an identifier or keyword.
+		// If we see an ASCII letter we consume contiguous letters as an identifier or keyword.
 		// TODO non-ASCII letters as string contents etc.
 	case isASCIILetter(c):
 		s.unread()
@@ -134,7 +134,6 @@ func (s *Scanner) consumeNumber() (tokens.Token, string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
-	var n int
 	var isFloat bool
 LOOP:
 	for {
@@ -146,20 +145,11 @@ LOOP:
 		case c == '.' && !isFloat:
 			buf.WriteRune(c)
 			isFloat = true
-		case isWhitespace(c) || c == '\n':
+		case !isDigit(c) || isWhitespace(c) || c == '\n':
 			s.unread()
 			break LOOP
-		case !isDigit(c):
-			// Not a number, rollback
-			for n > 0 {
-				s.unread()
-				n--
-			}
-			isFloat = false
-			return tokens.ILLEGAL, string(c)
 		default:
 			buf.WriteRune(c)
-			n++
 		}
 	}
 

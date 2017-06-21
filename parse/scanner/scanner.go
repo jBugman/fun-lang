@@ -47,7 +47,8 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 		}
 	}
 
-	tok, txt := s.consumeCompounds(c)
+	s.unread()
+	tok, txt := s.consumeCompounds()
 	if tok != tokens.ILLEGAL {
 		return tok, txt
 	}
@@ -162,9 +163,10 @@ LOOP:
 var compounds = []tokens.Token{}
 
 // consumeCompounds consumes the current rune and all contiguous runes representing non-letter language constructs.
-func (s *Scanner) consumeCompounds(c rune) (tokens.Token, string) {
-	// Create two-rune word and compare with compound tokens
+func (s *Scanner) consumeCompounds() (tokens.Token, string) {
+	// Create two-rune word and compare with compound tokens.
 	var buf bytes.Buffer
+	c := s.read()
 	buf.WriteRune(c)
 	buf.WriteRune(s.read())
 	word := buf.String()
@@ -197,7 +199,7 @@ func checkKeywords(word string) (tokens.Token, string) {
 	case tokens.AS:
 		return tokens.AS, word
 	default:
-		// If not a keyword it must be an identifier
+		// If not a keyword it must be an identifier.
 		return tokens.IDENT, word
 	}
 }

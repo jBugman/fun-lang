@@ -42,4 +42,32 @@ const (
 	AS        Token = "as"
 	IO        Token = "IO"
 	UNDEFINED Token = "undefined"
+	IF        Token = "if"
+	THEN      Token = "then"
+	ELSE      Token = "else"
+	TYPE      Token = "type"
+
+	// Go-reserved keywords
+	RESERVED  Token = "RESERVED" // catch-all token just in case
+	BREAK     Token = "break"
+	DEFAULT   Token = "default"
+	FUNC      Token = "func"
+	INTERFACE Token = "interface"
+	SELECT    Token = "select"
+	PACKAGE   Token = "package"
+	CONST     Token = "const"
+	FOR       Token = "for"
+	RETURN    Token = "return"
+	VAR       Token = "var"
+	// CASE
+	// DEFER
+	// GO
+	// MAP
+	// STRUCT
+	// CHAN
+	// GOTO
+	// SWITCH
+	// FALLTHROUGH
+	// RANGE
+	// CONTINUE
 )

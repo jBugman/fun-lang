@@ -127,6 +127,10 @@ LOOP:
 		}
 	}
 
+	tok, txt := checkGoReserved(buf.String())
+	if tok != tokens.IDENT { // not a Go keyword
+		return tok, txt
+	}
 	return checkKeywords(buf.String())
 }
 
@@ -186,6 +190,14 @@ func (s *Scanner) consumeCompounds() (tokens.Token, string) {
 
 func checkKeywords(word string) (tokens.Token, string) {
 	switch tokens.Token(word) {
+	case tokens.IF:
+		return tokens.IF, word
+	case tokens.THEN:
+		return tokens.THEN, word
+	case tokens.ELSE:
+		return tokens.ELSE, word
+	case tokens.TYPE:
+		return tokens.TYPE, word
 	case tokens.IO:
 		return tokens.IO, word
 	case tokens.IMPORT:
@@ -200,6 +212,33 @@ func checkKeywords(word string) (tokens.Token, string) {
 		return tokens.AS, word
 	default:
 		// If not a keyword it must be an identifier.
+		return tokens.IDENT, word
+	}
+}
+
+func checkGoReserved(word string) (tokens.Token, string) {
+	switch tokens.Token(word) {
+	case tokens.BREAK:
+		return tokens.BREAK, word
+	case tokens.DEFAULT:
+		return tokens.DEFAULT, word
+	case tokens.FUNC:
+		return tokens.FUNC, word
+	case tokens.INTERFACE:
+		return tokens.INTERFACE, word
+	case tokens.SELECT:
+		return tokens.SELECT, word
+	case tokens.PACKAGE:
+		return tokens.PACKAGE, word
+	case tokens.CONST:
+		return tokens.CONST, word
+	case tokens.FOR:
+		return tokens.FOR, word
+	case tokens.RETURN:
+		return tokens.RETURN, word
+	case tokens.VAR:
+		return tokens.VAR, word
+	default:
 		return tokens.IDENT, word
 	}
 }

@@ -22,7 +22,7 @@ type Parser struct {
 	s     *scanner.Scanner
 	buf   struct {
 		tok   tokens.Token // last read token
-		lit   string       // last read literal
+		txt   string       // last read literal
 		empty bool
 	}
 	pos position
@@ -38,21 +38,26 @@ func (p position) String() string {
 	return fmt.Sprintf("Ln %d, Col %d", p.line+1, p.col+1)
 }
 
+func (p position) adjust(txt string) position {
+	return position{line: p.line, col: p.col - len(txt)}
+}
+
 func (p *Parser) scan() (tokens.Token, string) {
 	if p.buf.empty {
-		p.buf.tok, p.buf.lit = p.s.Scan()
+		p.buf.tok, p.buf.txt = p.s.Scan()
 	} else {
 		p.buf.empty = true
 	}
-	return p.buf.tok, p.buf.lit
+	p.advancePos(p.buf.tok, p.buf.txt)
+	return p.buf.tok, p.buf.txt
 }
 
 func (p *Parser) scanIgnoringWS() (tokens.Token, string) {
-	tok, lit := p.scan()
+	tok, txt := p.scan()
 	if tok == tokens.WS {
-		tok, lit = p.scan()
+		tok, txt = p.scan()
 	}
-	return tok, lit
+	return tok, txt
 }
 
 func (p *Parser) unscan() {
@@ -60,17 +65,16 @@ func (p *Parser) unscan() {
 }
 
 func (p *Parser) syntaxErr(found string, expected tokens.Token) error {
-	return fmt.Errorf("found '%s' expected '%s' at %s", found, string(expected), p.pos)
+	return fmt.Errorf("found '%s' expected '%s' at %s", found, string(expected), p.pos.adjust(found))
 }
 
-func (p *Parser) advancePos(tok tokens.Token) {
-	p.pos.col += (p.s.N - p.pos.n) // increment by delta since last advance
-	p.pos.n = p.s.N                // update from scanner
+func (p *Parser) advancePos(tok tokens.Token, txt string) {
 	if p.pos.lf {
 		p.pos.line++
-		p.pos.col = 0
-		// p.pos.lf = false
+		p.pos.col = 0 // col should be 0, given empty line + delta=1 (\n) from previous line
 	}
+	p.pos.col += p.s.N - p.pos.n // increment by delta since last advance
+	p.pos.n = p.s.N              // update from scanner
 	p.pos.lf = tok == tokens.LF
 }
 
@@ -87,76 +91,64 @@ func (p *Parser) Parse() (*fun.Module, error) {
 	if tok, txt = p.scanIgnoringWS(); tok != tokens.MODULE {
 		return nil, p.syntaxErr(txt, tokens.MODULE)
 	}
-	p.advancePos(tok)
 	if tok, txt = p.scanIgnoringWS(); tok != tokens.IDENT {
 		return nil, p.syntaxErr(txt, tokens.IDENT)
 	}
-	p.advancePos(tok)
 	module.Name = txt
 	if tok, txt = p.scanIgnoringWS(); tok != tokens.WHERE {
 		return nil, p.syntaxErr(txt, tokens.WHERE)
 	}
-	p.advancePos(tok)
 	if tok, txt = p.scanIgnoringWS(); tok != tokens.LF {
 		return nil, p.syntaxErr(txt, tokens.LF)
 	}
-	p.advancePos(tok)
 
 LOOP:
 	for {
 		p.skipNewlines()
 		tok, txt = p.scanIgnoringWS()
-		p.advancePos(tok)
 		switch tok {
 		case tokens.IMPORT:
 			if tok, txt = p.scanIgnoringWS(); tok != tokens.QUOTE {
 				return nil, p.syntaxErr(txt, tokens.QUOTE)
 			}
-			p.advancePos(tok)
 			if tok, txt = p.scanIgnoringWS(); tok != tokens.IDENT {
 				return nil, p.syntaxErr(txt, tokens.IDENT)
 			}
-			p.advancePos(tok)
 			imp := fun.Import{Path: txt}
 			if tok, txt = p.scanIgnoringWS(); tok != tokens.QUOTE {
 				return nil, p.syntaxErr(txt, tokens.QUOTE)
 			}
-			p.advancePos(tok)
 			tok, txt = p.scanIgnoringWS()
-			p.advancePos(tok)
 			switch tok {
 			case tokens.AS:
 				if tok, txt = p.scanIgnoringWS(); tok != tokens.QUOTE {
 					return nil, p.syntaxErr(txt, tokens.QUOTE)
 				}
-				p.advancePos(tok)
 				if tok, txt = p.scanIgnoringWS(); tok != tokens.IDENT {
 					return nil, p.syntaxErr(txt, tokens.IDENT)
 				}
-				p.advancePos(tok)
 				imp.Alias = txt
 				if tok, txt = p.scanIgnoringWS(); tok != tokens.QUOTE {
 					return nil, p.syntaxErr(txt, tokens.QUOTE)
 				}
-				p.advancePos(tok)
 				if tok, txt = p.scanIgnoringWS(); tok != tokens.LF {
 					return nil, p.syntaxErr(txt, tokens.LF)
 				}
-				p.advancePos(tok)
 			case tokens.LF:
+				// no-op
 			default:
 				return nil, p.syntaxErr(txt, tokens.AS)
 			}
 			module.Imports = append(module.Imports, imp)
 		case tokens.IDENT:
-			fmt.Println("found IDENT")
+			fmt.Println("found IDENT") // TODO implement declarations
 		case tokens.EOF:
 			break LOOP // file exhausted, break parsing loop
 		default:
 			if !p.Debug {
 				module = nil
 			}
-			return module, fmt.Errorf("found '%s' not expected anything at %s", txt, p.pos)
+			return module, p.syntaxErr(txt, tokens.EOF)
 		}
 	}
 	return module, nil
@@ -170,6 +162,5 @@ LOOP:
 			p.unscan()
 			break LOOP
 		}
-		p.advancePos(tok)
 	}
 }

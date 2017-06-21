@@ -13,6 +13,13 @@ import (
 	"github.com/jBugman/fun-lang/translate"
 )
 
+// Verifying how Go handles positions in parse errors
+func TestErrorLocation_99bottles(t *testing.T) {
+	fset := token.NewFileSet()
+	_, err := parser.ParseFile(fset, "test.go", "package main\n99bottles", 0)
+	assert.EqualError(t, err, "test.go:2:1: expected declaration, found 'INT' 99")
+}
+
 func TestFun_Module(t *testing.T) {
 	const fullSource = `
 	package main

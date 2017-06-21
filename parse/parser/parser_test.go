@@ -32,10 +32,20 @@ func TestParser_Parse_module(t *testing.T) {
 	p := parser.NewParser(strings.NewReader(ex(fullSource)))
 	p.Debug = true
 	ast, err := p.Parse()
-	assert.EqualError(t, err, "found '::' not expected anything at Ln 6, Col 4") // current state
+	assert.EqualError(t, err, "found '::' expected 'EOF' at Ln 6, Col 5") // TODO remove error
 	// if assert.NoError(t, err) {
 	assert.Equal(t, tree, ast)
 	// }
+}
+
+func TestParser_Parse_brokenModule(t *testing.T) {
+	_, err := parse.String("module     Test  whe\n")
+	assert.EqualError(t, err, "found 'whe' expected 'where' at Ln 1, Col 18")
+}
+
+func TestParser_Parse_brokenImport(t *testing.T) {
+	_, err := parse.String("module Test where\nimport \"fff\n")
+	assert.EqualError(t, err, "found '\n' expected '\"' at Ln 2, Col 12")
 }
 
 func ex(source string) string {

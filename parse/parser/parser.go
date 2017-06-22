@@ -83,30 +83,23 @@ func (p *Parser) advancePos(tok tokens.Token, txt string) {
 func (p *Parser) Parse() (*fun.Module, error) {
 	var tok tokens.Token
 	var txt string
-	module := &fun.Module{}
-
-	p.skipNewlines()
-
-	// Module declaration
-	if tok, txt = p.scanIgnoringWS(); tok != tokens.MODULE {
-		return nil, p.syntaxErr(txt, tokens.MODULE)
-	}
-	if tok, txt = p.scanIgnoringWS(); tok != tokens.IDENT {
-		return nil, p.syntaxErr(txt, tokens.IDENT)
-	}
-	module.Name = txt
-	if tok, txt = p.scanIgnoringWS(); tok != tokens.WHERE {
-		return nil, p.syntaxErr(txt, tokens.WHERE)
-	}
-	if tok, txt = p.scanIgnoringWS(); tok != tokens.LF {
-		return nil, p.syntaxErr(txt, tokens.LF)
-	}
-
+	var module fun.Module
 LOOP:
 	for {
 		p.skipNewlines()
 		tok, txt = p.scanIgnoringWS()
 		switch tok {
+		case tokens.MODULE:
+			if tok, txt = p.scanIgnoringWS(); tok != tokens.IDENT {
+				return nil, p.syntaxErr(txt, tokens.IDENT)
+			}
+			module.Name = txt
+			if tok, txt = p.scanIgnoringWS(); tok != tokens.WHERE {
+				return nil, p.syntaxErr(txt, tokens.WHERE)
+			}
+			if tok, txt = p.scanIgnoringWS(); tok != tokens.LF {
+				return nil, p.syntaxErr(txt, tokens.LF)
+			}
 		case tokens.IMPORT:
 			if tok, txt = p.scanIgnoringWS(); tok != tokens.QUOTE {
 				return nil, p.syntaxErr(txt, tokens.QUOTE)
@@ -141,17 +134,146 @@ LOOP:
 			}
 			module.Imports = append(module.Imports, imp)
 		case tokens.IDENT:
-			fmt.Println("found IDENT") // TODO implement declarations
-		case tokens.EOF:
-			break LOOP // file exhausted, break parsing loop
-		default:
-			if !p.Debug {
-				module = nil
+			decl, err := p.parseFuncDecl(tok, txt)
+			if err != nil {
+				return nil, err
 			}
-			return module, p.syntaxErr(txt, tokens.EOF)
+			module.Decls = append(module.Decls, *decl)
+			// TODO parse other declaration types
+		case tokens.EOF:
+			// File exhausted, break parsing loop.
+			break LOOP
+		default:
+			var result = &module
+			if !p.Debug {
+				result = nil
+			}
+			return result, p.syntaxErr(txt, tokens.EOF)
 		}
 	}
-	return module, nil
+	return &module, nil
+}
+
+func (p *Parser) parseFuncDecl(tok tokens.Token, txt string) (*fun.FuncDecl, error) {
+	var decl = fun.FuncDecl{Name: txt}
+	if tok, txt = p.scanIgnoringWS(); tok != tokens.DOUBLECOLON {
+		return nil, p.syntaxErr(txt, tokens.DOUBLECOLON)
+	}
+	var avaitingArrow bool
+	// Type signature
+TYPESIGN:
+	for {
+		tok, txt = p.scanIgnoringWS()
+		switch tok {
+		// parameter
+		case tokens.IDENT:
+			if avaitingArrow {
+				return nil, p.syntaxErr(txt, tokens.ARROW)
+			}
+			t, err := p.parseType(tok, txt)
+			if err != nil {
+				return nil, err
+			}
+			var param = fun.Parameter{Type: t}
+			decl.Params = append(decl.Params, param)
+			avaitingArrow = true
+		case tokens.ARROW:
+			if !avaitingArrow {
+				return nil, p.syntaxErr(txt, tokens.ARROW)
+			}
+			avaitingArrow = false
+		// result
+		case tokens.OPENBR:
+			var avaitingComma bool
+		TUPLE:
+			for {
+				tok, txt = p.scanIgnoringWS()
+				switch tok {
+				case tokens.IDENT:
+					if avaitingComma {
+						return nil, p.syntaxErr(txt, tokens.COMMA)
+					}
+					t, err := p.parseType(tok, txt)
+					if err != nil {
+						return nil, err
+					}
+					decl.Results.Types = append(decl.Results.Types, t)
+					avaitingComma = true
+				case tokens.COMMA:
+					if !avaitingComma {
+						return nil, p.syntaxErr(txt, tokens.IDENT)
+					}
+					avaitingComma = false
+				case tokens.CLOSEBR:
+					break TUPLE
+				}
+			}
+		case tokens.IO:
+			if avaitingArrow {
+				return nil, p.syntaxErr(txt, tokens.ARROW)
+			}
+		case tokens.LF:
+			break TYPESIGN
+		}
+	}
+	if len(decl.Results.Types) == 0 && len(decl.Params) > 0 {
+		// If there is a zero result list, then move last parameter to results
+		size := len(decl.Params) - 1
+		p := decl.Params[size]
+		decl.Params = decl.Params[:size]
+		decl.Results.Types = append(decl.Results.Types, p.Type)
+	}
+	// Body
+	var identCount int
+ARGS:
+	for {
+		tok, txt = p.scanIgnoringWS()
+		switch tok {
+		case tokens.IDENT:
+			if identCount == 0 && txt != decl.Name {
+				return nil, fmt.Errorf("found '%s' expected '%s' at %s", txt, decl.Name, p.pos.adjust(txt))
+			}
+			if identCount > 0 {
+				if identCount-1 > len(decl.Params) {
+					return nil, p.syntaxErr(txt, tokens.EQ)
+				}
+				decl.Params[identCount-1].Name = txt
+			}
+			identCount++
+		case tokens.EQ:
+			if (identCount - 1) < len(decl.Params) {
+				return nil, p.syntaxErr(txt, tokens.IDENT)
+			}
+			break ARGS
+		}
+	}
+	b, err := p.parseBody()
+	if err != nil {
+		return nil, err
+	}
+	decl.Body = b
+	return &decl, nil
+}
+
+func (p *Parser) parseBody() (fun.FuncBody, error) {
+	return fun.Undefined, nil //  TODO implement
+}
+
+func (p *Parser) parseType(tok tokens.Token, txt string) (fun.Type, error) {
+	var t fun.Type
+	switch txt {
+	case "int":
+		t = fun.IntT
+	case "double":
+		t = fun.DoubleT
+	case "char":
+		t = fun.CharT
+	case "string":
+		t = fun.StringT
+	default:
+		t = fun.ObjectType(txt)
+	}
+	return t, nil
 }
 
 func (p *Parser) skipNewlines() {

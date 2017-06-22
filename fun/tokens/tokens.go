@@ -10,6 +10,7 @@ const (
 	EOF     Token = "EOF"
 	WS      Token = "WS"
 	LF      Token = "LF"
+	RAW     Token = "RAW"
 
 	// Literals
 	IDENT   Token = "IDENT"
@@ -36,6 +37,7 @@ const (
 	CLOSEBR  Token = ")"
 
 	// Keywords
+	DO        Token = "do"
 	MODULE    Token = "module"
 	WHERE     Token = "where"
 	IMPORT    Token = "import"

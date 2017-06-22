@@ -12,8 +12,12 @@ import (
 
 // Scanner represents Fun lexer.
 type Scanner struct {
-	r *bufio.Reader
-	N int // read runes count
+	r   *bufio.Reader
+	N   int // read runes count
+	raw struct {
+		on bool // now parsing raw Go code
+		lf bool // last token was LF
+	}
 }
 
 // NewScanner creates a Scanner.
@@ -29,6 +33,10 @@ func (s *Scanner) Scan() (tokens.Token, string) {
 	c := s.read()
 
 	switch {
+	case s.raw.on:
+		// Parsing raw Go takes priority over everything.
+		s.unread()
+		return s.consumeRaw()
 	case isWhitespace(c):
 		// If we see whitespace we consume all contiguous whitespace.
 		s.unread()
@@ -131,7 +139,7 @@ LOOP:
 	if tok != tokens.IDENT { // not a Go keyword
 		return tok, txt
 	}
-	return checkKeywords(buf.String())
+	return s.checkKeywords(buf.String())
 }
 
 // consumeNumber consumes the current rune and all contiguous number-related runes.
@@ -188,7 +196,7 @@ func (s *Scanner) consumeCompounds() (tokens.Token, string) {
 	}
 }
 
-func checkKeywords(word string) (tokens.Token, string) {
+func (s *Scanner) checkKeywords(word string) (tokens.Token, string) {
 	switch tokens.Token(word) {
 	case tokens.IF:
 		return tokens.IF, word
@@ -196,6 +204,9 @@ func checkKeywords(word string) (tokens.Token, string) {
 		return tokens.THEN, word
 	case tokens.ELSE:
 		return tokens.ELSE, word
+	case tokens.DO:
+		s.raw.on = true
+		return tokens.DO, word
 	case tokens.TYPE:
 		return tokens.TYPE, word
 	case tokens.IO:
@@ -241,6 +252,41 @@ func checkGoReserved(word string) (tokens.Token, string) {
 	default:
 		return tokens.IDENT, word
 	}
+}
+
+// consumeRaw consumes full line as a single Raw token
+func (s *Scanner) consumeRaw() (tokens.Token, string) {
+	var buf bytes.Buffer
+LOOP:
+	for {
+		c := s.read()
+		switch {
+		case c == eof:
+			s.unread()
+			break LOOP
+		case c == '\n':
+			switch {
+			case s.raw.lf:
+				// Two LFs in a row, stop RAW parsing.
+				s.raw.on = false
+				s.raw.lf = false
+				return tokens.LF, "\n"
+			case buf.Len() == 0:
+				// Standalone LF (after 'do').
+				s.raw.lf = true
+				return tokens.LF, "\n"
+			default:
+				// End of line.
+				s.raw.lf = true
+				buf.WriteRune(c)
+				break LOOP
+			}
+		default:
+			s.raw.lf = false
+			buf.WriteRune(c)
+		}
+	}
+	return tokens.RAW, buf.String()
 }
 
 // read reads and returns the next Unicode character.

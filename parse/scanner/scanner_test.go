@@ -444,3 +444,35 @@ func ex(source string) string {
 	}
 	return strings.Join(lines, "\n")
 }
+
+func TestScanner_Scan_raw(t *testing.T) {
+	tok, txt, s := scan(`do
+    fmt.Println("test")
+    return 1, 42, 2 + 4
+
+test
+`)
+	assert.Equal(t, tokens.DO, tok)
+	assert.Equal(t, "do", txt)
+	assert.Equal(t, 2, s.N)
+	tok, txt = s.Scan()
+	assert.Equal(t, tokens.LF, tok)
+	assert.Equal(t, "\n", txt)
+	assert.Equal(t, 3, s.N)
+	tok, txt = s.Scan()
+	assert.Equal(t, tokens.RAW, tok)
+	assert.Equal(t, "    fmt.Println(\"test\")\n", txt)
+	assert.Equal(t, 27, s.N)
+	tok, txt = s.Scan()
+	assert.Equal(t, tokens.RAW, tok)
+	assert.Equal(t, "    return 1, 42, 2 + 4\n", txt)
+	assert.Equal(t, 51, s.N)
+	tok, txt = s.Scan()
+	assert.Equal(t, tokens.LF, tok)
+	assert.Equal(t, "\n", txt)
+	assert.Equal(t, 52, s.N)
+	tok, txt = s.Scan()
+	assert.Equal(t, tokens.IDENT, tok)
+	assert.Equal(t, "test", txt)
+	assert.Equal(t, 56, s.N)
+}

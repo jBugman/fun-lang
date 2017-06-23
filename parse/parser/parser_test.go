@@ -28,14 +28,10 @@ func TestParser_Parse_module(t *testing.T) {
 			fun.Import{Path: "io", Alias: "io"},
 		},
 	}
-	// ast, err := parse.String(ex(fullSource))
-	p := parser.NewParser(strings.NewReader(ex(fullSource)))
-	p.Debug = true
-	ast, err := p.Parse()
-	assert.EqualError(t, err, "found '::' expected 'EOF' at Ln 6, Col 5") // TODO remove error
-	// if assert.NoError(t, err) {
-	assert.Equal(t, tree, ast)
-	// }
+	ast, err := parse.String(ex(fullSource))
+	if assert.NoError(t, err) {
+		assert.Equal(t, tree, ast)
+	}
 }
 
 func TestParser_Parse_brokenModule(t *testing.T) {

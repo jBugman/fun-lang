@@ -256,7 +256,21 @@ ARGS:
 }
 
 func (p *Parser) parseBody() (fun.FuncBody, error) {
-	return fun.Undefined, nil //  TODO implement
+	var tok tokens.Token
+	var txt string
+	var result fun.FuncBody
+	tok, txt = p.scanIgnoringWS()
+	switch tok {
+	case tokens.UNDEFINED:
+		result = fun.Undefined
+	case tokens.DO:
+		result = fun.DoBlock{}
+		// TODO finish
+	}
+	if tok, txt = p.scanIgnoringWS(); tok != tokens.LF {
+		return nil, p.syntaxErr(txt, tokens.LF)
+	}
+	return result, nil
 }
 
 func (p *Parser) parseType(tok tokens.Token, txt string) (fun.Type, error) {

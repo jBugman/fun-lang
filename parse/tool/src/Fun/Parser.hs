@@ -36,9 +36,8 @@ funFuncDecl :: Parser Fun.Decl
 funFuncDecl = do
     reserved "func"
     name <- identifier
-    -- spaces
-    -- params <- sepBy1 identifier (lexeme " ->")
-    return $ Fun.FuncDecl name [] [] Fun.Undefined
+    params <- funcParams
+    return $ Fun.FuncDecl name params [] Fun.Undefined
     -- case reverse types of
     --     ["IO"]    -> return $ Fun.FuncDecl name [] Fun.JustIO [] Fun.Undefined
     --     [x]       -> return $ Fun.FuncDecl name [] (Fun.IO $ Fun.Type x) [] Fun.Undefined
@@ -47,5 +46,5 @@ funFuncDecl = do
 
 funcParams :: Parser [Fun.Param]
 funcParams = do
-    xs <- parensList string
-    return []
+    xs <- parensList (identifier `sepBy1` reserved "::")
+    return $ map (\[x, y] -> Fun.Param x (Fun.Type y)) xs

@@ -1,7 +1,7 @@
 module Fun.Parser where
 
 import Text.Parsec.String (Parser)
-import Text.ParserCombinators.Parsec (optionMaybe, sepBy1)
+import Text.ParserCombinators.Parsec ((<|>), try, optionMaybe, sepBy1, count)
 import Text.Parsec.Char (char)
 import Data.List (intercalate)
 
@@ -36,15 +36,23 @@ funFuncDecl :: Parser Fun.Decl
 funFuncDecl = do
     reserved "func"
     name <- identifier
-    params <- funcParams
-    return $ Fun.FuncDecl name params [] Fun.Undefined
-    -- case reverse types of
-    --     ["IO"]    -> return $ Fun.FuncDecl name [] Fun.JustIO [] Fun.Undefined
-    --     [x]       -> return $ Fun.FuncDecl name [] (Fun.IO $ Fun.Type x) [] Fun.Undefined
-    --     ("IO":xs) -> return $ Fun.FuncDecl name (map Fun.Type (reverse xs)) Fun.JustIO [] Fun.Undefined
-    --     (x:xs)    -> return $ Fun.FuncDecl name (map Fun.Type (reverse xs)) (Fun.IO $ Fun.Type x) [] Fun.Undefined
+    params <- try funcParams <|> return []
+    results <- try (reserved "->" *> funcResults) <|> return []
+    reservedOp "="
+    body <- funcBody
+    return $ Fun.FuncDecl name params results body
+
+funcResults :: Parser [Fun.Type]
+funcResults = do
+    xs <- try (parensList identifier) <|> try (count 1 identifier) <|> return []
+    return $ map Fun.Type xs
 
 funcParams :: Parser [Fun.Param]
 funcParams = do
     xs <- parensList (identifier `sepBy1` reserved "::")
     return $ map (\[x, y] -> Fun.Param x (Fun.Type y)) xs
+
+funcBody :: Parser Fun.FuncBody
+funcBody = do
+    reserved "undefined"
+    return Fun.Undefined

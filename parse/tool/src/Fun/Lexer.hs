@@ -48,6 +48,9 @@ identifier = Tok.identifier lexer
 reserved :: String -> Parser ()
 reserved = Tok.reserved lexer
 
+reservedOp :: String -> Parser ()
+reservedOp = Tok.reservedOp lexer
+
 dot :: Parser String
 dot = Tok.dot lexer
 

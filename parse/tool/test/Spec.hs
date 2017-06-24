@@ -38,14 +38,28 @@ main = hspec $ do
     it "parses multiple parameters" $
       p funcParams "(n :: int, name :: string)" `shouldBe` Right [Param "n" (Type "int"), Param "name" (Type "string")]
 
--- describe "Fun.Parser.funFuncDecl" $ do
---   it "parses simplest decl" $
---     p funFuncDecl "func f\n" `shouldBe` Right (Fun.FuncDecl "f" [] Fun.JustIO [] Undefined)
+  describe "Fun.Parser.funcResults" $ do
+    it "parses empty list" $
+      p funcResults "" `shouldBe` Right []
 
---   it "parses some params" $
---     p funFuncDecl "func g (a :: int, b :: int)\n" `shouldBe`
---       Right (FuncDecl "g" [Param "a" "int", Param "b" "int"] [] Undefined)
+    it "parses single result" $
+      p funcResults "bool" `shouldBe` Right [Type "bool"]
 
---   it "parses return tuple" $
---     p funFuncDecl "func h (a :: int, b :: string) -> (int, string)\n" `shouldBe`
---       Right (FuncDecl "f" [Param "a" "int", Param "b" "string"] [Type "int", Type "string"] Undefined)
+    it "parses multiple results" $
+      p funcResults "(int, error)" `shouldBe` Right [Type "int", Type "error"]
+
+  describe "Fun.Parser.funFuncDecl" $ do
+    it "parses simplest decl" $
+      p funFuncDecl "func f = undefined" `shouldBe` Right (FuncDecl "f" [] [] Undefined)
+
+    it "parses func with some params" $
+      p funFuncDecl "func g (a :: int, b :: int) = undefined" `shouldBe`
+        Right (FuncDecl "g" [Param "a" (Type "int"), Param "b" (Type "int")] [] Undefined)
+
+    it "parses func witout params" $
+      p funFuncDecl "func read () -> (header, error) = undefined" `shouldBe`
+        Right (FuncDecl "read" [] [Type "header", Type "error"] Undefined)
+
+    it "parses params and results" $
+      p funFuncDecl "func h (a :: int, b :: string) -> (int, string) = undefined" `shouldBe`
+        Right (FuncDecl "h" [Param "a" (Type "int"), Param "b" (Type "string")] [Type "int", Type "string"] Undefined)

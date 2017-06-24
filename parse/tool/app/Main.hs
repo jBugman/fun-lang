@@ -1,8 +1,12 @@
 module Main where
 
 import Fun.Parser
+import Text.Parsec.Error
+import System.Exit (die)
 
 main :: IO ()
 main = do
     source <- getContents
-    print $ parse funImport "stdin" source
+    case parse funImport "" source of
+        Right result -> putStr $ show result
+        Left err -> die $ show err

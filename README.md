@@ -1,23 +1,19 @@
 ## Fun
-### Haskell-flavoured Go syntax sugar
+### Lighter, more functional language, compiled to Go
 
 Idea is to provide cleaner (subjective) syntax and later some code-generation features around simple constructs to allow more concise code. Also, there is an ability to use raw inline Go code for more complex cases.
 
-    module Main where
+    package main
 
-    import "fmt"
     import "io"
 
-    inc :: int -> int
-    inc val = val + 1
+    func inc (val :: int) -> int = val + 1
 
-    print42 :: IO ()
-    print42 = fmt.Println 42
+    func print42 = print 42
 
-    main :: IO ()
-    main = do
-        line := "Hello World!"
-        fmt.Fprintln(io.Discard, line)
+    func main = do
+        var line = "Hello World!"
+        fmt.Fprintln io.Discard line
 
 Package purpose
 
@@ -28,4 +24,4 @@ Package purpose
 
 Tests
 
-    gocov test ./fun ./print ./translate ./parse/scanner | gocov-html > coverage.html && open coverage.html
+    gocov test ./fun ./print ./translate ./parse/... | gocov-html > coverage.html && open coverage.html

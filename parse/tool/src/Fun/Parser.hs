@@ -1,6 +1,6 @@
 module Fun.Parser (
     parse,
-    funImport
+    funImport, funFuncDecl
 ) where
 
 import Data.List (intercalate)
@@ -8,15 +8,24 @@ import Text.ParserCombinators.Parsec
 import Text.Parsec.Char
 import qualified Text.Parsec.Token as P
 import Text.Parsec.Language
-import Fun.Types
+import qualified Fun.Types as Fun
 
-funTokens :: P.TokenParser st
-funTokens = P.makeTokenParser haskellStyle {
+funDef = haskellStyle {
+    P.commentStart   = "/*",
+    P.commentEnd     = "*/",
+    P.commentLine    = "//",
     P.reservedNames = ["package", "func", "case", "if", "then", "else"] -- TODO add more
 }
 
+funTokens :: P.TokenParser st
+funTokens = P.makeTokenParser funDef
+
 ident :: Parser String
-ident = P.identifier funTokens
+ident = do {
+    c <- P.identStart funDef;
+    cs <- many (P.identLetter funDef);
+    return (c:cs)
+    } <?> "identifier"
 
 slash :: Parser Char
 slash = char '/'
@@ -24,17 +33,27 @@ slash = char '/'
 dot :: Parser String
 dot = P.dot funTokens
 
-ws :: Parser ()
-ws = P.whiteSpace funTokens
+symbol :: String -> Parser String
+symbol = P.symbol funTokens
 
-funImport :: Parser Import
+lexeme :: String -> Parser String
+lexeme s = P.lexeme funTokens (string s)
+
+commaSep :: String -> Parser [String]
+commaSep s = P.commaSep funTokens (string s)
+
+-- ws :: Parser ()
+-- ws = skipMany1 space 
+
+parens :: Parser String -> Parser String
+parens = P.parens funTokens
+
+funImport :: Parser Fun.Import
 funImport = do
-    ws
-    string "import"
-    spaces
+    lexeme "import"
     path <- pathP
     alias <- optionMaybe aliasP
-    return $ Import path alias
+    return $ Fun.Import path alias
     where
         pathP = do
             char '"'
@@ -50,6 +69,33 @@ funImport = do
                         return $ intercalate "-" xs
         aliasP = do
             spaces
-            string "as"
-            spaces
+            lexeme "as"
             P.stringLiteral funTokens
+
+funFuncDecl :: Parser Fun.Decl
+funFuncDecl = do
+    name <- ident
+    spaces
+    lexeme "::"
+    -- types <- sepBy1 (ident <|> parens commaSep ident) (lexeme " ->")
+    types <- sepBy1 ident (lexeme " ->")
+    endOfLine
+    case reverse types of
+        ["IO"]    -> return $ Fun.FuncDecl name [] Fun.JustIO [] Fun.Undefined
+        [x]       -> return $ Fun.FuncDecl name [] (Fun.IO $ Fun.Type x) [] Fun.Undefined
+        ("IO":xs) -> return $ Fun.FuncDecl name (map Fun.Type (reverse xs)) Fun.JustIO [] Fun.Undefined
+        (x:xs)    -> return $ Fun.FuncDecl name (map Fun.Type (reverse xs)) (Fun.IO $ Fun.Type x) [] Fun.Undefined
+
+    -- params <- optionMaybe $ endBy1 ident (lexeme "->")
+    -- results <- lexeme "IO" -- count 1 (string "IO")
+    -- results <- choice [count 1 (string "IO"), count 1 ident, inBraces (sepBy ident (symbol ","))]
+    -- spaces
+    -- newline
+    -- return $ FuncDecl name types JustIO [] Undefined
+    -- return $ FuncDecl name params (toResult results) [] Undefined
+
+
+-- toResult :: [String] -> Fun.Result
+-- toResult ["IO"]  = JustIO
+-- toResult [x] = SingleResult x
+-- toResult xs  = ResultTuple xs

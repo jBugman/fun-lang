@@ -1,6 +1,7 @@
 module Fun.Lexer where
 
 import Text.Parsec.String (Parser)
+import Text.Parsec.Combinator (between)
 import qualified Text.Parsec.Char as C
 import qualified Text.Parsec.Token as Tok
 
@@ -57,9 +58,6 @@ dot = Tok.dot lexer
 symbol :: String -> Parser String
 symbol = Tok.symbol lexer
 
-lexeme :: String -> Parser String
-lexeme s = Tok.lexeme lexer (C.string s)
-
 comma :: Parser String
 comma = Tok.comma lexer
 
@@ -74,3 +72,7 @@ parensList p = parens (Tok.commaSep lexer p)
 
 string :: Parser String
 string = Tok.stringLiteral lexer
+
+quoted :: Parser a -> Parser a
+quoted = between (C.char '"') (C.char '"')
+

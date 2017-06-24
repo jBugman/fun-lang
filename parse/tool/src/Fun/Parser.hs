@@ -1,9 +1,10 @@
 module Fun.Parser where
 
-import Text.Parsec.String (Parser)
-import Text.ParserCombinators.Parsec ((<|>), try, optionMaybe, sepBy1, count)
-import Text.Parsec.Char (char)
 import Data.List (intercalate)
+import Text.Parsec ((<|>), try)
+import Text.Parsec.Char (char)
+import Text.Parsec.Combinator (optionMaybe, sepBy1, count)
+import Text.Parsec.String (Parser)
 
 import Fun.Lexer
 import qualified Fun.Types as Fun
@@ -11,26 +12,12 @@ import qualified Fun.Types as Fun
 funImport :: Parser Fun.Import
 funImport = do
     reserved "import"
-    path <- pathP
-    alias <- optionMaybe aliasP
+    path <- quoted $ joinedBy '/' $ joinedBy '.' $ joinedBy '-' identifier
+    alias <- optionMaybe (whitespace *> reserved "as" *> quoted identifier)
     return $ Fun.Import path alias
     where
-        pathP = do
-            char '"'
-            xs <- sepBy1 pp (char '/')
-            char '"'
-            return $ intercalate "/" xs
-                where
-                    pp = do
-                        xs <- sepBy1 pp' dot
-                        return $ intercalate "." xs
-                    pp' = do
-                        xs <- sepBy1 identifier (char '-')
-                        return $ intercalate "-" xs
-        aliasP = do
-            whitespace
-            reserved "as"
-            string
+        joinedBy :: Char -> Parser String -> Parser String
+        joinedBy c p = intercalate [c] <$> sepBy1 p (char c) -- black Applicative magic
 
 funFuncDecl :: Parser Fun.Decl
 funFuncDecl = do

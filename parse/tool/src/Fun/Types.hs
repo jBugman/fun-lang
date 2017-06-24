@@ -13,9 +13,8 @@ data Import = Import {
 
 data Decl = FuncDecl {
     funcName :: String,
-    params   :: [Type],
-    result   :: Result,
-    args     :: [Var],
+    params   :: [Param],
+    results  :: [Type],
     body     :: FuncBody
 } deriving (Eq, Show)
 
@@ -23,10 +22,11 @@ type Var = String
 
 type TypeName = String
 
-data Type = Int | Type TypeName | Tuple [TypeName]
+data Type = Type TypeName | List Type
     deriving (Eq, Show)
 
-data Result = JustIO | IO Type | Pure Type
+data Param = Param {paramName :: String, paramType :: Type}
     deriving (Eq, Show)
 
-data FuncBody = Undefined deriving (Eq, Show)
+data FuncBody = Undefined
+    deriving (Eq, Show)

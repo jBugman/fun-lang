@@ -1,7 +1,7 @@
 module Main where
 
 import Fun.Parser
-import Text.Parsec.Error
+import Text.Parsec (parse)
 import System.Exit (die)
 
 main :: IO ()

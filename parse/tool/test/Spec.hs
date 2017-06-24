@@ -32,7 +32,10 @@ main = hspec $ do
     it "parses empty list" $
       p funcParams "()" `shouldBe` Right []
 
-    it "parses some params" $
+    it "parses single parameter" $
+      p funcParams "(x :: bool)" `shouldBe` Right [Param "x" (Type "bool")]
+
+    it "parses multiple parameters" $
       p funcParams "(n :: int, name :: string)" `shouldBe` Right [Param "n" (Type "int"), Param "name" (Type "string")]
 
 -- describe "Fun.Parser.funFuncDecl" $ do

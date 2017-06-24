@@ -1,5 +1,6 @@
 module Fun.Lexer where
 
+import Data.Functor.Identity (Identity)
 import Text.Parsec.String (Parser)
 import Text.Parsec.Combinator (between)
 import qualified Text.Parsec.Char as C
@@ -29,6 +30,7 @@ nameFirst = C.alphaNum
 nameLetter :: Parser Char
 nameLetter = C.alphaNum
 
+lexer :: Tok.GenTokenParser String () Identity
 lexer = Tok.makeTokenParser Tok.LanguageDef {
     Tok.caseSensitive   = True,
     Tok.commentStart    = "",

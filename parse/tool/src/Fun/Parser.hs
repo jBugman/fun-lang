@@ -1,13 +1,16 @@
 module Fun.Parser where
 
 import Data.List (intercalate)
-import Text.Parsec ((<|>), try)
+import Text.Parsec (parse, (<|>), try, ParseError)
 import Text.Parsec.Char (char)
 import Text.Parsec.Combinator (optionMaybe, sepBy1, count)
 import Text.Parsec.String (Parser)
 
 import Fun.Lexer
 import qualified Fun.Types as Fun
+
+prs :: Parser a -> String -> Either ParseError a
+prs rule = parse rule ""
 
 funImport :: Parser Fun.Import
 funImport = do

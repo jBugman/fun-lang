@@ -62,18 +62,18 @@ main = hspec $ do
       prs funFuncDecl "func h (a :: int, b :: string) -> (int, string) = undefined" `shouldParse`
         FuncDecl "h" [Param "a" (Type "int"), Param "b" (Type "string")] [Type "int", Type "string"] Undefined
 
-  -- describe "Fun.Parser.inline" $ do
-  --   it "parses empty inline" $
-  --     prs inline "inline {}" `shouldBe` Right (Inline "")
+  describe "Fun.Parser.inline" $ do
+    it "parses empty inline" $
+      prs inline "inline\n" `shouldParse` Inline []
 
-  --   it "parses inline func body" $
-  --     prs inline "inline {\n    i := 0\n    fmt.Printf(\"%d\", i)\n}" `shouldBe`
-  --       Right (Inline "\n    i := 0\n    fmt.Printf(\"%d\", i)\n")
+    it "parses inline func body" $
+      prs inline "inline\n    i := 0\n    fmt.Printf(\"%d\", i)\n" `shouldParse`
+        Inline ["i := 0", "fmt.Printf(\"%d\", i)"]
 
-  --   it "parses inline func body with braces in it" $
-  --     prs inline "inline {\n    m := make(chan string)\n    go func() { {m <- struct{}{}} }()\n}" `shouldBe`
-  --       Right (Inline "\n    m := make(chan string)\n    go func() { {m <- struct{}{}} }()\n")
+    it "parses inline func body with braces in it" $
+      prs inline "inline\n    m := make(chan string)\n    go func() { {m <- struct{}{}} }()\n" `shouldParse`
+        Inline ["m := make(chan string)", "go func() { {m <- struct{}{}} }()"]
 
-  --   it "parses inline func body without something after it" $
-  --     prs inline "inline {\n  {\n struct{}{}\n }\n }\n}\n // comment" `shouldBe`
-  --       Right (Inline "\n  {\n struct{}{}\n }\n }\n")
+    it "parses inline func body without something after it" $
+      prs inline "inline\n    {\n        struct{}{}\n    }\n    // inline comment\n\n // comment" `shouldParse`
+        Inline ["{", "    struct{}{}", "}", "// inline comment"]

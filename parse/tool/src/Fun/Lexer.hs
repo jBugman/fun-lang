@@ -1,13 +1,35 @@
 module Fun.Lexer where
 
-import Data.Functor.Identity (Identity)
-import Text.Parsec.String (Parser)
-import Text.Parsec.Combinator (between)
-import qualified Text.Parsec.Char as C
-import qualified Text.Parsec.Token as Tok
+import Control.Applicative (empty)
+import Control.Monad (void)
+import Text.Megaparsec (try, many, char, string, letterChar, alphaNumChar, spaceChar, between, notFollowedBy, sepBy)
+import Text.Megaparsec.String (Parser)
+import qualified Text.Megaparsec.Lexer as L
 
-reservedNames :: [String]
-reservedNames = [
+
+sp :: Parser () -- whitespace consumer
+sp = L.space (void spaceChar) lineComment empty
+    where lineComment  = L.skipLineComment "//"
+
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sp
+
+symbol :: String -> Parser String
+symbol = L.symbol sp
+
+rword :: String -> Parser ()
+rword w = string w *> notFollowedBy alphaNumChar *> sp
+
+identifier :: Parser String
+identifier = (lexeme . try) (p >>= check)
+  where
+    p       = (:) <$> letterChar <*> many alphaNumChar
+    check x = if x `elem` rws
+                then fail $ "keyword " ++ show x ++ " cannot be an identifier"
+                else return x
+
+rws :: [String] -- list of reserved words
+rws = [
     "import",
     "as",
     "package",
@@ -18,68 +40,29 @@ reservedNames = [
     "else"
  ]
 
-reservedOps :: [String]
-reservedOps = [
-    "+",
-    "-"
- ]
-
-nameFirst :: Parser Char
-nameFirst = C.alphaNum
-
-nameLetter :: Parser Char
-nameLetter = C.alphaNum
-
-lexer :: Tok.GenTokenParser String () Identity
-lexer = Tok.makeTokenParser Tok.LanguageDef {
-    Tok.caseSensitive   = True,
-    Tok.commentStart    = "",
-    Tok.commentEnd      = "",
-    Tok.commentLine     = "//",
-    Tok.nestedComments  = False,
-    Tok.reservedNames   = reservedNames,
-    Tok.reservedOpNames = reservedOps,
-    Tok.opStart         = C.oneOf "!",
-    Tok.opLetter        = C.oneOf "!",
-    Tok.identStart      = nameFirst,
-    Tok.identLetter     = nameLetter
-}
-
-identifier :: Parser String
-identifier = Tok.identifier lexer
-
-reserved :: String -> Parser ()
-reserved = Tok.reserved lexer
-
-reservedOp :: String -> Parser ()
-reservedOp = Tok.reservedOp lexer
+integer :: Parser Integer
+integer = lexeme L.integer
 
 dot :: Parser String
-dot = Tok.dot lexer
-
-symbol :: String -> Parser String
-symbol = Tok.symbol lexer
+dot = symbol "."
 
 comma :: Parser String
-comma = Tok.comma lexer
+comma = symbol ","
 
-whitespace :: Parser ()
-whitespace = Tok.whiteSpace lexer
+commaSep :: Parser a -> Parser [a]
+commaSep p = p `sepBy` comma
 
 parens :: Parser a -> Parser a
-parens = Tok.parens lexer
+parens = between (symbol "(") (symbol ")")
 
 parensList :: Parser a -> Parser [a]
-parensList p = parens (Tok.commaSep lexer p)
-
-string :: Parser String
-string = Tok.stringLiteral lexer
+parensList p = parens (commaSep p)
 
 quoted :: Parser a -> Parser a
-quoted = between (C.char '"') (C.char '"')
+quoted = between (char '"') (char '"')
 
 braces :: Parser a -> Parser a
-braces = Tok.braces lexer
+braces = between (symbol "{") (symbol "}")
 
 bracesWhitespace :: Parser a -> Parser a
-bracesWhitespace = between (C.char '{') (C.char '}')
+bracesWhitespace = between (char '{') (char '}')

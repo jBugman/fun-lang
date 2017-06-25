@@ -78,3 +78,8 @@ string = Tok.stringLiteral lexer
 quoted :: Parser a -> Parser a
 quoted = between (C.char '"') (C.char '"')
 
+braces :: Parser a -> Parser a
+braces = Tok.braces lexer
+
+bracesWhitespace :: Parser a -> Parser a
+bracesWhitespace = between (C.char '{') (C.char '}')

@@ -1,15 +1,17 @@
+{-# LANGUAGE PartialTypeSignatures #-}
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 module Fun.Parser where
 
 import Data.List (intercalate)
-import Text.Megaparsec (parse, (<|>), optional, try, char, sepBy1, count)
+import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError)
 import Text.Megaparsec.String (Parser)
 
 import Fun.Lexer
 import qualified Fun.Types as Fun
 
 
--- prs :: Parser a -> String -> Either ParseError a
-prs rule = parse rule ""
+prs :: Parser a -> String -> Either (ParseError Char _) a
+prs rule = runParser rule ""
 
 funImport :: Parser Fun.Import
 funImport = do

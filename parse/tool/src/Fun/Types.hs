@@ -11,12 +11,14 @@ data Import = Import {
     alias :: Maybe String
 } deriving (Eq, Show)
 
-data Decl = FuncDecl {
-    funcName :: String,
-    params   :: [Param],
-    results  :: [Type],
-    body     :: FuncBody
-} deriving (Eq, Show)
+data Decl
+    = FuncDecl {
+        funcName :: String,
+        params   :: [Param],
+        results  :: [Type],
+        body     :: FuncBody
+    }
+        deriving (Eq, Show)
 
 type Var = String
 
@@ -28,5 +30,25 @@ data Type = Type TypeName | List Type
 data Param = Param {paramName :: String, paramType :: Type}
     deriving (Eq, Show)
 
-data FuncBody = Undefined
+data FuncBody = Undefined | Expr | Inline String
     deriving (Eq, Show)
+
+type FuncName = String
+
+data Expr
+    = Application {
+        func :: FuncName,
+        args :: [Expr]
+    }
+    | DoBlock [Expr]
+    | For ForHeader Expr
+    | Op Expr Expr
+        deriving (Eq, Show)
+
+data ForHeader
+    = Ever
+    | Iter Var Int Int
+    | IterInlusive Var Int Int
+    | Range1 Var Type
+    | Range2 Var Var Type
+        deriving (Eq, Show)

@@ -14,7 +14,7 @@ prs :: Parser a -> String -> Either (ParseError Char _) a
 prs rule = runParser rule ""
 
 funImport :: Parser Fun.Import
-funImport = do
+funImport = nonIndented $ do
     rword "import"
     path <- quoted $ joinedBy '/' $ joinedBy '.' $ joinedBy '-' identifier
     alias <- optional (sp *> rword "as" *> quoted identifier)
@@ -24,7 +24,7 @@ funImport = do
         joinedBy c p = intercalate [c] <$> sepBy1 p (char c) -- black Applicative magic
 
 funFuncDecl :: Parser Fun.Decl
-funFuncDecl = do
+funFuncDecl = nonIndented $ do
     rword "func"
     name <- identifier
     params <- try funcParams <|> return []

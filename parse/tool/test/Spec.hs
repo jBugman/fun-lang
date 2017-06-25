@@ -14,6 +14,9 @@ main = hspec $ do
     it "returns error on malformed input" $
       prs funImport `shouldFailOn` "i_mport \"fmt\""
 
+    it "checks what import must not be indented" $
+      prs funImport `shouldFailOn` "    import \"fmt\""
+
     it "parses alias" $
       prs funImport "import \"longpackagename\" as \"pkg\"" `shouldParse` Import "longpackagename" (Just "pkg")
 

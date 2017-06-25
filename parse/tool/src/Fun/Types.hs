@@ -30,7 +30,7 @@ data Type = Type TypeName | List Type
 data Param = Param {paramName :: String, paramType :: Type}
     deriving (Eq, Show)
 
-data FuncBody = Undefined | Expr | Inline String
+data FuncBody = Undefined | Expr | Inline [String]
     deriving (Eq, Show)
 
 type FuncName = String

@@ -54,4 +54,7 @@ data ForHeader
 
 data Literal
     = StringLit String
+    | IntegerLit Integer
+    | DoubleLit Double
+    | HexLit Integer
         deriving (Eq, Show)

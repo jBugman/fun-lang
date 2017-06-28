@@ -81,3 +81,10 @@ main = hspec $ do
     it "parses inline func body without something after it" $
       prs inline "inline\n    {\n        struct{}{}\n    }\n    // inline comment\n\n // comment" `shouldParse`
         Inline ["{", "    struct{}{}", "}", "// inline comment"]
+
+  describe "Fun.Parser.package" $ do
+    it "parses helloworld" $
+      prs package "package main\n\nfunc main = print \"hello world\"" `shouldParse`
+        Package "main" [] [
+            FuncDecl "main" [] []
+              (Single $ Application (FuncName "main") [Lit $ StringLit "hello world"])]

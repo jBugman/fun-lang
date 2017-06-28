@@ -20,26 +20,25 @@ data Decl
     }
         deriving (Eq, Show)
 
-type Var = String
+newtype Var = Var String deriving (Eq, Show)
 
-type TypeName = String
-
-data Type = Type TypeName | List Type
+data Type = Type String | List Type
     deriving (Eq, Show)
 
 data Param = Param {paramName :: String, paramType :: Type}
     deriving (Eq, Show)
 
-data FuncBody = Undefined | Expr | Inline [String]
+data FuncBody = Undefined | Single Expr | Inline [String]
     deriving (Eq, Show)
 
-type FuncName = String
+newtype FuncName = FuncName String deriving (Eq, Show)
 
 data Expr
     = Application {
         func :: FuncName,
         args :: [Expr]
     }
+    | Lit Literal
     | DoBlock [Expr]
     | For ForHeader Expr
     | Op Expr Expr
@@ -51,4 +50,8 @@ data ForHeader
     | IterInlusive Var Int Int
     | Range1 Var Type
     | Range2 Var Var Type
+        deriving (Eq, Show)
+
+data Literal
+    = StringLit String
         deriving (Eq, Show)

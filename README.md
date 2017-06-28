@@ -7,7 +7,7 @@ Idea is to provide cleaner (subjective) syntax and later some code-generation fe
 
     import "io"
 
-    func inc (val :: int) -> int = val + 1
+    func inc (val int) -> int = val + 1
 
     func print42 = print 42
 
@@ -15,12 +15,6 @@ Idea is to provide cleaner (subjective) syntax and later some code-generation fe
         var line = "Hello World!"
         fmt.Fprintln io.Discard line
 
-Package purpose
-
-    /fun        Language definitions
-    /translate  Translation from Go to Fun
-    /parse      Parsing Fun source code
-    /printer    Translation from Fun to Go
 
 Tests
 

@@ -2,7 +2,7 @@ module Fun.Lexer where
 
 import Control.Applicative (empty)
 import Control.Monad (void)
-import Text.Megaparsec (try, many, char, string, letterChar, alphaNumChar, spaceChar, between, notFollowedBy, sepBy, oneOf)
+import Text.Megaparsec (try, many, char, string, letterChar, alphaNumChar, spaceChar, between, notFollowedBy, sepBy, oneOf, newline, count)
 import Text.Megaparsec.String (Parser)
 import qualified Text.Megaparsec.Lexer as L
 
@@ -14,9 +14,16 @@ splf = L.space (void spaceChar) lineComment empty
 
 sp :: Parser () -- whitespace consumer for lexemes
 sp = L.space (void $ oneOf " \t") lineComment empty
+-- sp = L.space empty lineComment empty
+
+lf :: Parser ()
+lf = void newline
 
 nonIndented :: Parser a -> Parser a
 nonIndented = L.nonIndented splf
+
+indentation :: Parser ()
+indentation = void $ count 4 (char ' ')
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sp

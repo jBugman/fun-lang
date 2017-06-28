@@ -3,7 +3,7 @@
 module Fun.Parser where
 
 import Data.List (intercalate)
-import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError)
+import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError, manyTill, some, anyChar, eof)
 import Text.Megaparsec.String (Parser)
 
 import Fun.Lexer
@@ -44,6 +44,17 @@ funcParams = do
     return $ map (\[x, y] -> Fun.Param x (Fun.Type y)) xs
 
 funcBody :: Parser Fun.FuncBody
-funcBody = do
-    rword "undefined"
-    return Fun.Undefined
+funcBody = inline <|> undef
+
+undef :: Parser Fun.FuncBody
+undef = rword "undefined" *> return Fun.Undefined
+
+inline :: Parser Fun.FuncBody
+inline = do
+    rword "inline"
+    lf
+    xs <- some indentedLine
+    return $ Fun.Inline xs
+        where
+            indentedLine :: Parser String
+            indentedLine = indentation *> manyTill anyChar (lf <|> eof)

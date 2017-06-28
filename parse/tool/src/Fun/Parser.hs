@@ -58,3 +58,6 @@ inline = do
         where
             indentedLine :: Parser String
             indentedLine = indentation *> manyTill anyChar (lf <|> eof)
+
+package :: Parser Fun.Package
+package = undefined -- TODO

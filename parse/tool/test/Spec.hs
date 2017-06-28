@@ -82,6 +82,63 @@ main = hspec $ do
       prs inline "inline\n    {\n        struct{}{}\n    }\n    // inline comment\n\n // comment" `shouldParse`
         Inline ["{", "    struct{}{}", "}", "// inline comment"]
 
+  describe "Fun.Parser.funcNameP" $ do
+    it "parses just name" $
+      prs funcNameP "f" `shouldParse` FuncName "f"
+
+    it "fails on not an ident" $
+      prs funcNameP `shouldFailOn` "42"
+
+    it "parses selector" $
+      prs funcNameP "fmt.Println" `shouldParse` FuncName "fmt.Println"
+
+  describe "Fun.Parser.literals" $ do
+    describe "intLit" $ do
+      it "parses unsigned int" $
+        prs intLit "42" `shouldParse` IntegerLit 42
+
+      it "parses signed int" $
+        prs intLit "-42" `shouldParse` IntegerLit (-42)
+
+      it "fails on string" $
+        prs intLit `shouldFailOn` "foo"
+
+    describe "doubleLit" $ do
+      it "parses floats" $
+        prs doubleLit "42.0" `shouldParse` DoubleLit 42.0
+
+      it "fails on ints" $
+        prs doubleLit `shouldFailOn` "42"
+
+    describe "hexLit" $ do
+      it "fails on int" $
+        prs hexLit `shouldFailOn` "42"
+
+      it "parses hexes" $
+        prs hexLit "0xFF" `shouldParse` HexLit 0xFF
+
+    describe "stringLit" $ do
+      it "parses string literal" $
+        prs stringLit "\"foo\"" `shouldParse` StringLit "foo"
+
+      it "parses quoted int as string" $
+        prs stringLit "\"42\"" `shouldParse` StringLit "42"
+
+  describe "Fun.Parser.expr" $ do
+    it "parses int literal" $
+      prs expr "42" `shouldParse` Lit (IntegerLit 42)
+
+    it "parses string literal" $
+      prs expr "\"foo\"" `shouldParse` Lit (StringLit "foo")
+
+  describe "Fun.Parser.funcApplication" $ do
+    it "parses simplest case" $
+      prs funcApplication "f 42" `shouldParse` Application (FuncName "f") [Lit (IntegerLit 42)]
+
+    it "parses println" $
+      prs funcApplication "fmt.Println \"foo\"" `shouldParse`
+        Application (FuncName "fmt.Println") [Lit (StringLit "foo")]
+
   describe "Fun.Parser.package" $ do
     it "parses helloworld" $
       prs package "package main\n\nfunc main = print \"hello world\"" `shouldParse`

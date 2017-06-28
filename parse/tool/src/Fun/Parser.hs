@@ -3,7 +3,7 @@
 module Fun.Parser where
 
 import Data.List (intercalate)
-import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError, manyTill, some, anyChar, eof)
+import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError, manyTill, many, some, anyChar, eof)
 import Text.Megaparsec.String (Parser)
 
 import Fun.Lexer
@@ -60,4 +60,59 @@ inline = do
             indentedLine = indentation *> manyTill anyChar (lf <|> eof)
 
 package :: Parser Fun.Package
-package = undefined -- TODO
+package = do
+    rword "package"
+    name <- identifier
+    is <- try (many funImport) <|> return []
+    ds <- some topLevel
+    eof
+    return $ Fun.Package name is ds
+
+topLevel :: Parser Fun.Decl
+topLevel = funFuncDecl
+
+funcApplication :: Parser Fun.Expr
+funcApplication = do
+    name <- funcNameP
+    args <- try (many expr) <|> return []
+    return $ Fun.Application name args
+
+funcNameP :: Parser Fun.FuncName
+funcNameP = do
+    s <- try selector <|> identifier
+    return (Fun.FuncName s)
+        where
+            selector = do
+                rec <- identifier
+                _ <- char '.'
+                name <- identifier
+                return $ rec ++ "." ++ name
+
+expr :: Parser Fun.Expr
+expr = try literal <|> funcApplication
+
+literal :: Parser Fun.Expr
+literal = do
+    lit <- try doubleLit <|> try hexLit <|> try intLit <|> stringLit
+    return (Fun.Lit lit)
+
+doubleLit :: Parser Fun.Literal
+doubleLit = do
+    x <- double
+    return (Fun.DoubleLit x)
+
+hexLit :: Parser Fun.Literal
+hexLit = do
+    x <- hex
+    return (Fun.HexLit x)
+
+intLit :: Parser Fun.Literal
+intLit = do
+    x <- try signedInteger <|> integer
+    return (Fun.IntegerLit x)
+
+stringLit :: Parser Fun.Literal
+stringLit = do
+    s <- stringLiteral
+    return (Fun.StringLit s)
+

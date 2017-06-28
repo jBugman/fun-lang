@@ -2,7 +2,7 @@ module Fun.Lexer where
 
 import Control.Applicative (empty)
 import Control.Monad (void)
-import Text.Megaparsec (try, many, char, string, letterChar, alphaNumChar, spaceChar, between, notFollowedBy, sepBy, oneOf, newline, count)
+import Text.Megaparsec (try, many, char, char', string, letterChar, alphaNumChar, spaceChar, between, notFollowedBy, sepBy, oneOf, newline, count, manyTill)
 import Text.Megaparsec.String (Parser)
 import qualified Text.Megaparsec.Lexer as L
 
@@ -54,8 +54,20 @@ rws = [
     "else"
  ]
 
+hex :: Parser Integer
+hex = char '0' >> char' 'x' >> L.hexadecimal
+
+double :: Parser Double
+double = lexeme L.float
+
 integer :: Parser Integer
 integer = lexeme L.integer
+
+signedInteger :: Parser Integer
+signedInteger = L.signed sp integer
+
+stringLiteral :: Parser String
+stringLiteral = char '"' >> manyTill L.charLiteral (char '"')
 
 dot :: Parser String
 dot = symbol "."

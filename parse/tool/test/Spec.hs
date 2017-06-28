@@ -62,9 +62,13 @@ main = hspec $ do
       prs funFuncDecl "func h (a :: int, b :: string) -> (int, string) = undefined" `shouldParse`
         FuncDecl "h" [Param "a" (Type "int"), Param "b" (Type "string")] [Type "int", Type "string"] Undefined
 
+    it "parses inline as body" $
+      prs funFuncDecl "func test () = inline\n    ping <- true" `shouldParse`
+        FuncDecl "test" [] [] (Inline ["ping <- true"])
+
   describe "Fun.Parser.inline" $ do
-    it "parses empty inline" $
-      prs inline "inline\n" `shouldParse` Inline []
+    it "fails on empty inline" $
+      prs inline `shouldFailOn` "inline\n"
 
     it "parses inline func body" $
       prs inline "inline\n    i := 0\n    fmt.Printf(\"%d\", i)\n" `shouldParse`

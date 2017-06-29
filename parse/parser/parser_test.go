@@ -34,9 +34,9 @@ func TestParser_Parse_module(t *testing.T) {
 	}
 }
 
-func TestParser_Parse_brokenModule(t *testing.T) {
+func TestParse_not_a_package(t *testing.T) {
 	_, err := parse.String("module     Test  whe\n")
-	assert.EqualError(t, err, "found 'whe' expected 'where' at Ln 1, Col 18")
+	assert.EqualError(t, err, "found 'm' expected \"package\" at Ln 1, Col 1")
 }
 
 func TestParser_Parse_brokenImport(t *testing.T) {

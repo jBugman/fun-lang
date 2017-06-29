@@ -7,5 +7,5 @@ main :: IO ()
 main = do
     source <- getContents
     case F.parsePackage source of
-        Left  err -> die (show err)
-        Right p   -> F.toStdout (F.jsonify p)
+        Left  err -> die (F.prettyError err)
+        Right p   -> F.printAsJSON p

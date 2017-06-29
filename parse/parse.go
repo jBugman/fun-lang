@@ -4,9 +4,9 @@ package parse
 import (
 	"bytes"
 	"encoding/json"
-	"os/exec"
-
 	"errors"
+	"os/exec"
+	"strings"
 
 	"github.com/jBugman/fun-lang/fun"
 	"github.com/jBugman/fun-lang/parse/parser"
@@ -44,7 +44,8 @@ func Offload(source []byte) ([]byte, error) {
 	case nil:
 		return ob.Bytes(), nil
 	case *exec.ExitError:
-		return nil, errors.New(eb.String())
+		msg := strings.TrimSuffix(eb.String(), "\n")
+		return nil, errors.New(msg)
 	default:
 		return nil, err
 	}

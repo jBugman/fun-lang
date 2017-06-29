@@ -15,26 +15,26 @@ func FixFormat(source []byte) (string, error) {
 	return string(result), err
 }
 
-// Module prints fun.Module.
-func Module(mod fun.Module) ([]byte, error) {
+// Package prints fun.Module.
+func Package(pk fun.Package) ([]byte, error) {
 	var err error
 	var buf bytes.Buffer
 	// Package
-	fmt.Fprintf(&buf, "package %s%s\n", strings.ToLower(string(mod.Name[0])), mod.Name[1:])
+	fmt.Fprintf(&buf, "package %s%s\n", strings.ToLower(string(pk.Name[0])), pk.Name[1:])
 	// Imports
-	switch len(mod.Imports) {
+	switch len(pk.Imports) {
 	case 0: // do nothing
 	case 1:
-		fmt.Fprintln(&buf, "import ", Import(mod.Imports[0]))
+		fmt.Fprintln(&buf, "import ", Import(pk.Imports[0]))
 	default:
 		fmt.Fprintln(&buf, "import (")
-		for _, imp := range mod.Imports {
+		for _, imp := range pk.Imports {
 			fmt.Fprintln(&buf, Import(imp))
 		}
 		fmt.Fprintln(&buf, ")")
 	}
 	// Top-level declarations
-	for _, decl := range mod.Decls {
+	for _, decl := range pk.TopLevels {
 		var line string
 		switch d := decl.(type) {
 		case fun.FuncDecl:

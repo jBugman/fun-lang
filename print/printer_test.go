@@ -27,13 +27,13 @@ func ex(source string) string {
 	return r
 }
 
-func TestModule(t *testing.T) {
-	tree := fun.Module{
+func TestPackage(t *testing.T) {
+	tree := fun.Package{
 		Name: "Main",
 		Imports: []fun.Import{
 			{Path: "fmt"},
 		},
-		Decls: []fun.Decl{
+		TopLevels: []fun.TopLevel{
 			fun.FuncDecl{
 				Name: "main",
 				Body: fun.SingleExprBody{
@@ -50,7 +50,7 @@ func TestModule(t *testing.T) {
 			},
 		},
 	}
-	source, err := print.Module(tree)
+	source, err := print.Package(tree)
 	assert.NoError(t, err)
 	result, err := print.FixFormat(source)
 	assert.NoError(t, err)
@@ -65,15 +65,15 @@ func TestModule(t *testing.T) {
 	`), fmt.Sprint(string(result)))
 }
 
-func TestModule_multiImports(t *testing.T) {
-	tree := fun.Module{
+func TestPackage_multiImports(t *testing.T) {
+	tree := fun.Package{
 		Name: "Test",
 		Imports: []fun.Import{
 			{Path: "log"},
 			{Path: "./log", Alias: "myLog"},
 		},
 	}
-	source, err := print.Module(tree)
+	source, err := print.Package(tree)
 	assert.NoError(t, err)
 	result, err := print.FixFormat(source)
 	assert.NoError(t, err)

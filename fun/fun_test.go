@@ -115,12 +115,12 @@ func ExampleFuncDecl_String_params() {
 }
 
 func ExampleCreateAST() {
-	module := fun.Module{
+	pack := fun.Package{
 		Name: "Main",
 		Imports: []fun.Import{
 			{Path: "fmt"},
 		},
-		Decls: []fun.Decl{
+		TopLevels: []fun.TopLevel{
 			fun.FuncDecl{
 				Name: "main",
 				Body: fun.SingleExprBody{
@@ -135,7 +135,7 @@ func ExampleCreateAST() {
 			},
 		},
 	}
-	fmt.Print(module)
+	fmt.Print(pack)
 	// Output:
 	// module Main where
 	//

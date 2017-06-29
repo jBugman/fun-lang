@@ -19,7 +19,7 @@ func NewFun(fset *token.FileSet) Fun {
 
 // Fun provides methods for translation.
 type Fun interface {
-	Module(src *ast.File) (fun.Module, error)
+	Package(src *ast.File) (fun.Package, error)
 	Import(imp *ast.ImportSpec) (fun.Import, error)
 	Function(fd *ast.FuncDecl) (fun.FuncDecl, error)
 	Statement(stmt ast.Stmt) (fun.Expression, error)
@@ -31,17 +31,17 @@ type funC struct {
 }
 
 // Module converts Go ast.File to Fun Module.
-func (conv funC) Module(src *ast.File) (fun.Module, error) {
-	var module fun.Module
-	// Module name
-	module.Name = strings.Title(identToString(src.Name))
+func (conv funC) Package(src *ast.File) (fun.Package, error) {
+	var pack fun.Package
+	// Package name
+	pack.Name = strings.Title(identToString(src.Name))
 	// Imports
 	for _, imp := range src.Imports {
 		funImp, err := conv.Import(imp)
 		if err != nil {
-			return module, err
+			return pack, err
 		}
-		module.Imports = append(module.Imports, funImp)
+		pack.Imports = append(pack.Imports, funImp)
 	}
 	// Top-level declarations
 	for _, gd := range src.Decls {
@@ -49,12 +49,12 @@ func (conv funC) Module(src *ast.File) (fun.Module, error) {
 		case *ast.FuncDecl:
 			fn, err := conv.Function(d)
 			if err != nil {
-				return module, err
+				return pack, err
 			}
-			module.Decls = append(module.Decls, fn)
+			pack.TopLevels = append(pack.TopLevels, fn)
 		}
 	}
-	return module, nil
+	return pack, nil
 }
 
 // Import converts Go import to Fun Import.

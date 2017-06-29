@@ -21,21 +21,21 @@ func (imp Import) String() string {
 	return fmt.Sprintf("import \"%s\" as \"%s\"", imp.Path, imp.Alias)
 }
 
-func (mod Module) String() string {
-	topLevels := make([]string, 1+1+len(mod.Decls))
+func (pk Package) String() string {
+	topLevels := make([]string, 1+1+len(pk.TopLevels))
 
 	// Module name
-	topLevels[0] = fmt.Sprintf("module %s where%s", mod.Name, lf)
+	topLevels[0] = fmt.Sprintf("module %s where%s", pk.Name, lf)
 
 	// Imports
-	imports := make([]string, len(mod.Imports))
-	for i, imp := range mod.Imports {
+	imports := make([]string, len(pk.Imports))
+	for i, imp := range pk.Imports {
 		imports[i] = imp.String()
 	}
 	topLevels[1] = strings.Join(imports, lf) + lf
 
 	// Top-level declarations
-	for i, decl := range mod.Decls {
+	for i, decl := range pk.TopLevels {
 		topLevels[2+i] = fmt.Sprint(decl) + lf
 	}
 

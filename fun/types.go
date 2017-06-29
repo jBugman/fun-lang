@@ -39,11 +39,11 @@ type ListType struct {
 
 func (t ListType) typeMarker() {}
 
-// Module represents single source file.
-type Module struct {
-	Name    string
-	Imports []Import
-	Decls   []Decl
+// Package represents single source file.
+type Package struct {
+	Name      string     `json:"name"`
+	Imports   []Import   `json:"imports"`
+	TopLevels []TopLevel `json:"topDecls"`
 }
 
 // Import represents import.
@@ -54,9 +54,9 @@ type Import struct {
 
 /*** Top-level declarations ***/
 
-// Decl represents top-level declaration.
-type Decl interface {
-	declMarker()
+// TopLevel represents top-level declaration.
+type TopLevel interface {
+	topLevelMarker()
 }
 
 // FuncDecl represents function declaration.
@@ -67,7 +67,7 @@ type FuncDecl struct {
 	Body    FuncBody
 }
 
-func (fd FuncDecl) declMarker() {}
+func (fd FuncDecl) topLevelMarker() {}
 
 /*** Function declaration ***/
 

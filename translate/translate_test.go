@@ -20,7 +20,7 @@ func TestErrorLocation_99bottles(t *testing.T) {
 	assert.EqualError(t, err, "test.go:2:1: expected declaration, found 'INT' 99")
 }
 
-func TestFun_Module(t *testing.T) {
+func TestFun_Package(t *testing.T) {
 	const fullSource = `
 	package main
 
@@ -44,7 +44,7 @@ func TestFun_Module(t *testing.T) {
 	`
 	fset := token.NewFileSet()
 	tree, _ := parser.ParseFile(fset, "source.go", fullSource, 0)
-	result, err := translate.NewFun(fset).Module(tree)
+	result, err := translate.NewFun(fset).Package(tree)
 	assert.NoError(t, err)
 	assert.Equal(t, ex(`
 	module Main where
@@ -165,7 +165,7 @@ func TestFun_Module_unsupportedNakedReturn(t *testing.T) {
 	fset := token.NewFileSet()
 	tree, err := parser.ParseFile(fset, "", source, 0)
 	assert.NoError(t, err)
-	_, err = translate.NewFun(fset).Module(tree)
+	_, err = translate.NewFun(fset).Package(tree)
 	assert.EqualError(t, err, ex(`
 	result list of zero length is not supported:
 	     0  *ast.ReturnStmt {
@@ -183,6 +183,6 @@ func TestFun_Module_unsupportedForwardDeclare(t *testing.T) {
 	fset := token.NewFileSet()
 	tree, err := parser.ParseFile(fset, "", source, 0)
 	assert.NoError(t, err)
-	_, err = translate.NewFun(fset).Module(tree)
+	_, err = translate.NewFun(fset).Package(tree)
 	assert.Error(t, err)
 }

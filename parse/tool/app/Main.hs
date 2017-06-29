@@ -1,11 +1,11 @@
 module Main where
 
-import Fun.Parser (prs, funImport)
 import System.Exit (die)
+import qualified Fun.Main as F
 
 main :: IO ()
 main = do
     source <- getContents
-    case prs funImport source of
-        Right result -> putStr $ show result
-        Left err -> die $ show err
+    case F.parsePackage source of
+        Left  err -> die (show err)
+        Right p   -> F.toStdout (F.jsonify p)

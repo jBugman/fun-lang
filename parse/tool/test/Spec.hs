@@ -110,6 +110,16 @@ main = hspec $ do
       it "fails on ints" $
         prs doubleLit `shouldFailOn` "42"
 
+    describe "boolLit" $ do
+      it "parses true" $
+        prs boolLit "true" `shouldParse` BoolLit True
+
+      it "parses false" $
+        prs boolLit "false" `shouldParse` BoolLit False
+
+      it "fails on string" $
+        prs boolLit `shouldFailOn` "False"
+
     describe "hexLit" $ do
       it "fails on int" $
         prs hexLit `shouldFailOn` "42"

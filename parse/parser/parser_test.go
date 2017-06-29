@@ -69,3 +69,16 @@ main = do
 	line := "Hello World!"
 	fmt.Fprintln(io.Discard, line)
 `
+
+func TestParse_package_noErr(t *testing.T) {
+	src := ex(`
+	package main
+	
+	func main = print "hello world"
+	`)
+	ast := fun.Module{Name: "main"}
+	result, err := parse.String(src)
+	if assert.NoError(t, err) {
+		assert.Equal(t, ast, *result)
+	}
+}

@@ -15,10 +15,16 @@ data TopLevel
 newtype Var = Var String
     deriving (Eq, Show)
 
-data Type = Type String | List Type
+data Type
+    = Type String
+    | Slice Type
+    | Map Type Type
+        deriving (Eq, Show)
+
+data VarSpec = VarSpec Name Type
     deriving (Eq, Show)
 
-data Param = Param Name Type
+newtype Param = Param VarSpec
     deriving (Eq, Show)
 
 data FuncBody

@@ -40,8 +40,14 @@ funcResults = do
 
 funcParams :: Parser [Fun.Param]
 funcParams = do
-    xs <- parensList (identifier `sepBy1` rword "::")
-    return $ map (\[x, y] -> Fun.Param x (Fun.Type y)) xs
+    xs <- parensList varSpec
+    return $ map Fun.Param xs
+
+varSpec :: Parser Fun.VarSpec
+varSpec = do
+    n <- identifier
+    t <- identifier
+    return $ Fun.VarSpec n (Fun.Type t)
 
 funcBody :: Parser Fun.FuncBody
 funcBody = inline <|> undef
@@ -119,5 +125,4 @@ stringLit = do
 boolLit :: Parser Fun.Literal
 boolLit = do
     s <- try (word "true") <|> word "false"
-    let b = if s == "true" then True else False
-    return (Fun.BoolLit b)
+    return (Fun.BoolLit (s == "true"))

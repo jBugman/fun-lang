@@ -9,11 +9,10 @@ import (
 	"strings"
 
 	"github.com/jBugman/fun-lang/fun"
-	"github.com/jBugman/fun-lang/parse/parser"
 )
 
-// String is a shortcut to string parsing. Uses Haskell parser.
-func String(source string) (*fun.Module, error) {
+// Package parses string as a Package using Haskell parser.
+func Package(source string) (*fun.Package, error) {
 	jsonString, err := Offload([]byte(source))
 	if err != nil {
 		return nil, err
@@ -23,12 +22,6 @@ func String(source string) (*fun.Module, error) {
 		return nil, err
 	}
 	return p, nil
-}
-
-// Bytes is a shortcut to []byte parsing. Uses Go parser.
-func Bytes(source []byte) (*fun.Module, error) {
-	p := parser.NewParser(bytes.NewReader(source))
-	return p.Parse()
 }
 
 // Offload uses func-parse tool to parse
@@ -51,8 +44,8 @@ func Offload(source []byte) ([]byte, error) {
 	}
 }
 
-func decodeJSON(source []byte) (*fun.Module, error) {
-	var p fun.Module
+func decodeJSON(source []byte) (*fun.Package, error) {
+	var p fun.Package
 	err := json.Unmarshal(source, &p)
 	if err != nil {
 		return nil, err

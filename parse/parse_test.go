@@ -1,4 +1,4 @@
-package parser_test
+package parse_test
 
 import (
 	"strings"
@@ -8,39 +8,29 @@ import (
 
 	"github.com/jBugman/fun-lang/fun"
 	"github.com/jBugman/fun-lang/parse"
-	"github.com/jBugman/fun-lang/parse/parser"
 )
 
-func TestParseString_identity(t *testing.T) {
-	src := ex(fullSource)
-	p := parser.NewParser(strings.NewReader(src))
-	ast0, err0 := p.Parse()
-	ast1, err1 := parse.String(src)
-	assert.Equal(t, ast0, ast1)
-	assert.Equal(t, err0, err1)
-}
-
-func TestParser_Parse_module(t *testing.T) {
-	tree := &fun.Module{
+func TestPackage(t *testing.T) {
+	tree := &fun.Package{
 		Name: "Main",
 		Imports: []fun.Import{
 			fun.Import{Path: "fmt"},
 			fun.Import{Path: "io", Alias: "io"},
 		},
 	}
-	ast, err := parse.String(ex(fullSource))
+	ast, err := parse.Package(ex(fullSource))
 	if assert.NoError(t, err) {
 		assert.Equal(t, tree, ast)
 	}
 }
 
-func TestParse_not_a_package(t *testing.T) {
-	_, err := parse.String("module     Test  whe\n")
+func TestPackage_not_a_package(t *testing.T) {
+	_, err := parse.Package("module     Test  whe\n")
 	assert.EqualError(t, err, "found 'm' expected \"package\" at Ln 1, Col 1")
 }
 
-func TestParser_Parse_brokenImport(t *testing.T) {
-	_, err := parse.String("module Test where\nimport \"fff\n")
+func TestPackage_brokenImport(t *testing.T) {
+	_, err := parse.Package("module Test where\nimport \"fff\n")
 	assert.EqualError(t, err, "found '\n' expected '\"' at Ln 2, Col 12")
 }
 
@@ -76,8 +66,8 @@ func TestParse_package_noErr(t *testing.T) {
 	
 	func main = print "hello world"
 	`)
-	ast := fun.Module{Name: "main"}
-	result, err := parse.String(src)
+	ast := fun.Package{Name: "main"}
+	result, err := parse.Package(src)
 	if assert.NoError(t, err) {
 		assert.Equal(t, ast, *result)
 	}

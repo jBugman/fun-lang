@@ -1,5 +1,12 @@
-import Test.Hspec (hspec, describe, it)
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedLists #-}
+module Main where
+
+import Test.Hspec (hspec, describe, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldParse, shouldFailOn)
+
+import Data.Aeson (toJSON)
+import qualified Data.Aeson.Types as J (Value (Object, String, Array))
 
 import Fun.Parser
 import Fun.Types
@@ -156,3 +163,27 @@ main = hspec $ do
         Package "main" [] [
             FuncDecl "main" [] []
               (Single $ Application (FuncName "print") [Lit $ StringLit "hello world"])]
+
+  describe "Fun.Types.ToJSON" $ do
+    it "serializes helloworld" $
+      toJSON
+        (Package "main" [] [
+          FuncDecl "main" [] []
+            (Single $ Application (FuncName "print") [Lit $ StringLit "hello world"])])
+        `shouldBe` J.Object
+          [ ("$type", J.String "package")
+          , ("name", J.String "main")
+          , ("imports", J.Array [])
+          , ("topDecls", J.Array [ J.Object
+            [ ("$type", J.String "funcDecl")
+            , ("name", J.String "main")
+            , ("params", J.Array [])
+            , ("results", J.Array [])
+            , ("body", J.Object
+              [ ("$type", J.String "singleExpr")
+              , ("expr", J.Object
+                [ ("$type", J.String "funcApplication")
+                , ("name", J.String "print")
+                , ("args", J.Array [ J.Object
+                  [ ("$type", J.String "stringLit")
+                  , ("value", J.String "hello world")  ]])])])]])]

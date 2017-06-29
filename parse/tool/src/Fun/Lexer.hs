@@ -14,7 +14,6 @@ splf = L.space (void spaceChar) lineComment empty
 
 sp :: Parser () -- whitespace consumer for lexemes
 sp = L.space (void $ oneOf " \t") lineComment empty
--- sp = L.space empty lineComment empty
 
 lf :: Parser ()
 lf = void newline
@@ -62,6 +61,9 @@ double = lexeme L.float
 
 integer :: Parser Integer
 integer = lexeme L.integer
+
+word :: String -> Parser String
+word = lexeme . string
 
 signedInteger :: Parser Integer
 signedInteger = L.signed sp integer

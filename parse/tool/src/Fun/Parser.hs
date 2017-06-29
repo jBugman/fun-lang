@@ -116,3 +116,8 @@ stringLit = do
     s <- stringLiteral
     return (Fun.StringLit s)
 
+boolLit :: Parser Fun.Literal
+boolLit = do
+    s <- try (word "true") <|> word "false"
+    let b = if s == "true" then True else False
+    return (Fun.BoolLit b)

@@ -50,7 +50,12 @@ varSpec = do
     return $ Fun.VarSpec n (Fun.Type t)
 
 funcBody :: Parser Fun.FuncBody
-funcBody = inline <|> undef
+funcBody = try inline <|> try undef <|> singleExpr
+
+singleExpr :: Parser Fun.FuncBody
+singleExpr = do
+    e <- expr
+    return (Fun.Single e)
 
 undef :: Parser Fun.FuncBody
 undef = rword "undefined" *> return Fun.Undefined

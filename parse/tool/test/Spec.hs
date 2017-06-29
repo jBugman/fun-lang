@@ -155,4 +155,4 @@ main = hspec $ do
       prs package "package main\n\nfunc main = print \"hello world\"" `shouldParse`
         Package "main" [] [
             FuncDecl "main" [] []
-              (Single $ Application (FuncName "main") [Lit $ StringLit "hello world"])]
+              (Single $ Application (FuncName "print") [Lit $ StringLit "hello world"])]

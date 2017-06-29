@@ -23,7 +23,7 @@ funImport = nonIndented $ do
         joinedBy :: Char -> Parser String -> Parser String
         joinedBy c p = intercalate [c] <$> sepBy1 p (char c) -- black Applicative magic
 
-funFuncDecl :: Parser Fun.Decl
+funFuncDecl :: Parser Fun.TopLevel
 funFuncDecl = nonIndented $ do
     rword "func"
     name <- identifier
@@ -68,7 +68,7 @@ package = do
     eof
     return $ Fun.Package name is ds
 
-topLevel :: Parser Fun.Decl
+topLevel :: Parser Fun.TopLevel
 topLevel = funFuncDecl
 
 funcApplication :: Parser Fun.Expr

@@ -1,43 +1,37 @@
 module Fun.Types where
 
-data Package = Package {
-    packageName :: String,
-    imports     :: [Import],
-    decls       :: [Decl]
-} deriving (Eq, Show)
+type Name = String
 
-data Import = Import {
-    path  :: String,
-    alias :: Maybe String
-} deriving (Eq, Show)
+data Package = Package Name [Import] [TopLevel]
+    deriving (Eq, Show)
 
-data Decl
-    = FuncDecl {
-        funcName :: String,
-        params   :: [Param],
-        results  :: [Type],
-        body     :: FuncBody
-    }
+data Import = Import String (Maybe Name)
+    deriving (Eq, Show)
+
+data TopLevel
+    = FuncDecl Name [Param] [Type] FuncBody
         deriving (Eq, Show)
 
-newtype Var = Var String deriving (Eq, Show)
+newtype Var = Var String
+    deriving (Eq, Show)
 
 data Type = Type String | List Type
     deriving (Eq, Show)
 
-data Param = Param {paramName :: String, paramType :: Type}
+data Param = Param Name Type
     deriving (Eq, Show)
 
-data FuncBody = Undefined | Single Expr | Inline [String]
-    deriving (Eq, Show)
+data FuncBody
+    = Undefined
+    | Single Expr
+    | Inline [String]
+        deriving (Eq, Show)
 
-newtype FuncName = FuncName String deriving (Eq, Show)
+newtype FuncName = FuncName String
+    deriving (Eq, Show)
 
 data Expr
-    = Application {
-        func :: FuncName,
-        args :: [Expr]
-    }
+    = Application FuncName [Expr]
     | Lit Literal
     | DoBlock [Expr]
     | For ForHeader Expr
@@ -57,4 +51,5 @@ data Literal
     | IntegerLit Integer
     | DoubleLit Double
     | HexLit Integer
+    | BoolLit Bool
         deriving (Eq, Show)

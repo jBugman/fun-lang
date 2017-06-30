@@ -34,7 +34,7 @@ type funC struct {
 func (conv funC) Package(src *ast.File) (fun.Package, error) {
 	var pack fun.Package
 	// Package name
-	pack.Name = strings.Title(identToString(src.Name))
+	pack.Name = identToString(src.Name)
 	// Imports
 	for _, imp := range src.Imports {
 		funImp, err := conv.Import(imp)

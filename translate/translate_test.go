@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/jBugman/fun-lang/fun"
 	"github.com/jBugman/fun-lang/translate"
 )
 
@@ -42,27 +43,39 @@ func TestFun_Package(t *testing.T) {
 		fmt.Fprintln(io.Discard, line)
 	}
 	`
+	sample := fun.Package{
+		Name:    "main",
+		Imports: []fun.Import{{Path: "fmt"}, {Path: "io"}},
+		TopLevels: []fun.TopLevel{
+			fun.FuncDecl{
+				Name:    "inc",
+				Params:  fun.Parameters{{Name: "val", Type: fun.IntT}},
+				Results: fun.Results{Types: []fun.Type{fun.IntT}},
+				Body: fun.SingleExprBody{
+					Expr: fun.InfixOperation{
+						X:        fun.Val("val"),
+						Operator: fun.Operator("+"),
+						Y:        fun.Int("1"),
+					}}},
+			fun.FuncDecl{
+				Name: "print42",
+				Body: fun.SingleExprBody{
+					Expr: fun.FuncApplication{
+						Func:      fun.FunctionVal{Module: "fmt", Name: "Println"},
+						Arguments: []fun.Expression{fun.Int("42")},
+					}}},
+			fun.FuncDecl{
+				Name: "main",
+				Body: fun.Inline{Block: []string{
+					`line := "Hello World!"`,
+					`fmt.Fprintln(io.Discard, line)`,
+				}},
+			}}}
 	fset := token.NewFileSet()
 	tree, _ := parser.ParseFile(fset, "source.go", fullSource, 0)
 	result, err := translate.NewFun(fset).Package(tree)
 	assert.NoError(t, err)
-	assert.Equal(t, ex(`
-	module Main where
-	
-	import "fmt"
-	import "io"
-	
-	inc :: int -> IO int
-	inc val = val + 1
-	
-	print42 :: IO ()
-	print42 = fmt.Println 42
-	
-	main :: IO ()
-	main = inline
-	    line := "Hello World!"
-	    fmt.Fprintln(io.Discard, line)
-	`), fmt.Sprint(result))
+	assert.Equal(t, sample, result)
 }
 
 func TestFun_Import(t *testing.T) {
@@ -73,9 +86,11 @@ func TestFun_Import(t *testing.T) {
 			Value: "fmt",
 		},
 	}
+	sample := fun.Import{Path: "fmt"}
 	result, err := translate.NewFun(fset).Import(tree)
-	assert.NoError(t, err)
-	assert.Equal(t, `import "fmt"`, fmt.Sprint(result))
+	if assert.NoError(t, err) {
+		assert.Equal(t, sample, result)
+	}
 }
 
 func TestFun_Expression_selector(t *testing.T) {
@@ -84,9 +99,13 @@ func TestFun_Expression_selector(t *testing.T) {
 		X:   &ast.Ident{Name: "fmt"},
 		Sel: &ast.Ident{Name: "Println"},
 	}
+	sample := fun.FunctionVal{
+		Module: "fmt",
+		Name:   "Println",
+	}
 	result, err := translate.NewFun(fset).Expression(tree)
 	if assert.NoError(t, err) {
-		assert.Equal(t, "fmt.Println", fmt.Sprint(result))
+		assert.Equal(t, sample, result)
 	}
 }
 
@@ -101,8 +120,13 @@ func TestFun_Expression_binary(t *testing.T) {
 		Y:  &ast.BasicLit{Kind: token.INT, Value: "1"},
 	}
 	result, err := translate.NewFun(fset).Expression(tree)
+	sample := fun.InfixOperation{
+		X:        fun.Val("val"),
+		Operator: fun.Operator("+"),
+		Y:        fun.Int("1"),
+	}
 	if assert.NoError(t, err) {
-		assert.Equal(t, "val + 1", fmt.Sprint(result))
+		assert.Equal(t, sample, result)
 	}
 }
 
@@ -124,8 +148,12 @@ func TestFun_Statement_tuple(t *testing.T) {
 	expr, err := parser.ParseExpr("func() {return 'a', 9.99}")
 	returnExpr := expr.(*ast.FuncLit).Body.List[0]
 	result, err := translate.NewFun(fset).Statement(returnExpr)
+	sample := fun.ReturnList{
+		fun.Char("a"),
+		fun.Double("9.99"),
+	}
 	if assert.NoError(t, err) {
-		assert.Equal(t, "('a', 9.99)", fmt.Sprint(result))
+		assert.Equal(t, sample, result)
 	}
 }
 

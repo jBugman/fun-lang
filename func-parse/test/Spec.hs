@@ -164,6 +164,12 @@ main = hspec $ do
             FuncDecl "main" [] []
               (Single $ Application (FuncName "print") [Lit $ StringLit "hello world"])]
 
+    it "parses package with import" $
+      prs package "package foo\n\nimport \"fmt\"\n\nfunc Hello = fmt.Println \"hello world\"" `shouldParse`
+        Package "foo" [ Import "fmt" Nothing ] [
+          FuncDecl "Hello" [] []
+            (Single $ Application (FuncName "fmt.Println") [Lit $ StringLit "hello world"])]
+
   describe "Fun.Types.ToJSON" $ do
     it "serializes helloworld" $
       toJSON

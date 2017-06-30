@@ -2,7 +2,7 @@
 module Fun.Parser where
 
 import Data.List (intercalate)
-import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError, manyTill, many, some, anyChar, eof)
+import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError, manyTill, many, some, anyChar, eof, endBy, endBy1, skipMany)
 import Text.Megaparsec.String (Parser)
 
 import Fun.Lexer
@@ -13,7 +13,7 @@ prs :: Parser a -> String -> Either (ParseError Char _) a
 prs rule = runParser rule ""
 
 funImport :: Parser Fun.Import
-funImport = nonIndented $ do
+funImport = do
     rword "import"
     path <- quoted $ joinedBy '/' $ joinedBy '.' $ joinedBy '-' identifier
     alias <- optional (sp *> rword "as" *> quoted identifier)
@@ -23,7 +23,7 @@ funImport = nonIndented $ do
         joinedBy c p = intercalate [c] <$> sepBy1 p (char c) -- black Applicative magic
 
 funFuncDecl :: Parser Fun.TopLevel
-funFuncDecl = nonIndented $ do
+funFuncDecl = do
     rword "func"
     name <- identifier
     params <- try funcParams <|> return []
@@ -71,12 +71,11 @@ inline = do
 
 package :: Parser Fun.Package
 package = do
-    rword "package"
-    name <- identifier
-    is <- try (many funImport) <|> return []
-    ds <- some topLevel
+    name <- rword "package" *> identifier <* skipMany lf
+    imps <- endBy (try funImport) lf <* skipMany lf
+    tops <- endBy1 topLevel (lf <|> eof)
     eof
-    return $ Fun.Package name is ds
+    return $ Fun.Package name imps tops
 
 topLevel :: Parser Fun.TopLevel
 topLevel = funFuncDecl

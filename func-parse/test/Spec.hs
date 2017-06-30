@@ -49,21 +49,21 @@ main = hspec $ do
       prs funcParams "()" `shouldParse` []
 
     it "parses single parameter" $
-      prs funcParams "(x bool)" `shouldParse` [Param $ VarSpec "x" (Type "bool")]
+      prs funcParams "(x bool)" `shouldParse` [Param $ VarSpec "x" (Atomic "bool")]
 
     it "parses multiple parameters" $
       prs funcParams "(n int, name string)" `shouldParse`
-        [Param $ VarSpec "n" (Type "int"), Param $ VarSpec "name" (Type "string")]
+        [Param $ VarSpec "n" (Atomic "int"), Param $ VarSpec "name" (Atomic "string")]
 
   describe "Fun.Parser.funcResults" $ do
     it "parses empty list" $
       prs funcResults "" `shouldParse` []
 
     it "parses single result" $
-      prs funcResults "bool" `shouldParse` [Type "bool"]
+      prs funcResults "bool" `shouldParse` [Atomic "bool"]
 
     it "parses multiple results" $
-      prs funcResults "(int, error)" `shouldParse` [Type "int", Type "error"]
+      prs funcResults "(int, error)" `shouldParse` [Atomic "int", Atomic "error"]
 
   describe "Fun.Parser.funFuncDecl" $ do
     it "parses simplest decl" $
@@ -71,15 +71,18 @@ main = hspec $ do
 
     it "parses func with some params" $
       prs funFuncDecl "func g (a int, b int) = undefined" `shouldParse`
-        FuncDecl "g" [Param $ VarSpec "a" (Type "int"), Param $ VarSpec "b" (Type "int")] [] Undefined
+        FuncDecl "g" [Param $ VarSpec "a" (Atomic "int"), Param $ VarSpec "b" (Atomic "int")] [] Undefined
 
     it "parses func witout params" $
       prs funFuncDecl "func read () -> (header, error) = undefined" `shouldParse`
-        FuncDecl "read" [] [Type "header", Type "error"] Undefined
+        FuncDecl "read" [] [Atomic "header", Atomic "error"] Undefined
 
     it "parses params and results" $
       prs funFuncDecl "func h (a int, b string) -> (int, string) = undefined" `shouldParse`
-        FuncDecl "h" [Param $ VarSpec "a" (Type "int"), Param $ VarSpec "b" (Type "string")] [Type "int", Type "string"] Undefined
+        FuncDecl "h"
+          [ Param $ VarSpec "a" (Atomic "int")
+          , Param $ VarSpec "b" (Atomic "string")
+          ] [ Atomic "int", Atomic "string" ] Undefined
 
     it "parses inline as body" $
       prs funFuncDecl "func test () = inline\n    ping <- true" `shouldParse`

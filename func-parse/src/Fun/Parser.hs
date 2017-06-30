@@ -36,7 +36,7 @@ funFuncDecl = do
 funcResults :: Parser [Fun.Type]
 funcResults = do
     xs <- try (parensList identifier) <|> try (count 1 identifier) <|> return []
-    return $ map Fun.Type xs
+    return $ map Fun.Atomic xs -- TODO add more
 
 funcParams :: Parser [Fun.Param]
 funcParams = do
@@ -47,7 +47,7 @@ varSpec :: Parser Fun.VarSpec
 varSpec = do
     n <- identifier
     t <- identifier
-    return $ Fun.VarSpec n (Fun.Type t)
+    return $ Fun.VarSpec n (Fun.Atomic t)
 
 funcBody :: Parser Fun.FuncBody
 funcBody = try inline <|> try undef <|> singleExpr

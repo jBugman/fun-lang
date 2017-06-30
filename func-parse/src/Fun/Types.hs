@@ -37,15 +37,15 @@ newtype Var = Var String
     deriving (Eq, Show)
 
 data Type
-    = Type String
+    = Atomic String
     | Slice Type
     | Map Type Type
         deriving (Eq, Show)
 
 instance ToJSON Type where
-    toJSON (Type t)  = object [ jsonType "typeLit", "value" .= t ]
-    toJSON (Slice t) = object [ jsonType "sliceOf", "type" .= t ]
-    toJSON (Map k v) = object [ jsonType "mapOf", "keys" .= k, "values" .= v ]
+    toJSON (Atomic t) = object [ jsonType "atomic", "value" .= t ]
+    toJSON (Slice t)  = object [ jsonType "sliceOf", "type" .= t ]
+    toJSON (Map k v)  = object [ jsonType "mapOf", "keys" .= k, "values" .= v ]
 
 data VarSpec = VarSpec Name Type
     deriving (Eq, Show)

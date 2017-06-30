@@ -44,12 +44,7 @@ func TestPackage(t *testing.T) {
 						},
 						Arguments: []fun.Expression{
 							fun.String("Hello World!"),
-						},
-					},
-				},
-			},
-		},
-	}
+						}}}}}}
 	source, err := print.Package(tree)
 	assert.NoError(t, err)
 	result, err := print.FixFormat(source)

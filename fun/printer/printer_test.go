@@ -1,5 +1,6 @@
-package fun_test
+package printer_test
 
+/*
 import (
 	"fmt"
 	"strings"
@@ -318,3 +319,4 @@ func ex(source string) string {
 	}
 	return strings.Join(lines, "\n")
 }
+*/

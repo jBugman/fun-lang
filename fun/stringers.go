@@ -4,14 +4,18 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-
-	"github.com/jBugman/fun-lang/fun/tokens"
 )
 
-const lf = "\n"
+const (
+	lf        = "\n"
+	undefined = "undefined"
+	arrow     = "->"
+	_io       = "IO" // TODO remove
+	unit      = "()" // TODO remove
+)
 
 func (u Undef) String() string {
-	return string(tokens.UNDEFINED)
+	return undefined
 }
 
 func (imp Import) String() string {
@@ -47,7 +51,7 @@ func (fd FuncDecl) String() string {
 	// Type signature
 	fmt.Fprintf(&out, "%s :: %s", fd.Name, fd.Params)
 	if len(fd.Params) > 0 {
-		fmt.Fprintf(&out, " %s ", tokens.ARROW)
+		fmt.Fprintf(&out, " %s ", arrow)
 	}
 	fmt.Fprint(&out, fd.Results, lf)
 
@@ -59,7 +63,7 @@ func (fd FuncDecl) String() string {
 	fmt.Fprint(&out, " = ")
 
 	if fd.Body == nil {
-		fmt.Fprint(&out, tokens.UNDEFINED)
+		fmt.Fprint(&out, undefined)
 	} else {
 		fmt.Fprint(&out, fd.Body)
 	}
@@ -72,7 +76,7 @@ func (ps Parameters) String() string {
 	for i := 0; i < len(ps); i++ {
 		ss[i] = fmt.Sprint(ps[i].Type)
 	}
-	const sep = " " + string(tokens.ARROW) + " "
+	const sep = " " + arrow + " "
 	return strings.Join(ss, sep)
 }
 
@@ -100,7 +104,7 @@ func (rs Results) String() string {
 		result = fmt.Sprintf("(%s)", strings.Join(ss, ", "))
 	}
 	if !rs.Pure {
-		return fmt.Sprintf("%s %s", tokens.IO, result)
+		return fmt.Sprintf("%s %s", _io, result)
 	}
 	return result
 }
@@ -126,7 +130,7 @@ func (fa FuncApplication) String() string {
 func (v FunctionVal) String() string {
 	var buf bytes.Buffer
 	if v.Module != "" {
-		fmt.Fprint(&buf, v.Module, tokens.PERIOD)
+		fmt.Fprint(&buf, v.Module, ".")
 	}
 	fmt.Fprint(&buf, v.Name)
 	return buf.String()
@@ -178,5 +182,5 @@ func (t ListType) String() string {
 }
 
 func (t UnitType) String() string {
-	return string(tokens.UNIT)
+	return unit
 }

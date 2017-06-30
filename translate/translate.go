@@ -111,11 +111,11 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 		fn.Body = fun.SingleExprBody{Expr: stmt}
 	} else {
 		// Convert to Fun DoBlock
-		db := fun.DoBlock{}
+		db := fun.Inline{}
 		for _, stmt := range fd.Body.List {
 			var buf bytes.Buffer
 			printer.Fprint(&buf, conv.fset, stmt)
-			db.Text = append(db.Text, buf.String())
+			db.Block = append(db.Block, buf.String())
 		}
 		fn.Body = db
 	}

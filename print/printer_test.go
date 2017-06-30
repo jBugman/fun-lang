@@ -113,7 +113,7 @@ func TestFuncDecl_doBlock_multiline(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name:   "printHash",
 		Params: fun.Parameters{fun.NewParam("str", "string")},
-		Body: fun.DoBlock{Text: []string{
+		Body: fun.Inline{Block: []string{
 			`h := md5.New()`,
 			`io.WriteString(h, str)`,
 			`fmt.Printf("%x", h.Sum(nil))`,

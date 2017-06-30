@@ -60,8 +60,8 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 	var body string
 	var err error
 	switch b := f.Body.(type) {
-	case fun.DoBlock:
-		body = strings.Join(b.Text, "\n")
+	case fun.Inline:
+		body = strings.Join(b.Block, "\n")
 	case fun.SingleExprBody:
 		body, err = Expression(b.Expr)
 		if err != nil {

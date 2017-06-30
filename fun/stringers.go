@@ -133,9 +133,9 @@ func (v FunctionVal) String() string {
 }
 
 // Assuming non-empty body, empty do block does not really makes sense.
-func (do DoBlock) String() string {
-	buf := bytes.NewBufferString("do\n")
-	for _, line := range do.Text {
+func (b Inline) String() string {
+	buf := bytes.NewBufferString("inline\n")
+	for _, line := range b.Block {
 		fmt.Fprintf(buf, "    %s\n", line)
 	}
 	return strings.TrimSuffix(buf.String(), lf)

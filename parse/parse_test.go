@@ -10,18 +10,14 @@ import (
 	"github.com/jBugman/fun-lang/parse"
 )
 
-func TestPackage(t *testing.T) {
+func TestPackage_inline_main(t *testing.T) {
 	src := ex(`
 	package main
 
 	import "fmt"
 	import "io" as "io"
 
-	func inc (val int) -> int = val + 1
-
-	func print42 = fmt.Println 42
-
-	func main = do
+	func main = inline
 	    line := "Hello World!"
 	    fmt.Fprintln(io.Discard, line)
 	`)
@@ -31,7 +27,13 @@ func TestPackage(t *testing.T) {
 			fun.Import{Path: "fmt"},
 			fun.Import{Path: "io", Alias: "io"},
 		},
-	}
+		TopLevels: []fun.TopLevel{
+			fun.FuncDecl{
+				Name: "main",
+				Body: fun.Inline{Block: []string{
+					`line := "Hello World!"`,
+					`fmt.Fprintln(io.Discard, line)`,
+				}}}}}
 	ast, err := parse.Package(src)
 	if assert.NoError(t, err) {
 		assert.Equal(t, tree, ast)

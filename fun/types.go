@@ -108,12 +108,12 @@ func (u Undef) expressionMarker() {}
 // Undefined is an Undef singleton.
 const Undefined Undef = true
 
-// DoBlock represents raw Go code as a function body.
-type DoBlock struct {
-	Text []string
+// Inline represents raw Go code as a function body.
+type Inline struct {
+	Block []string
 }
 
-func (do DoBlock) funcBodyMarker() {}
+func (b Inline) funcBodyMarker() {}
 
 // SingleExprBody represents sungle expression as a function body.
 type SingleExprBody struct {

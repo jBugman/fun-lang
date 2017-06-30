@@ -199,10 +199,10 @@ func ExampleFuncDecl_String_singleExprBody() {
 }
 
 func ExampleDoBlock_String_oneLine() {
-	fn := fun.DoBlock{Text: []string{`fmt.Fprintf(&b, "world!")`}}
+	fn := fun.Inline{Block: []string{`fmt.Fprintf(&b, "world!")`}}
 	fmt.Println(fn)
 	// Output:
-	// do
+	// inline
 	//     fmt.Fprintf(&b, "world!")
 }
 
@@ -210,7 +210,7 @@ func ExampleFuncDecl_String_doBlock_multiline() {
 	fn := fun.FuncDecl{
 		Name:   "printHash",
 		Params: fun.Parameters{fun.NewParam("str", "string")},
-		Body: fun.DoBlock{Text: []string{
+		Body: fun.Inline{Block: []string{
 			`h := md5.New()`,
 			`io.WriteString(h, str)`,
 			`fmt.Printf("%x", h.Sum(nil))`,
@@ -219,7 +219,7 @@ func ExampleFuncDecl_String_doBlock_multiline() {
 	fmt.Println(fn)
 	// Output:
 	// printHash :: string -> IO ()
-	// printHash str = do
+	// printHash str = inline
 	//     h := md5.New()
 	//     io.WriteString(h, str)
 	//     fmt.Printf("%x", h.Sum(nil))

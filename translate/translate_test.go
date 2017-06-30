@@ -59,7 +59,7 @@ func TestFun_Package(t *testing.T) {
 	print42 = fmt.Println 42
 	
 	main :: IO ()
-	main = do
+	main = inline
 	    line := "Hello World!"
 	    fmt.Fprintln(io.Discard, line)
 	`), fmt.Sprint(result))

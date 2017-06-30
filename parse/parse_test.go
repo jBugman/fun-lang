@@ -11,6 +11,20 @@ import (
 )
 
 func TestPackage(t *testing.T) {
+	src := ex(`
+	package main
+
+	import "fmt"
+	import "io" as "io"
+
+	func inc (val int) -> int = val + 1
+
+	func print42 = fmt.Println 42
+
+	func main = do
+		line := "Hello World!"
+		fmt.Fprintln(io.Discard, line)
+	`)
 	tree := &fun.Package{
 		Name: "Main",
 		Imports: []fun.Import{
@@ -18,7 +32,7 @@ func TestPackage(t *testing.T) {
 			fun.Import{Path: "io", Alias: "io"},
 		},
 	}
-	ast, err := parse.Package(ex(fullSource))
+	ast, err := parse.Package(src)
 	if assert.NoError(t, err) {
 		assert.Equal(t, tree, ast)
 	}
@@ -30,8 +44,30 @@ func TestPackage_not_a_package(t *testing.T) {
 }
 
 func TestPackage_brokenImport(t *testing.T) {
-	_, err := parse.Package("module Test where\nimport \"fff\n")
+	_, err := parse.Package("package test\nimport \"fff\n")
 	assert.EqualError(t, err, "found '\n' expected '\"' at Ln 2, Col 12")
+}
+
+func TestPackage_helloWorld(t *testing.T) {
+	src := ex(`
+	package main
+	
+	func main = print "hello world"
+	`)
+	ast := fun.Package{
+		Name: "main",
+		TopLevels: []fun.TopLevel{
+			fun.FuncDecl{
+				Name: "main",
+				Body: fun.SingleExprBody{
+					Expr: fun.FuncApplication{
+						Func:      fun.FunctionVal{Name: "print"},
+						Arguments: []fun.Expression{fun.String("hello world")},
+					}}}}}
+	result, err := parse.Package(src)
+	if assert.NoError(t, err) {
+		assert.Equal(t, ast, *result)
+	}
 }
 
 func ex(source string) string {
@@ -40,35 +76,4 @@ func ex(source string) string {
 		lines[i] = strings.TrimPrefix(lines[i], "\t")
 	}
 	return strings.Join(lines, "\n")
-}
-
-const fullSource = `
-module Main where
-
-import "fmt"
-import "io" as "io"
-
-inc :: int -> int
-inc val = val + 1
-
-print42 :: IO ()
-print42 = fmt.Println 42
-
-main :: IO ()
-main = do
-	line := "Hello World!"
-	fmt.Fprintln(io.Discard, line)
-`
-
-func TestParse_package_noErr(t *testing.T) {
-	src := ex(`
-	package main
-	
-	func main = print "hello world"
-	`)
-	ast := fun.Package{Name: "main"}
-	result, err := parse.Package(src)
-	if assert.NoError(t, err) {
-		assert.Equal(t, ast, *result)
-	}
 }

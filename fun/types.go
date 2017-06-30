@@ -41,9 +41,9 @@ func (t ListType) typeMarker() {}
 
 // Package represents single source file.
 type Package struct {
-	Name      string     `json:"name"`
-	Imports   []Import   `json:"imports"`
-	TopLevels []TopLevel `json:"topDecls"`
+	Name      string
+	Imports   []Import
+	TopLevels []TopLevel
 }
 
 // Import represents import.

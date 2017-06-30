@@ -2,7 +2,8 @@
 module Fun.Parser where
 
 import Data.List (intercalate)
-import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError, manyTill, many, some, anyChar, eof, endBy, endBy1, skipMany)
+import Text.Megaparsec ((<|>), optional, try, char, sepBy1, count, runParser, ParseError,
+                        manyTill, many, some, anyChar, eof, endBy1, skipMany, skipSome, sepEndBy)
 import Text.Megaparsec.String (Parser)
 
 import Fun.Lexer
@@ -69,11 +70,14 @@ inline = do
             indentedLine :: Parser String
             indentedLine = indentation *> manyTill anyChar (lf <|> eof)
 
+imports :: Parser [Fun.Import]
+imports = sepEndBy funImport (skipSome lf)
+
 package :: Parser Fun.Package
 package = do
     name <- rword "package" *> identifier <* skipMany lf
-    imps <- endBy (try funImport) lf <* skipMany lf
-    tops <- endBy1 topLevel (lf <|> eof)
+    imps <- imports
+    tops <- endBy1 topLevel (skipSome lf <|> eof)
     eof
     return $ Fun.Package name imps tops
 

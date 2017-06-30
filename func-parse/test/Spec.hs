@@ -33,6 +33,17 @@ main = hspec $ do
     it "parses github urls" $
       prs funImport "import \"github.com/jBugman/fun-lang/fun\"" `shouldParse` Import "github.com/jBugman/fun-lang/fun" Nothing
 
+  describe "Fun.Parser.imports" $ do
+    it "parses multiple imports" $
+      prs imports "import \"pkg1\"\n\n\nimport \"pkg2\"\n" `shouldParse`
+        [Import "pkg1" Nothing, Import "pkg2" Nothing]
+
+    it "parses single import" $
+      prs imports "import \"pkg1\"" `shouldParse` [Import "pkg1" Nothing]
+
+    it "parses no imports" $
+      prs imports "func main = undefined" `shouldParse` []
+
   describe "Fun.Parser.funcParams" $ do
     it "parses empty list" $
       prs funcParams "()" `shouldParse` []
@@ -168,6 +179,16 @@ main = hspec $ do
       prs package "package foo\n\nimport \"fmt\"\n\nfunc Hello = fmt.Println \"hello world\"" `shouldParse`
         Package "foo" [ Import "fmt" Nothing ] [
           FuncDecl "Hello" [] []
+            (Single $ Application (FuncName "fmt.Println") [Lit $ StringLit "hello world"])]
+
+    it "parses package with multiple imports" $
+      prs package "package bar\n\nimport \"fmt\"\nimport \"looong/pkg\" as \"l\"\n\nfunc Greet = fmt.Println \"hello world\""
+        `shouldParse`
+        Package "bar"
+          [ Import "fmt" Nothing
+          , Import "looong/pkg" (Just "l")
+          ][
+          FuncDecl "Greet" [] []
             (Single $ Application (FuncName "fmt.Println") [Lit $ StringLit "hello world"])]
 
   describe "Fun.Types.ToJSON" $ do

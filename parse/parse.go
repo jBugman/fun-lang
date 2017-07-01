@@ -12,8 +12,8 @@ import (
 	"github.com/jBugman/fun-lang/fun"
 )
 
-// Package parses string as a Package using Haskell parser.
-func Package(source string) (*fun.Package, error) {
+// Package parses Package using Haskell parser.
+func Package(source []byte) (*fun.Package, error) {
 	jsonString, err := Offload([]byte(source))
 	if err != nil {
 		return nil, err

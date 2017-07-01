@@ -34,19 +34,21 @@ func TestPackage_inline_main(t *testing.T) {
 					`line := "Hello World!"`,
 					`fmt.Fprintln(io.Discard, line)`,
 				}}}}}
-	ast, err := parse.Package(src)
+	ast, err := parse.Package([]byte(src))
 	if assert.NoError(t, err) {
 		assert.Equal(t, tree, ast)
 	}
 }
 
 func TestPackage_not_a_package(t *testing.T) {
-	_, err := parse.Package("module     Test  whe\n")
+	const src = "module     Test  whe\n"
+	_, err := parse.Package([]byte(src))
 	assert.EqualError(t, err, "found 'm' expected \"package\" at Ln 1, Col 1")
 }
 
 func TestPackage_brokenImport(t *testing.T) {
-	_, err := parse.Package("package test\nimport \"fff\n")
+	const src = "package test\nimport \"fff\n"
+	_, err := parse.Package([]byte(src))
 	assert.Error(t, err)
 }
 
@@ -66,7 +68,7 @@ func TestPackage_helloWorld(t *testing.T) {
 						Name: fun.FuncName{V: "print"},
 						Args: []fun.Expr{fun.StringLit("hello world")},
 					}}}}}
-	result, err := parse.Package(src)
+	result, err := parse.Package([]byte(src))
 	if assert.NoError(t, err) {
 		assert.Equal(t, ast, *result)
 	}

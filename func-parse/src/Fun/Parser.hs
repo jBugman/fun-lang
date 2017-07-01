@@ -106,7 +106,7 @@ expr = try literal <|> funcApplication
 
 literal :: Parser Fun.Expr
 literal = do
-    lit <- try doubleLit <|> try hexLit <|> try intLit <|> stringLit
+    lit <- try doubleLit <|> try hexLit <|> try intLit <|> try charLit <|> stringLit
     return (Fun.Lit lit)
 
 doubleLit :: Parser Fun.Literal
@@ -128,6 +128,11 @@ stringLit :: Parser Fun.Literal
 stringLit = do
     s <- stringLiteral
     return (Fun.StringLit s)
+
+charLit :: Parser Fun.Literal
+charLit = do
+    c <- charLiteral
+    return (Fun.CharLit c)
 
 boolLit :: Parser Fun.Literal
 boolLit = do

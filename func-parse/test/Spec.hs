@@ -156,6 +156,22 @@ main = hspec $ do
       it "parses quoted int as string" $
         prs stringLit "\"42\"" `shouldParse` StringLit "42"
 
+      it "parses escaped chars" $
+        prs stringLit "\"one\ntwo\"" `shouldParse` StringLit "one\ntwo"
+
+    describe "charLit" $ do
+      it "parses char literal" $
+        prs charLit "'z'" `shouldParse` CharLit 'z'
+
+      it "parses escaped char" $
+        prs charLit "'\n'" `shouldParse` CharLit '\n'
+
+      it "fails on broken char lit" $
+        prs charLit `shouldFailOn` "'asd'"
+
+      it "fails on string" $
+        prs charLit `shouldFailOn` "\"42\""
+
   describe "Fun.Parser.expr" $ do
     it "parses int literal" $
       prs expr "42" `shouldParse` Lit (IntegerLit 42)

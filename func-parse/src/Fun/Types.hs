@@ -80,8 +80,10 @@ data Expr
     = Application FuncName [Expr]
     | Lit Literal
     | DoBlock [Expr]
+    -- TODO Var is really an Expr
+    -- TODO add return list
     -- | For ForHeader Expr
-    -- | Op Expr Expr
+    -- | BinaryOp Op Expr Expr
         deriving (Eq, Show)
 
 instance ToJSON Expr where
@@ -101,6 +103,7 @@ data ForHeader
 
 data Literal
     = StringLit String
+    | CharLit Char
     | IntegerLit Integer
     | DoubleLit Double
     | HexLit Integer
@@ -109,6 +112,7 @@ data Literal
 
 instance ToJSON Literal where
     toJSON (StringLit x)  = object [ jsonType "stringLit", "value" .= x ]
+    toJSON (CharLit x)    = object [ jsonType "charLit", "value" .= x ]
     toJSON (IntegerLit x) = object [ jsonType "integerLit", "value" .= x ]
     toJSON (DoubleLit x)  = object [ jsonType "doubleLit", "value" .= x ]
     toJSON (HexLit x)     = object [ jsonType "hexLit", "value" .= x ]

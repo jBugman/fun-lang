@@ -68,6 +68,10 @@ word = lexeme . string
 signedInteger :: Parser Integer
 signedInteger = L.signed sp integer
 
+charLiteral :: Parser Char
+charLiteral = between tick tick L.charLiteral
+    where tick = void $ char '\''
+
 stringLiteral :: Parser String
 stringLiteral = char '"' >> manyTill L.charLiteral (char '"')
 

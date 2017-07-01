@@ -1,43 +1,5 @@
-// Package fun contains Fun language AST and means to prettyprint its source code.
+// Package fun contains Fun language AST.
 package fun
-
-// Type represents type.
-type Type interface {
-	typeMarker()
-}
-
-// UnitType represents Unit.
-type UnitType bool
-
-func (t UnitType) typeMarker() {}
-
-// Unit is an UnitType singleton.
-const Unit UnitType = true
-
-// AtomicType represents bacic type.
-type AtomicType string
-
-func (t AtomicType) typeMarker() {}
-
-// Supported atomic type singletons
-const (
-	IntT    = AtomicType("int")
-	DoubleT = AtomicType("double")
-	CharT   = AtomicType("char")
-	StringT = AtomicType("string")
-)
-
-// ObjectType represents an object (mostly Go struct).
-type ObjectType string
-
-func (t ObjectType) typeMarker() {}
-
-// ListType represents list of any type.
-type ListType struct {
-	T Type
-}
-
-func (t ListType) typeMarker() {}
 
 // Package represents single source file.
 type Package struct {
@@ -52,167 +14,206 @@ type Import struct {
 	Alias string
 }
 
-/*** Top-level declarations ***/
+/* TopLevel */
 
 // TopLevel represents top-level declaration.
 type TopLevel interface {
-	topLevelMarker()
+	isTopLevel()
 }
 
 // FuncDecl represents function declaration.
 type FuncDecl struct {
 	Name    string
-	Params  Parameters
-	Results Results
+	Params  []Param
+	Results []Type
 	Body    FuncBody
 }
 
-func (fd FuncDecl) topLevelMarker() {}
+func (fd FuncDecl) isTopLevel() {}
 
-/*** Function declaration ***/
+/* Var */
 
-// Parameter represents function parameter.
-type Parameter struct {
+// Var represents variable
+type Var string // TODO move to Expr
+
+func (v Var) isExpr() {}
+
+/* Type */
+
+// Type represents type.
+type Type interface {
+	typeMarker()
+}
+
+// Atomic represents bacic type.
+type Atomic string
+
+func (t Atomic) typeMarker() {}
+
+// Supported atomic type singletons
+const (
+	IntT    = Atomic("int")
+	DoubleT = Atomic("double")
+	CharT   = Atomic("char")
+	StringT = Atomic("string")
+)
+
+// Slice represents Go slice.
+type Slice struct {
+	T Type
+}
+
+func (t Slice) typeMarker() {}
+
+// Map represents a Go map.
+type Map struct {
+	K, V Type
+}
+
+func (t Map) typeMarker() {}
+
+/* VarSpec */
+
+// VarSpec is a variable name with its type.
+type VarSpec struct {
 	Name string
 	Type Type
 }
 
-// Parameters represents function parameters.
-type Parameters []Parameter
+/* Param */
 
-// Results represents function result list.
-// Examples:
-// IO ()
-// a
-// (a, b)
-// IO a
-// IO (a, b)
-type Results struct {
-	Pure  bool
-	Types []Type
+// Param represents function parameter.
+type Param struct {
+	VarSpec
 }
+
+/* FuncBody */
 
 // FuncBody represents function body.
 type FuncBody interface {
-	funcBodyMarker()
+	isFuncBody()
 }
 
 /*** Function body ***/
 
-// Undef represents function body placeholder.
-type Undef bool
+// Undefined represents function body placeholder.
+type Undefined bool
 
-func (u Undef) funcBodyMarker()   {}
-func (u Undef) expressionMarker() {}
+func (b Undefined) isFuncBody() {}
+func (b Undefined) isExpr()     {}
 
-// Undefined is an Undef singleton.
-const Undefined Undef = true
+// Undef is an Undefined singleton.
+const Undef Undefined = true
+
+// Single represents sungle expression as a function body.
+type Single struct {
+	Expr Expr
+}
+
+func (b Single) isFuncBody() {}
 
 // Inline represents raw Go code as a function body.
 type Inline struct {
 	Block []string
 }
 
-func (b Inline) funcBodyMarker() {}
+func (b Inline) isFuncBody() {}
 
-// SingleExprBody represents sungle expression as a function body.
-type SingleExprBody struct {
-	Expr Expression
+/* FuncName */
+
+// FuncName represents function addressed by name.
+type FuncName struct {
+	V string
+	// Name   string // TODO split it back?
+	// Module string
 }
 
-func (b SingleExprBody) funcBodyMarker() {}
+func (fa FuncName) isExpr() {}
 
-// Expression is something that has value.
-type Expression interface {
-	expressionMarker()
+/* Expr */
+
+// Expr is something that can be reduced to terminal Expr or passed as value.
+type Expr interface {
+	isExpr()
 }
 
-/*** Expresstions ***/
-
-// FuncApplication represents function application.
-type FuncApplication struct {
-	Func      FunctionVal
-	Arguments []Expression
+// Application represents function application.
+type Application struct {
+	Name FuncName
+	Args []Expr
 }
 
-func (fa FuncApplication) expressionMarker() {}
+func (e Application) isExpr() {}
 
-// FunctionVal represents function addressed by name.
-type FunctionVal struct {
-	Name   string
-	Module string
+// BinaryOp represents infix binary operator.
+type BinaryOp struct {
+	X, Y Expr
+	Op   Operator
 }
 
-func (fa FunctionVal) expressionMarker() {}
-
-// InfixOperation represents.
-type InfixOperation struct {
-	X, Y     Expression
-	Operator Operator
-}
-
-func (op InfixOperation) expressionMarker() {}
-
-// ReturnList represents a group of values.
-type ReturnList []Expression
-
-func (t ReturnList) expressionMarker() {}
+func (e BinaryOp) isExpr() {}
 
 // Operator represents binary operator.
 type Operator string
 
-// Val represents something passed by name.
-type Val string
-
-func (v Val) argumentMarker()   {}
-func (v Val) expressionMarker() {}
-
-/*** Literals ***/
-
 // Literal represents language literals.
 type Literal interface {
-	Expression
-	literalMarker()
+	Expr
+	isLiteral()
 }
 
-// Int maps to Go int.
-type Int string
+// Results represents a group of expressions to return from function.
+type Results []Expr
 
-func (t Int) literalMarker()    {}
-func (t Int) expressionMarker() {}
+func (e Results) isExpr() {}
+
+/* ForHeader */
+// TODO add
+
+/* Literal */
+
+// StringLit is a literal Go string.
+type StringLit string
+
+func (l StringLit) isLiteral() {}
+func (l StringLit) isExpr()    {}
+
+// CharLit is a literal Go char.
+type CharLit rune
+
+func (l CharLit) isLiteral() {}
+func (l CharLit) isExpr()    {}
+
+// IntegerLit is a literal Go int.
+type IntegerLit int
+
+func (l IntegerLit) isLiteral() {}
+func (l IntegerLit) isExpr()    {}
+
+// DoubleLit is a literal Go floating value (specifically float64).
+type DoubleLit float64
+
+func (l DoubleLit) isLiteral() {}
+func (l DoubleLit) isExpr()    {}
+
+// BoolLit is a literal Go bool.
+type BoolLit bool
+
+func (l BoolLit) isLiteral() {}
+func (l BoolLit) isExpr()    {}
+
+// HexLit is a literal Go uint written as hex value.
+type HexLit uint
+
+func (l HexLit) isLiteral() {}
+func (l HexLit) isExpr()    {}
 
 // Float maps to Go float32.
-type Float string
+// type Float string
+// func (t Float) literalMarker()    {}
+// func (t Float) expressionMarker() {}
 
-func (t Float) literalMarker()    {}
-func (t Float) expressionMarker() {}
-
-// Double maps to Go float64.
-type Double string
-
-func (t Double) literalMarker()    {}
-func (t Double) expressionMarker() {}
-
-// String wraps Go string.
-type String string
-
-func (t String) literalMarker()    {}
-func (t String) expressionMarker() {}
-
-// Bool maps to Go bool.
-type Bool string
-
-func (t Bool) literalMarker()    {}
-func (t Bool) expressionMarker() {}
-
-// Char maps to Go char.
-type Char string
-
-func (t Char) literalMarker()    {}
-func (t Char) expressionMarker() {}
-
-// Imaginary maps to Go imaginary double.
-type Imaginary string
-
-func (t Imaginary) literalMarker()    {}
-func (t Imaginary) expressionMarker() {}
+// // Imaginary maps to Go imaginary double.
+// type Imaginary string
+// func (t Imaginary) literalMarker()    {}
+// func (t Imaginary) expressionMarker() {}

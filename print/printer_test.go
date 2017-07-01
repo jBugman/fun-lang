@@ -36,14 +36,11 @@ func TestPackage(t *testing.T) {
 		TopLevels: []fun.TopLevel{
 			fun.FuncDecl{
 				Name: "main",
-				Body: fun.SingleExprBody{
-					Expr: fun.FuncApplication{
-						Func: fun.FunctionVal{
-							Module: "fmt",
-							Name:   "Println",
-						},
-						Arguments: []fun.Expression{
-							fun.String("Hello World!"),
+				Body: fun.Single{
+					Expr: fun.Application{
+						Name: fun.FuncName{V: "fmt.Println"},
+						Args: []fun.Expr{
+							fun.StringLit("Hello World!"),
 						}}}}}}
 	source, err := print.Package(tree)
 	assert.NoError(t, err)
@@ -85,12 +82,12 @@ func TestPackage_multiImports(t *testing.T) {
 func TestFuncDecl_infixReturn(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name:    "myFunc",
-		Results: fun.SingleResult(fun.IntT),
-		Body: fun.SingleExprBody{
-			Expr: fun.InfixOperation{
-				X:        fun.Val("x"),
-				Operator: fun.Operator("+"),
-				Y:        fun.Int("2"),
+		Results: []fun.Type{fun.IntT},
+		Body: fun.Single{
+			Expr: fun.BinaryOp{
+				X:  fun.Var("x"),
+				Op: fun.Operator("+"),
+				Y:  fun.IntegerLit(2),
 			}},
 	}
 	source, err := print.FuncDecl(tree)
@@ -107,7 +104,7 @@ func TestFuncDecl_infixReturn(t *testing.T) {
 func TestFuncDecl_doBlock_multiline(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name:   "printHash",
-		Params: fun.Parameters{fun.NewParam("str", "string")},
+		Params: []fun.Param{fun.NewParam("str", "string")},
 		Body: fun.Inline{Block: []string{
 			`h := md5.New()`,
 			`io.WriteString(h, str)`,
@@ -129,16 +126,13 @@ func TestFuncDecl_doBlock_multiline(t *testing.T) {
 
 func TestFuncDecl_multiReturn(t *testing.T) {
 	tree := fun.FuncDecl{
-		Name:   "swap",
-		Params: fun.Parameters{fun.NewParam("x", "int"), fun.NewParam("y", "int")},
-		Results: fun.Results{
-			Pure:  true,
-			Types: []fun.Type{fun.IntT, fun.IntT},
-		},
-		Body: fun.SingleExprBody{
-			Expr: fun.ReturnList{
-				fun.Val("y"),
-				fun.Val("x"),
+		Name:    "swap",
+		Params:  []fun.Param{fun.NewParam("x", "int"), fun.NewParam("y", "int")},
+		Results: []fun.Type{fun.IntT, fun.IntT},
+		Body: fun.Single{
+			Expr: fun.Results{
+				fun.Var("y"),
+				fun.Var("x"),
 			},
 		},
 	}
@@ -156,20 +150,17 @@ func TestFuncDecl_multiReturn(t *testing.T) {
 func TestFuncDecl_charsAsBytes(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name:   "fun",
-		Params: fun.Parameters{fun.NewParam("x", "char")},
-		Results: fun.Results{
-			Pure: true,
-			Types: []fun.Type{
-				fun.AtomicType("char"),
-				fun.StringT,
-				fun.ObjectType("apples"),
-			},
+		Params: []fun.Param{fun.NewParam("x", "char")},
+		Results: []fun.Type{
+			fun.Atomic("char"),
+			fun.StringT,
+			// fun.ObjectType("apples"),
 		},
-		Body: fun.SingleExprBody{
-			Expr: fun.ReturnList{
-				fun.Char("a"),
-				fun.String("word"),
-				fun.Val("aapl"),
+		Body: fun.Single{
+			Expr: fun.Results{
+				fun.CharLit('a'),
+				fun.StringLit("word"),
+				// fun.Val("aapl"),
 			},
 		},
 	}
@@ -178,8 +169,8 @@ func TestFuncDecl_charsAsBytes(t *testing.T) {
 	result, err := print.FixFormat([]byte(source))
 	assert.NoError(t, err)
 	assert.Equal(t, ex(`
-	func fun(x byte) (byte, string, apples) {
-		return 'a', "word", aapl
+	func fun(x byte) (byte, string) {
+		return 'a', "word"
 	}
 	`), fmt.Sprint(result))
 }
@@ -187,17 +178,15 @@ func TestFuncDecl_charsAsBytes(t *testing.T) {
 func TestFuncDecl_listTypeArg(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name: "size",
-		Params: fun.Parameters{
-			fun.Parameter{
-				Name: "xs",
-				Type: fun.ListType{T: fun.IntT},
-			},
-		},
-		Results: fun.SingleResult(fun.IntT),
-		Body: fun.SingleExprBody{
-			Expr: fun.FuncApplication{
-				Func:      fun.FunctionVal{Name: "len"},
-				Arguments: []fun.Expression{fun.Val("xs")},
+		Params: []fun.Param{{V: fun.VarSpec{
+			Name: "xs",
+			Type: fun.Slice{T: fun.IntT},
+		}}},
+		Results: []fun.Type{fun.IntT},
+		Body: fun.Single{
+			Expr: fun.Application{
+				Name: fun.FuncName{V: "len"},
+				Args: []fun.Expr{fun.Var("xs")},
 			},
 		},
 	}

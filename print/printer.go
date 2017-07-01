@@ -62,12 +62,12 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 	switch b := f.Body.(type) {
 	case fun.Inline:
 		body = strings.Join(b.Block, "\n")
-	case fun.SingleExprBody:
+	case fun.Single:
 		body, err = Expression(b.Expr)
 		if err != nil {
 			return "", err
 		}
-		if f.Results.ShouldReturn() {
+		if len(f.Results) > 0 {
 			body = fmt.Sprintf("return %s", body)
 		}
 	default:
@@ -78,7 +78,7 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	results, err = Results(f.Results)
+	results, err = typeSlice(f.Results)
 	if err != nil {
 		return "", err
 	}
@@ -86,31 +86,30 @@ func FuncDecl(f fun.FuncDecl) (string, error) {
 }
 
 // Parameters prints fun.Parameters.
-func Parameters(ps fun.Parameters) (string, error) {
+func Parameters(ps []fun.Param) (string, error) {
 	ss := make([]string, len(ps))
 	for i := 0; i < len(ps); i++ {
-		p, err := Type(ps[i].Type)
+		p, err := Type(ps[i].V.Type)
 		if err != nil {
 			return "", err
 		}
-		ss[i] = fmt.Sprintf("%s %s", ps[i].Name, p)
+		ss[i] = fmt.Sprintf("%s %s", ps[i].V.Name, p)
 	}
 	return strings.Join(ss, ", "), nil
 }
 
-// Results prints fun.Results.
-func Results(results fun.Results) (string, error) {
-	rs := results.Types
-	switch len(rs) {
+func typeSlice(xs []fun.Type) (string, error) {
+	n := len(xs)
+	switch n {
 	case 0:
-		return "", nil // Empty result == IO ()
+		return "", nil
 	case 1:
-		return Type(rs[0])
+		return Type(xs[0])
 	default:
 		var err error
-		ss := make([]string, len(rs))
-		for i := 0; i < len(rs); i++ {
-			ss[i], err = Type(rs[i])
+		ss := make([]string, n)
+		for i := 0; i < n; i++ {
+			ss[i], err = Type(xs[i])
 			if err != nil {
 				return "", err
 			}
@@ -122,19 +121,17 @@ func Results(results fun.Results) (string, error) {
 // Type prints instances of fun.Type interface
 func Type(arg fun.Type) (string, error) {
 	switch t := arg.(type) {
-	case fun.AtomicType:
-		return AtomicType(t), nil
-	case fun.ObjectType:
-		return ObjectType(t), nil
-	case fun.ListType:
-		return ListType(t), nil
+	case fun.Atomic:
+		return Atomic(t), nil
+	case fun.Slice:
+		return Slice(t), nil
 	default:
 		return "", fmt.Errorf("not supported: %s", t)
 	}
 }
 
-// InfixOperation prints fun.InfixOperation.
-func InfixOperation(op fun.InfixOperation) (string, error) {
+// BinaryOp prints fun.BinaryOp.
+func BinaryOp(op fun.BinaryOp) (string, error) {
 	x, err := Expression(op.X)
 	if err != nil {
 		return "", err
@@ -143,73 +140,87 @@ func InfixOperation(op fun.InfixOperation) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s %s %s", x, op.Operator, y), nil
+	return fmt.Sprintf("%s %s %s", x, op.Op, y), nil
 }
 
 // Expression dispatches printers for concrete expression types.
-func Expression(e fun.Expression) (string, error) {
+func Expression(e fun.Expr) (string, error) {
 	switch expr := e.(type) {
-	case fun.FuncApplication:
-		return FuncApplication(expr)
+	case fun.Application:
+		return Application(expr)
 	case fun.Literal:
+		return Literal(expr), nil
+	case fun.BinaryOp:
+		return BinaryOp(expr)
+	case fun.Var:
 		return fmt.Sprint(expr), nil
-	case fun.InfixOperation:
-		return InfixOperation(expr)
-	case fun.Val:
-		return fmt.Sprint(expr), nil
-	case fun.ReturnList:
-		return ReturnList(expr), nil
+	case fun.Results:
+		return Results(expr)
 	default:
 		return "", fmt.Errorf("NOT IMPLEMENTED %s", expr)
 	}
 }
 
-// FuncApplication prints fun.FuncApplication.
-func FuncApplication(fa fun.FuncApplication) (string, error) {
+// Application prints fun.Application.
+func Application(fa fun.Application) (string, error) {
 	var err error
-	ss := make([]string, len(fa.Arguments))
-	for i := 0; i < len(fa.Arguments); i++ {
-		ss[i], err = Expression(fa.Arguments[i])
+	n := len(fa.Args)
+	ss := make([]string, n)
+	for i := 0; i < n; i++ {
+		ss[i], err = Expression(fa.Args[i])
 		if err != nil {
 			return "", err
 		}
 	}
-	return fmt.Sprintf("%s(%s)", FunctionVal(fa.Func), strings.Join(ss, ", ")), nil
+	return fmt.Sprintf("%s(%s)", FuncName(fa.Name), strings.Join(ss, ", ")), nil
 }
 
-// FunctionVal prints fun.FunctionVal.
-func FunctionVal(v fun.FunctionVal) string {
-	var buf bytes.Buffer
-	if v.Module != "" {
-		fmt.Fprint(&buf, v.Module, ".")
-	}
-	fmt.Fprint(&buf, v.Name)
-	return buf.String()
+// FuncName prints fun.FuncName.
+func FuncName(v fun.FuncName) string {
+	// var buf bytes.Buffer
+	// if v.Module != "" {
+	// 	fmt.Fprint(&buf, v.Module, ".")
+	// }
+	// fmt.Fprint(&buf, v.Name)
+	// return buf.String()
+	return v.V
 }
 
-// AtomicType prints fun.AtomicType.
-func AtomicType(t fun.AtomicType) string {
+// Atomic prints fun.Atomic.
+func Atomic(t fun.Atomic) string {
 	if t == fun.CharT {
 		return "byte"
 	}
 	return string(t)
 }
 
-// ObjectType prints fun.ObjectType.
-func ObjectType(t fun.ObjectType) string {
-	return string(t)
+// Literal prints fun.Literal.
+func Literal(o fun.Literal) string {
+	switch v := o.(type) {
+	case fun.CharLit:
+		return fmt.Sprintf("'%c'", v)
+	case fun.StringLit:
+		return fmt.Sprintf("\"%s\"", v)
+	default:
+		return fmt.Sprintf("%#v", v)
+	}
 }
 
-// ListType prints fun.ListType.
-func ListType(t fun.ListType) string {
+// Slice prints fun.Slice.
+func Slice(t fun.Slice) string {
 	return fmt.Sprintf("[]%s", t.T)
 }
 
-// ReturnList prints multiple values to return.
-func ReturnList(t fun.ReturnList) string {
-	ss := make([]string, len(t))
-	for i := 0; i < len(t); i++ {
-		ss[i] = fmt.Sprint(t[i])
+// Results prints return arguments to return.
+func Results(xs fun.Results) (string, error) {
+	n := len(xs)
+	var err error
+	ss := make([]string, n)
+	for i := 0; i < n; i++ {
+		ss[i], err = Expression(xs[i])
+		if err != nil {
+			return "", err
+		}
 	}
-	return strings.Join(ss, ", ")
+	return strings.Join(ss, ", "), nil
 }

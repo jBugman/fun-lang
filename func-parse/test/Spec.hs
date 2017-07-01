@@ -5,7 +5,7 @@ module Main where
 import Test.Hspec (hspec, describe, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldParse, shouldFailOn)
 
-import Data.Aeson (toJSON)
+import Data.Aeson (toJSON, (.=))
 import qualified Data.Aeson.Types as J (Value (Object, String, Array))
 
 import Fun.Parser
@@ -211,28 +211,30 @@ main = hspec $ do
             (Single $ Application (FuncName "fmt.Println") [Lit $ StringLit "hello world"])]
 
   describe "Fun.Types.ToJSON" $ do
+    it "wrap works correctly" $ -- TODO use quickcheck
+      wrap "Import" [ "path" .= ("fmt" :: String) ] `shouldBe`
+        J.Object [ ("$type", J.String "Import"), ("$data", J.Object [ ("path", "fmt") ]) ]
+
     it "serializes helloworld" $
       toJSON
         (Package "main" [] [
           FuncDecl "main" [] []
             (Single $ Application (FuncName "print") [Lit $ StringLit "hello world"])])
-        `shouldBe` J.Object
-          [ ("$type", J.String "Package")
-          , ("name", J.String "main")
+        `shouldBe` wrap "Package"
+          [ ("name", J.String "main")
           , ("imports", J.Array [])
-          , ("topLevels", J.Array [ J.Object
-            [ ("$type", J.String "FuncDecl")
-            , ("name", J.String "main")
-            , ("params", J.Array [])
-            , ("results", J.Array [])
-            , ("body", J.Object
-              [ ("$type", J.String "Single")
-              , ("expr", J.Object
-                [ ("$type", J.String "Application")
-                , ("name", J.Object
-                  [ ("$type", J.String "FuncName")
-                  , ("v", J.String "print")
+          , ("topLevels", J.Array
+            [ wrap "FuncDecl"
+              [ ("name", J.String "main")
+              , ("params", J.Array [])
+              , ("results", J.Array [])
+              , ("body", wrap "Single"
+                [ ("expr", wrap "Application"
+                  [ ("name", wrap "FuncName" [ ("v", J.String "print") ] )
+                  , ("args", J.Array [ wrap "StringLit" [ ("value", J.String "hello world") ] ] )
+                  -- Parens all the way down
                   ])
-                , ("args", J.Array [ J.Object
-                  [ ("$type", J.String "StringLit")
-                  , ("value", J.String "hello world")  ]])])])]])]
+                ])
+              ]
+            ])
+          ]

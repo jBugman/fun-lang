@@ -2,7 +2,7 @@
 module Fun.Types where
 
 import Data.Aeson (ToJSON, toJSON, (.=), object)
-import Data.Aeson.Types (Pair)
+import Data.Aeson.Types (Pair, Value)
 
 type Name = String
 
@@ -11,23 +11,22 @@ data Package = Package Name [Import] [TopLevel]
 
 instance ToJSON Package where
     toJSON (Package name imports topLevels) =
-        object [ jsonType "Package", "name" .= name, "imports" .= imports, "topLevels" .= topLevels ]
+        wrap "Package" [ "name" .= name, "imports" .= imports, "topLevels" .= topLevels ]
 
 data Import = Import String (Maybe Name)
     deriving (Eq, Show)
 
 instance ToJSON Import where
-    toJSON (Import path Nothing)      = object [ jsonType "Import", "path" .= path ]
-    toJSON (Import path (Just alias)) = object [ jsonType "Import", "path" .= path, "alias" .= alias ]
+    toJSON (Import path Nothing)      = wrap "Import" [ "path" .= path ]
+    toJSON (Import path (Just alias)) = wrap "Import" [ "path" .= path, "alias" .= alias ]
 
 data TopLevel
     = FuncDecl Name [Param] [Type] FuncBody
         deriving (Eq, Show)
 
 instance ToJSON TopLevel where
-    toJSON (FuncDecl name params results body) = object
-        [ jsonType "FuncDecl"
-        , "name"    .= name
+    toJSON (FuncDecl name params results body) = wrap "FuncDecl"
+        [ "name"    .= name
         , "params"  .= params
         , "results" .= results
         , "body"    .= body
@@ -43,21 +42,21 @@ data Type
         deriving (Eq, Show)
 
 instance ToJSON Type where
-    toJSON (Atomic t) = object [ jsonType "Atomic", "value" .= t ]
-    toJSON (Slice t)  = object [ jsonType "Slice", "type" .= t ]
-    toJSON (Map k v)  = object [ jsonType "Map", "keys" .= k, "values" .= v ]
+    toJSON (Atomic t) = wrap "Atomic" [ "value" .= t ]
+    toJSON (Slice t)  = wrap "Slice"  [ "type" .= t ]
+    toJSON (Map k v)  = wrap "Map"    [ "keys" .= k, "values" .= v ]
 
 data VarSpec = VarSpec Name Type
     deriving (Eq, Show)
 
 instance ToJSON VarSpec where
-    toJSON (VarSpec n t) = object [ jsonType "VarSpec", "name" .= n, "type" .= t ]
+    toJSON (VarSpec n t) = wrap "VarSpec" [ "name" .= n, "type" .= t ]
 
 newtype Param = Param VarSpec
     deriving (Eq, Show)
 
 instance ToJSON Param where
-    toJSON (Param v) = object [ jsonType "Param", "v" .= v ]
+    toJSON (Param v) = wrap "Param" [ "v" .= v ]
 
 data FuncBody
     = Undefined
@@ -66,15 +65,15 @@ data FuncBody
         deriving (Eq, Show)
 
 instance ToJSON FuncBody where
-    toJSON Undefined      = object [ jsonType "Undefined" ]
-    toJSON (Single expr)  = object [ jsonType "Single", "expr" .= expr ]
-    toJSON (Inline block) = object [ jsonType "Inline", "block" .= block ]
+    toJSON Undefined      = wrap "Undefined" []
+    toJSON (Single expr)  = wrap "Single"    [ "expr" .= expr ]
+    toJSON (Inline block) = wrap "Inline"    [ "block" .= block ]
 
 newtype FuncName = FuncName String
     deriving (Eq, Show)
 
 instance ToJSON FuncName where
-    toJSON (FuncName s) = object [ jsonType "FuncName", "v" .= s ]
+    toJSON (FuncName s) = wrap "FuncName" [ "v" .= s ]
 
 data Expr
     = Application FuncName [Expr]
@@ -87,9 +86,9 @@ data Expr
         deriving (Eq, Show)
 
 instance ToJSON Expr where
-    toJSON (Application name args) = object [ jsonType "Application", "name" .= name, "args" .= args ]
-    toJSON (Lit lit)               = toJSON lit
-    toJSON (DoBlock exprs)         = object [ jsonType "DoBlock", "exprs" .= exprs ]
+    toJSON (Application name args) = wrap "Application" [ "name" .= name, "args" .= args ]
+    toJSON (Lit lit)               = toJSON lit -- see 'instance ToJSON Literal'
+    toJSON (DoBlock exprs)         = wrap "DoBlock" [ "exprs" .= exprs ]
     -- toJSON For ForHeader Expr
     -- toJSON Op Expr Expr
 
@@ -111,12 +110,15 @@ data Literal
         deriving (Eq, Show)
 
 instance ToJSON Literal where
-    toJSON (StringLit x)  = object [ jsonType "StringLit", "value" .= x ]
-    toJSON (CharLit x)    = object [ jsonType "CharLit", "value" .= x ]
-    toJSON (IntegerLit x) = object [ jsonType "IntegerLit", "value" .= x ]
-    toJSON (DoubleLit x)  = object [ jsonType "DoubleLit", "value" .= x ]
-    toJSON (HexLit x)     = object [ jsonType "HexLit", "value" .= x ]
-    toJSON (BoolLit x)    = object [ jsonType "BoolLit", "value" .= x ]
+    toJSON (StringLit x)  = wrap "StringLit"  [ "value" .= x ]
+    toJSON (CharLit x)    = wrap "CharLit"    [ "value" .= x ]
+    toJSON (IntegerLit x) = wrap "IntegerLit" [ "value" .= x ]
+    toJSON (DoubleLit x)  = wrap "DoubleLit"  [ "value" .= x ]
+    toJSON (HexLit x)     = wrap "HexLit"     [ "value" .= x ]
+    toJSON (BoolLit x)    = wrap "BoolLit"    [ "value" .= x ]
 
-jsonType :: String -> Pair
-jsonType s = "$type" .= s
+wrap :: String -> [Pair] -> Value
+wrap t ps = object [ jsonType t, "$data" .= object ps ]
+    where
+        jsonType :: String -> Pair
+        jsonType s = "$type" .= s

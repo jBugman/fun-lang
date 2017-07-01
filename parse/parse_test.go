@@ -61,10 +61,10 @@ func TestPackage_helloWorld(t *testing.T) {
 		TopLevels: []fun.TopLevel{
 			fun.FuncDecl{
 				Name: "main",
-				Body: fun.SingleExprBody{
-					Expr: fun.FuncApplication{
-						Func:      fun.FunctionVal{Name: "print"},
-						Arguments: []fun.Expression{fun.String("hello world")},
+				Body: fun.Single{
+					Expr: fun.Application{
+						Name: fun.FuncName{V: "print"},
+						Args: []fun.Expr{fun.StringLit("hello world")},
 					}}}}}
 	result, err := parse.Package(src)
 	if assert.NoError(t, err) {

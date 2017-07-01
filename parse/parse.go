@@ -95,14 +95,14 @@ func decode(n interface{}) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			fd.Params = append(fd.Params, subnode.(fun.Parameter))
+			fd.Params = append(fd.Params, subnode.(fun.Param))
 		}
 		for _, obj := range node["results"].([]interface{}) {
 			subnode, err = decode(obj)
 			if err != nil {
 				return nil, err
 			}
-			fd.Results.Types = append(fd.Results.Types, subnode.(fun.Type))
+			fd.Results = append(fd.Results, subnode.(fun.Type))
 		}
 		subnode, err = decode(node["body"])
 		if err != nil {

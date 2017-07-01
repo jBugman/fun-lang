@@ -6,27 +6,34 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 
 	"github.com/jBugman/fun-lang/fun"
+	"github.com/mitchellh/mapstructure"
 )
 
 // Package parses Package using Haskell parser.
 func Package(source []byte) (*fun.Package, error) {
-	jsonString, err := Offload([]byte(source))
+	var err error
+	// Use func-parse tool to parse source to JSON
+	encoded, err := Offload([]byte(source))
 	if err != nil {
 		return nil, err
 	}
-	obj, err := decodeJSON(jsonString)
-	if err != nil {
+	// Parse JSON to a map
+	var raw map[string]interface{}
+	if err = json.Unmarshal(encoded, &raw); err != nil {
 		return nil, err
 	}
-	pack, err := decode(obj)
-	if err != nil {
+	// Convert map to a typed data via reflexion
+	var result fun.Package
+	if err = decodeMap(raw, &result); err != nil {
 		return nil, err
 	}
-	return pack.(*fun.Package), nil
+	return &result, nil
 }
 
 // Offload uses func-parse tool to parse
@@ -49,68 +56,116 @@ func Offload(source []byte) ([]byte, error) {
 	}
 }
 
-func decodeJSON(source []byte) (map[string]interface{}, error) {
-	var obj map[string]interface{}
-	err := json.Unmarshal(source, &obj)
-	if err != nil {
-		fmt.Println(string(source))
-		return nil, err
-	}
-	return obj, nil
-}
+const (
+	typeField = "$type"
+	dataField = "$data"
+)
 
-func decode(n interface{}) (interface{}, error) {
-	const typeKey = "$type"
-	node := n.(map[string]interface{})
-	t, ok := node[typeKey]
-	if !ok {
-		return nil, fmt.Errorf("Missing \"%s\" key in JSON object", typeKey)
+// unwrapStruct converts JSON value to a concrete struct using type metadata.
+func unwrapStruct(src reflect.Type, target reflect.Type, data interface{}) (interface{}, error) {
+	if src != reflect.TypeOf(map[string]interface{}(nil)) {
+		return data, nil
+	}
+	m := data.(map[string]interface{})
+
+	var ok bool
+	var t interface{}
+	if t, ok = m[typeField]; !ok {
+		return data, nil // returnining non-structs
 	}
 
 	var err error
-	var subnode interface{}
+	var payload interface{}
+
+	if payload, ok = m[dataField]; !ok {
+		return nil, fmt.Errorf("missing field \"%s\" in %v", dataField, m)
+	}
+
 	switch t {
-	case "package":
-		var p fun.Package
-		for _, obj := range node["imports"].([]interface{}) {
-			subnode, err = decode(obj)
-			if err != nil {
-				return nil, err
-			}
-			p.Imports = append(p.Imports, subnode.(fun.Import))
-		}
-		for _, obj := range node["topDecls"].([]interface{}) {
-			subnode, err = decode(obj)
-			if err != nil {
-				return nil, err
-			}
-			p.TopLevels = append(p.TopLevels, subnode.(fun.TopLevel))
-		}
-		return &p, nil
-	case "funcDecl":
-		var fd fun.FuncDecl
-		fd.Name = node["name"].(string)
-		for _, obj := range node["params"].([]interface{}) {
-			subnode, err = decode(obj)
-			if err != nil {
-				return nil, err
-			}
-			fd.Params = append(fd.Params, subnode.(fun.Param))
-		}
-		for _, obj := range node["results"].([]interface{}) {
-			subnode, err = decode(obj)
-			if err != nil {
-				return nil, err
-			}
-			fd.Results = append(fd.Results, subnode.(fun.Type))
-		}
-		subnode, err = decode(node["body"])
-		if err != nil {
+	case "Package":
+		var result fun.Package
+		if err = decodeMap(payload, &result); err != nil {
 			return nil, err
 		}
-		fd.Body = subnode.(fun.FuncBody)
-		return &fd, nil
+		if len(result.Imports) == 0 {
+			result.Imports = nil
+		}
+		return result, nil
+
+	case "FuncDecl":
+		var result fun.FuncDecl
+		if err = decodeMap(payload, &result); err != nil {
+			return nil, err
+		}
+		if len(result.Params) == 0 {
+			result.Params = nil
+		}
+		if len(result.Results) == 0 {
+			result.Results = nil
+		}
+		return result, nil
+
+	case "Inline":
+		var result fun.Inline
+		if err = decodeMap(payload, &result); err != nil {
+			return nil, err
+		}
+		return result, nil
+
+	case "Single":
+		var result fun.Single
+		if err = decodeMap(payload, &result); err != nil {
+			return nil, err
+		}
+		return result, nil
+
+	case "FuncName":
+		var result fun.FuncName
+		if err = decodeMap(payload, &result); err != nil {
+			return nil, err
+		}
+		return result, nil
+
+	case "Application":
+		var result fun.Application
+		if err = decodeMap(payload, &result); err != nil {
+			return nil, err
+		}
+		if len(result.Args) == 0 {
+			result.Args = nil
+		}
+		return result, nil
+
+	case "StringLit":
+		var result fun.StringLit
+		if err = decodeMap(payload, &result); err != nil {
+			return nil, err
+		}
+		return result, nil
+
+	case "Import":
+		return payload, nil
+
 	default:
-		return nil, fmt.Errorf("Not supported type: %v", t)
+		return nil, fmt.Errorf("type is not supported: %s", t)
 	}
+}
+
+func decodeMap(data, result interface{}) error {
+	var err error
+	config := &mapstructure.DecoderConfig{
+		DecodeHook: unwrapStruct,
+		Result:     result,
+	}
+	var decoder *mapstructure.Decoder
+	if decoder, err = mapstructure.NewDecoder(config); err != nil {
+		return err
+	}
+	if err = decoder.Decode(data); err != nil {
+		fmt.Fprintln(os.Stderr, "target:", reflect.TypeOf(result))
+		fmt.Fprintln(os.Stderr, "data:", data)
+		fmt.Fprintln(os.Stderr)
+		return err
+	}
+	return nil
 }

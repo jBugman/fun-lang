@@ -15,24 +15,24 @@ func TestPackage_inline_main(t *testing.T) {
 	package main
 
 	import "fmt"
-	import "io" as "io"
+	import "io" as "myIO"
 
 	func main = inline
 	    line := "Hello World!"
-	    fmt.Fprintln(io.Discard, line)
+	    fmt.Fprintln(myIO.Discard, line)
 	`)
 	tree := &fun.Package{
-		Name: "Main",
+		Name: "main",
 		Imports: []fun.Import{
 			fun.Import{Path: "fmt"},
-			fun.Import{Path: "io", Alias: "io"},
+			fun.Import{Path: "io", Alias: "myIO"},
 		},
 		TopLevels: []fun.TopLevel{
 			fun.FuncDecl{
 				Name: "main",
 				Body: fun.Inline{Block: []string{
 					`line := "Hello World!"`,
-					`fmt.Fprintln(io.Discard, line)`,
+					`fmt.Fprintln(myIO.Discard, line)`,
 				}}}}}
 	ast, err := parse.Package([]byte(src))
 	if assert.NoError(t, err) {
@@ -66,7 +66,7 @@ func TestPackage_helloWorld(t *testing.T) {
 				Body: fun.Single{
 					Expr: fun.Application{
 						Name: fun.FuncName{V: "print"},
-						Args: []fun.Expr{fun.StringLit("hello world")},
+						Args: []fun.Expr{fun.StringLit{V: "hello world"}},
 					}}}}}
 	result, err := parse.Package([]byte(src))
 	if assert.NoError(t, err) {

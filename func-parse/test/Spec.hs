@@ -217,19 +217,22 @@ main = hspec $ do
           FuncDecl "main" [] []
             (Single $ Application (FuncName "print") [Lit $ StringLit "hello world"])])
         `shouldBe` J.Object
-          [ ("$type", J.String "package")
+          [ ("$type", J.String "Package")
           , ("name", J.String "main")
           , ("imports", J.Array [])
-          , ("topDecls", J.Array [ J.Object
-            [ ("$type", J.String "funcDecl")
+          , ("topLevels", J.Array [ J.Object
+            [ ("$type", J.String "FuncDecl")
             , ("name", J.String "main")
             , ("params", J.Array [])
             , ("results", J.Array [])
             , ("body", J.Object
-              [ ("$type", J.String "singleExpr")
+              [ ("$type", J.String "Single")
               , ("expr", J.Object
-                [ ("$type", J.String "funcApplication")
-                , ("name", J.String "print")
+                [ ("$type", J.String "Application")
+                , ("name", J.Object
+                  [ ("$type", J.String "FuncName")
+                  , ("v", J.String "print")
+                  ])
                 , ("args", J.Array [ J.Object
-                  [ ("$type", J.String "stringLit")
+                  [ ("$type", J.String "StringLit")
                   , ("value", J.String "hello world")  ]])])])]])]

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/jBugman/fun-lang/fun"
-	"github.com/jBugman/fun-lang/parse"
+	"github.com/jBugman/fun-lang/fun/parse"
 )
 
 func TestPackage_inline_main(t *testing.T) {

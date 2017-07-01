@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jBugman/fun-lang/parse"
+	"github.com/jBugman/fun-lang/fun/parse"
 	"github.com/jBugman/fun-lang/print"
 )
 

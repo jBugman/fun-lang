@@ -124,8 +124,9 @@ func (b Inline) isFuncBody() {}
 // FuncName represents function addressed by name.
 type FuncName struct {
 	V string
-	// Name   string // TODO split it back?
-	// Module string
+	// TODO split it back
+	// Package string
+	// Name    string
 }
 
 func (fa FuncName) isExpr() {}

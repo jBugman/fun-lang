@@ -49,20 +49,20 @@ func TestFun_Package(t *testing.T) {
 		TopLevels: []fun.TopLevel{
 			fun.FuncDecl{
 				Name:    "inc",
-				Params:  fun.Parameters{{Name: "val", Type: fun.IntT}},
-				Results: fun.Results{Types: []fun.Type{fun.IntT}},
-				Body: fun.SingleExprBody{
-					Expr: fun.InfixOperation{
-						X:        fun.Val("val"),
-						Operator: fun.Operator("+"),
-						Y:        fun.Int("1"),
+				Params:  []fun.Param{fun.NewParam("val", "int")},
+				Results: []fun.Type{fun.IntT},
+				Body: fun.Single{
+					Expr: fun.BinaryOp{
+						X:  fun.Var("val"),
+						Op: fun.Operator("+"),
+						Y:  fun.IntegerLit(1),
 					}}},
 			fun.FuncDecl{
 				Name: "print42",
-				Body: fun.SingleExprBody{
-					Expr: fun.FuncApplication{
-						Func:      fun.FunctionVal{Module: "fmt", Name: "Println"},
-						Arguments: []fun.Expression{fun.Int("42")},
+				Body: fun.Single{
+					Expr: fun.Application{
+						Name: fun.FuncName{V: "fmt.Println"},
+						Args: []fun.Expr{fun.IntegerLit(42)},
 					}}},
 			fun.FuncDecl{
 				Name: "main",
@@ -99,10 +99,7 @@ func TestFun_Expression_selector(t *testing.T) {
 		X:   &ast.Ident{Name: "fmt"},
 		Sel: &ast.Ident{Name: "Println"},
 	}
-	sample := fun.FunctionVal{
-		Module: "fmt",
-		Name:   "Println",
-	}
+	sample := fun.FuncName{V: "fmt.Println"}
 	result, err := translate.NewFun(fset).Expression(tree)
 	if assert.NoError(t, err) {
 		assert.Equal(t, sample, result)
@@ -120,10 +117,10 @@ func TestFun_Expression_binary(t *testing.T) {
 		Y:  &ast.BasicLit{Kind: token.INT, Value: "1"},
 	}
 	result, err := translate.NewFun(fset).Expression(tree)
-	sample := fun.InfixOperation{
-		X:        fun.Val("val"),
-		Operator: fun.Operator("+"),
-		Y:        fun.Int("1"),
+	sample := fun.BinaryOp{
+		X:  fun.Var("val"),
+		Op: fun.Operator("+"),
+		Y:  fun.IntegerLit(1),
 	}
 	if assert.NoError(t, err) {
 		assert.Equal(t, sample, result)
@@ -148,9 +145,9 @@ func TestFun_Statement_tuple(t *testing.T) {
 	expr, err := parser.ParseExpr("func() {return 'a', 9.99}")
 	returnExpr := expr.(*ast.FuncLit).Body.List[0]
 	result, err := translate.NewFun(fset).Statement(returnExpr)
-	sample := fun.ReturnList{
-		fun.Char("a"),
-		fun.Double("9.99"),
+	sample := fun.Results{
+		fun.CharLit('a'),
+		fun.DoubleLit(9.99),
 	}
 	if assert.NoError(t, err) {
 		assert.Equal(t, sample, result)

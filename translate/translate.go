@@ -9,6 +9,8 @@ import (
 	"go/token"
 	"strings"
 
+	"strconv"
+
 	"github.com/jBugman/fun-lang/fun"
 )
 
@@ -22,8 +24,8 @@ type Fun interface {
 	Package(src *ast.File) (fun.Package, error)
 	Import(imp *ast.ImportSpec) (fun.Import, error)
 	Function(fd *ast.FuncDecl) (fun.FuncDecl, error)
-	Statement(stmt ast.Stmt) (fun.Expression, error)
-	Expression(expr ast.Expr) (fun.Expression, error)
+	Statement(stmt ast.Stmt) (fun.Expr, error)
+	Expression(expr ast.Expr) (fun.Expr, error)
 }
 
 type funC struct {
@@ -64,7 +66,7 @@ func (conv funC) Import(imp *ast.ImportSpec) (fun.Import, error) {
 	if err != nil {
 		return result, err
 	}
-	s, ok := ex.(fun.String)
+	s, ok := ex.(fun.StringLit)
 	if !ok {
 		return result, conv.errorWithAST("not a string or char literal", imp.Path)
 	}
@@ -86,7 +88,7 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 			}
 			tp := identToString(ex)
 			for _, n := range p.Names {
-				fn.Params = append(fn.Params, fun.Parameter{Name: identToString(n), Type: fun.AtomicType(tp)})
+				fn.Params = append(fn.Params, fun.Param{V: fun.VarSpec{Name: identToString(n), Type: fun.Atomic(tp)}})
 			}
 		}
 	}
@@ -94,10 +96,9 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 	if fd.Type.Results != nil {
 		for _, p := range fd.Type.Results.List {
 			tp := identToString(p.Type.(*ast.Ident))
-			fn.Results.Types = append(fn.Results.Types, fun.AtomicType(tp))
+			fn.Results = append(fn.Results, fun.Atomic(tp))
 		}
 	}
-	fn.Results.Pure = false // TODO validate purity, but by default all Go code is marked inpure
 	// Body
 	if fd.Body == nil {
 		return fn, conv.errorWithAST("empty function body is not supported", fd)
@@ -108,7 +109,7 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 		if err != nil {
 			return fn, err
 		}
-		fn.Body = fun.SingleExprBody{Expr: stmt}
+		fn.Body = fun.Single{Expr: stmt}
 	} else {
 		// Convert to Fun DoBlock
 		db := fun.Inline{}
@@ -124,7 +125,7 @@ func (conv funC) Function(fd *ast.FuncDecl) (fun.FuncDecl, error) {
 }
 
 // Statement converts Go statement to a corresponding Fun Expression depending on type.
-func (conv funC) Statement(stmt ast.Stmt) (fun.Expression, error) {
+func (conv funC) Statement(stmt ast.Stmt) (fun.Expr, error) {
 	switch st := stmt.(type) {
 	case *ast.ReturnStmt:
 		lr := len(st.Results)
@@ -140,7 +141,7 @@ func (conv funC) Statement(stmt ast.Stmt) (fun.Expression, error) {
 			return result, nil
 		default:
 			//  ReturnList
-			result := make(fun.ReturnList, lr)
+			result := make(fun.Results, lr)
 			for i := 0; i < lr; i++ {
 				expr, err := conv.Expression(st.Results[i])
 				if err != nil {
@@ -162,7 +163,7 @@ func (conv funC) Statement(stmt ast.Stmt) (fun.Expression, error) {
 }
 
 // Expression converts Go expression to a Fun one.
-func (conv funC) Expression(expr ast.Expr) (fun.Expression, error) {
+func (conv funC) Expression(expr ast.Expr) (fun.Expr, error) {
 	switch ex := expr.(type) {
 	case *ast.Ident:
 		if ex.Obj == nil {
@@ -170,7 +171,7 @@ func (conv funC) Expression(expr ast.Expr) (fun.Expression, error) {
 		}
 		switch ex.Obj.Kind {
 		case ast.Var:
-			return fun.Val(ex.Name), nil
+			return fun.Var(ex.Name), nil
 		default:
 			return nil, conv.errorWithAST("unsupported Obj kind", ex.Obj)
 		}
@@ -183,47 +184,52 @@ func (conv funC) Expression(expr ast.Expr) (fun.Expression, error) {
 		if err != nil {
 			return nil, err
 		}
-		result := fun.InfixOperation{X: x, Y: y, Operator: fun.Operator(ex.Op.String())}
+		op := ex.Op.String()
+		result := fun.BinaryOp{X: x, Y: y, Op: fun.Operator(op)}
 		return result, nil
 	case *ast.SelectorExpr:
-		result := fun.FunctionVal{Name: identToString(ex.Sel)}
+		var name, pkg string
+		name = identToString(ex.Sel)
 		switch x := ex.X.(type) {
 		case *ast.Ident:
-			result.Module = identToString(x)
+			pkg = identToString(x)
 		default:
 			return nil, conv.errorWithAST("argument type not supported", x)
 		}
-		return result, nil
+		return fun.FuncName{V: pkg + "." + name}, nil
 	case *ast.CallExpr:
 		e, err := conv.Expression(ex.Fun)
 		if err != nil {
 			return nil, err
 		}
-		funcVal, ok := e.(fun.FunctionVal)
+		name, ok := e.(fun.FuncName)
 		if !ok {
 			return nil, conv.errorWithAST("expected FunctionVal but got", e)
 		}
-		result := fun.FuncApplication{Func: funcVal}
+		result := fun.Application{Name: name}
 		for _, aex := range ex.Args {
 			arg, err := conv.Expression(aex)
 			if err != nil {
 				return nil, err
 			}
-			result.Arguments = append(result.Arguments, arg)
+			result.Args = append(result.Args, arg)
 		}
 		return result, nil
 	case *ast.BasicLit:
 		switch ex.Kind {
 		case token.INT:
-			return fun.Int(ex.Value), nil
+			x, err := strconv.Atoi(ex.Value)
+			return fun.IntegerLit(x), err
 		case token.FLOAT:
-			return fun.Double(ex.Value), nil
+			x, err := strconv.ParseFloat(ex.Value, 64)
+			return fun.DoubleLit(x), err
 		case token.STRING:
-			return fun.String(strings.Trim(ex.Value, `"`)), nil
+			return fun.StringLit(strings.Trim(ex.Value, `"`)), nil
 		case token.CHAR:
-			return fun.Char(strings.Trim(ex.Value, "'")), nil
-		case token.IMAG:
-			return fun.Imaginary(ex.Value), nil
+			runes := []rune(strings.Trim(ex.Value, "'"))
+			return fun.CharLit(runes[0]), nil
+		// case token.IMAG:
+		// 	return fun.Imaginary(ex.Value), nil
 		default:
 			return nil, conv.errorWithAST("unexpected literal type", ex)
 		}

@@ -231,7 +231,7 @@ main = hspec $ do
               , ("body", wrap "Single"
                 [ ("expr", wrap "Application"
                   [ ("name", wrap "FuncName" [ ("v", J.String "print") ] )
-                  , ("args", J.Array [ wrap "StringLit" [ ("value", J.String "hello world") ] ] )
+                  , ("args", J.Array [ wrap "StringLit" [ ("v", J.String "hello world") ] ] )
                   -- Parens all the way down
                   ])
                 ])

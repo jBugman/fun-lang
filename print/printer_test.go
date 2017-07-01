@@ -40,7 +40,7 @@ func TestPackage(t *testing.T) {
 					Expr: fun.Application{
 						Name: fun.FuncName{V: "fmt.Println"},
 						Args: []fun.Expr{
-							fun.StringLit("Hello World!"),
+							fun.StringLit{V: "Hello World!"},
 						}}}}}}
 	source, err := print.Package(tree)
 	assert.NoError(t, err)
@@ -87,7 +87,7 @@ func TestFuncDecl_infixReturn(t *testing.T) {
 			Expr: fun.BinaryOp{
 				X:  fun.Var("x"),
 				Op: fun.Operator("+"),
-				Y:  fun.IntegerLit(2),
+				Y:  fun.IntegerLit{V: 2},
 			}},
 	}
 	source, err := print.FuncDecl(tree)
@@ -152,14 +152,14 @@ func TestFuncDecl_charsAsBytes(t *testing.T) {
 		Name:   "fun",
 		Params: []fun.Param{fun.NewParam("x", "char")},
 		Results: []fun.Type{
-			fun.Atomic("char"),
-			fun.StringT,
+			fun.Atomic{V: "char"}, // manual
+			fun.StringT,           // shortcut
 			// fun.ObjectType("apples"),
 		},
 		Body: fun.Single{
 			Expr: fun.Results{
-				fun.CharLit('a'),
-				fun.StringLit("word"),
+				fun.CharLit{V: 'a'},
+				fun.StringLit{V: "word"},
 				// fun.Val("aapl"),
 			},
 		},
@@ -180,7 +180,7 @@ func TestFuncDecl_listTypeArg(t *testing.T) {
 		Name: "size",
 		Params: []fun.Param{{V: fun.VarSpec{
 			Name: "xs",
-			Type: fun.Slice{T: fun.IntT},
+			Type: fun.Slice{V: fun.IntT},
 		}}},
 		Results: []fun.Type{fun.IntT},
 		Body: fun.Single{

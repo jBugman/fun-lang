@@ -42,9 +42,9 @@ data Type
         deriving (Eq, Show)
 
 instance ToJSON Type where
-    toJSON (Atomic t) = wrap "Atomic" [ "value" .= t ]
-    toJSON (Slice t)  = wrap "Slice"  [ "type" .= t ]
-    toJSON (Map k v)  = wrap "Map"    [ "keys" .= k, "values" .= v ]
+    toJSON (Atomic v) = wrap "Atomic" [ "v" .= v ]
+    toJSON (Slice v)  = wrap "Slice"  [ "v" .= v ]
+    toJSON (Map k v)  = wrap "Map"    [ "k" .= k, "v" .= v ]
 
 data VarSpec = VarSpec Name Type
     deriving (Eq, Show)
@@ -110,12 +110,12 @@ data Literal
         deriving (Eq, Show)
 
 instance ToJSON Literal where
-    toJSON (StringLit x)  = wrap "StringLit"  [ "value" .= x ]
-    toJSON (CharLit x)    = wrap "CharLit"    [ "value" .= x ]
-    toJSON (IntegerLit x) = wrap "IntegerLit" [ "value" .= x ]
-    toJSON (DoubleLit x)  = wrap "DoubleLit"  [ "value" .= x ]
-    toJSON (HexLit x)     = wrap "HexLit"     [ "value" .= x ]
-    toJSON (BoolLit x)    = wrap "BoolLit"    [ "value" .= x ]
+    toJSON (StringLit x)  = wrap "StringLit"  [ "v" .= x ]
+    toJSON (CharLit x)    = wrap "CharLit"    [ "v" .= x ]
+    toJSON (IntegerLit x) = wrap "IntegerLit" [ "v" .= x ]
+    toJSON (DoubleLit x)  = wrap "DoubleLit"  [ "v" .= x ]
+    toJSON (HexLit x)     = wrap "HexLit"     [ "v" .= x ]
+    toJSON (BoolLit x)    = wrap "BoolLit"    [ "v" .= x ]
 
 wrap :: String -> [Pair] -> Value
 wrap t ps = object [ jsonType t, "$data" .= object ps ]

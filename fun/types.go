@@ -42,13 +42,13 @@ func (v Var) isExpr() {}
 
 // Type represents type.
 type Type interface {
-	typeMarker()
+	isType()
 }
 
 // Atomic represents bacic type.
 type Atomic string
 
-func (t Atomic) typeMarker() {}
+func (t Atomic) isType() {}
 
 // Supported atomic type singletons
 const (
@@ -63,14 +63,14 @@ type Slice struct {
 	T Type
 }
 
-func (t Slice) typeMarker() {}
+func (t Slice) isType() {}
 
 // Map represents a Go map.
 type Map struct {
 	K, V Type
 }
 
-func (t Map) typeMarker() {}
+func (t Map) isType() {}
 
 /* VarSpec */
 
@@ -84,7 +84,7 @@ type VarSpec struct {
 
 // Param represents function parameter.
 type Param struct {
-	VarSpec
+	V VarSpec
 }
 
 /* FuncBody */

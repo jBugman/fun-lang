@@ -49,11 +49,11 @@ main = hspec $ do
       prs funcParams "()" `shouldParse` []
 
     it "parses single parameter" $
-      prs funcParams "(x bool)" `shouldParse` [Param $ VarSpec "x" (Atomic "bool")]
+      prs funcParams "(x bool)" `shouldParse` [Param $ Field "x" (Atomic "bool")]
 
     it "parses multiple parameters" $
       prs funcParams "(n int, name string)" `shouldParse`
-        [Param $ VarSpec "n" (Atomic "int"), Param $ VarSpec "name" (Atomic "string")]
+        [Param $ Field "n" (Atomic "int"), Param $ Field "name" (Atomic "string")]
 
   describe "Fun.Parser.funcResults" $ do
     it "parses empty list" $
@@ -71,7 +71,7 @@ main = hspec $ do
 
     it "parses func with some params" $
       prs funFuncDecl "func g (a int, b int) = undefined" `shouldParse`
-        FuncDecl "g" [Param $ VarSpec "a" (Atomic "int"), Param $ VarSpec "b" (Atomic "int")] [] Undefined
+        FuncDecl "g" [Param $ Field "a" (Atomic "int"), Param $ Field "b" (Atomic "int")] [] Undefined
 
     it "parses func witout params" $
       prs funFuncDecl "func read () -> (header, error) = undefined" `shouldParse`
@@ -80,8 +80,8 @@ main = hspec $ do
     it "parses params and results" $
       prs funFuncDecl "func h (a int, b string) -> (int, string) = undefined" `shouldParse`
         FuncDecl "h"
-          [ Param $ VarSpec "a" (Atomic "int")
-          , Param $ VarSpec "b" (Atomic "string")
+          [ Param $ Field "a" (Atomic "int")
+          , Param $ Field "b" (Atomic "string")
           ] [ Atomic "int", Atomic "string" ] Undefined
 
     it "parses inline as body" $

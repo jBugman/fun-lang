@@ -46,13 +46,13 @@ instance ToJSON Type where
     toJSON (Slice v)  = wrap "Slice"  [ "v" .= v ]
     toJSON (Map k v)  = wrap "Map"    [ "k" .= k, "v" .= v ]
 
-data VarSpec = VarSpec Name Type
+data Field = Field Name Type
     deriving (Eq, Show)
 
-instance ToJSON VarSpec where
-    toJSON (VarSpec n t) = wrap "VarSpec" [ "name" .= n, "type" .= t ]
+instance ToJSON Field where
+    toJSON (Field n t) = wrap "Field" [ "name" .= n, "type" .= t ]
 
-newtype Param = Param VarSpec
+newtype Param = Param Field
     deriving (Eq, Show)
 
 instance ToJSON Param where

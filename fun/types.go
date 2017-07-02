@@ -74,10 +74,10 @@ type Map struct {
 
 func (t Map) isType() {}
 
-/* VarSpec */
+/* Field */
 
-// VarSpec is a variable name with its type.
-type VarSpec struct {
+// Field is a variable name with its type.
+type Field struct {
 	Name string
 	Type Type
 }
@@ -86,7 +86,12 @@ type VarSpec struct {
 
 // Param represents function parameter.
 type Param struct {
-	V VarSpec
+	V Field
+}
+
+// NewParam creates new Param instance.
+func NewParam(name, t string) Param {
+	return Param{Field{Name: name, Type: Atomic{V: t}}}
 }
 
 /* FuncBody */

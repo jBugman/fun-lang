@@ -40,14 +40,14 @@ funcResults = do
 
 funcParams :: Parser [Fun.Param]
 funcParams = do
-    xs <- parensList varSpec
+    xs <- parensList field
     return $ map Fun.Param xs
 
-varSpec :: Parser Fun.VarSpec
-varSpec = do
+field :: Parser Fun.Field
+field = do
     n <- identifier
     t <- identifier
-    return $ Fun.VarSpec n (Fun.Atomic t)
+    return $ Fun.Field n (Fun.Atomic t)
 
 funcBody :: Parser Fun.FuncBody
 funcBody = try inline <|> try undef <|> singleExpr

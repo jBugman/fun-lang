@@ -178,7 +178,7 @@ func TestFuncDecl_charsAsBytes(t *testing.T) {
 func TestFuncDecl_listTypeArg(t *testing.T) {
 	tree := fun.FuncDecl{
 		Name: "size",
-		Params: []fun.Param{{V: fun.VarSpec{
+		Params: []fun.Param{{V: fun.Field{
 			Name: "xs",
 			Type: fun.Slice{V: fun.IntT},
 		}}},

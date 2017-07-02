@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jBugman/fun-lang/fun"
+	"github.com/jBugman/fun-lang/fun/togo"
 )
 
 // FixFormat formats valid Go code.
@@ -122,10 +123,10 @@ func typeSlice(xs []fun.Type) (string, error) {
 func Type(arg fun.Type) (string, error) {
 	switch t := arg.(type) {
 	case fun.Atomic:
-		return Atomic(t), nil
+		return Atomic(t)
 	case fun.Slice:
 		return Slice(t)
-	// TODO add map
+	// TODO: add map
 	default:
 		return "", fmt.Errorf("not supported: %s", t)
 	}
@@ -188,37 +189,30 @@ func FuncName(v fun.FuncName) string {
 }
 
 // Atomic prints fun.Atomic.
-func Atomic(t fun.Atomic) string {
-	if t == fun.CharT {
-		return "byte"
+func Atomic(x fun.Atomic) (string, error) {
+	node, err := togo.Atomic(x)
+	if err != nil {
+		return "", err
 	}
-	return t.V
+	return togo.PrintAST(node)
 }
 
 // Literal prints fun.Literal.
-func Literal(o fun.Literal) (string, error) {
-	switch v := o.(type) {
-	case fun.CharLit:
-		return fmt.Sprintf("'%c'", v.V), nil
-	case fun.StringLit:
-		return fmt.Sprintf("\"%s\"", v.V), nil
-	case fun.BoolLit:
-		return fmt.Sprintf("%v", v.V), nil
-	case fun.DoubleLit:
-		return fmt.Sprintf("%v", v.V), nil
-	case fun.IntegerLit:
-		return fmt.Sprintf("%v", v.V), nil
-	case fun.HexLit:
-		return fmt.Sprintf("%v", v.V), nil
-	default:
-		return "", fmt.Errorf("not supported: %#v", v)
+func Literal(x fun.Literal) (string, error) {
+	node, err := togo.Literal(x)
+	if err != nil {
+		return "", err
 	}
+	return togo.PrintAST(node)
 }
 
 // Slice prints fun.Slice.
-func Slice(t fun.Slice) (string, error) {
-	v, err := Type(t.V)
-	return fmt.Sprintf("[]%s", v), err
+func Slice(x fun.Slice) (string, error) {
+	node, err := togo.Slice(x)
+	if err != nil {
+		return "", err
+	}
+	return togo.PrintAST(node)
 }
 
 // Results prints return arguments to return.

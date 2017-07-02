@@ -1,17 +1,16 @@
 package togo
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
-	"go/token"
-
 	"go/format"
-	"io"
+	"go/token"
 
 	"github.com/jBugman/fun-lang/fun"
 )
 
-// TODO Package
+// TODO: Package
 
 // Import converts Fun Import to Go AST.
 func Import(imp fun.Import) (ast.Spec, error) {
@@ -52,7 +51,7 @@ func funcType(ps []fun.Param, rs []fun.Type) (*ast.FuncType, error) {
 	if err != nil {
 		return nil, err
 	}
-	r, err := Results(rs)
+	r, err := typeList(rs)
 	if err != nil {
 		return nil, err
 	}
@@ -63,22 +62,22 @@ func funcType(ps []fun.Param, rs []fun.Type) (*ast.FuncType, error) {
 	}, nil
 }
 
-// TODO FuncBody
+// TODO: FuncBody
 func FuncBody(f fun.FuncBody) (*ast.BlockStmt, error) {
 	return nil, fmt.Errorf("not implemented: %#v", f)
 }
 
-// TODO Parameters
+// TODO: Parameters
 func Parameters(xs []fun.Param) (*ast.FieldList, error) {
 	return nil, fmt.Errorf("not implemented: %#v", xs)
 }
 
-// TODO Type
+// TODO: Type
 func Type(t fun.Type) (ast.Expr, error) {
 	return nil, fmt.Errorf("not implemented: %#v", t)
 }
 
-// TODO BinaryOp
+// TODO: BinaryOp
 
 // Expression
 func Expression(expr fun.Expr) (ast.Expr, error) {
@@ -97,7 +96,7 @@ func Application(fa fun.Application) (ast.Expr, error) {
 	}, err
 }
 
-// TODO FuncName ?
+// TODO: FuncName ?
 
 // Atomic converts Fun Atomic type to Go AST.
 func Atomic(t fun.Atomic) (ast.Expr, error) {
@@ -107,6 +106,8 @@ func Atomic(t fun.Atomic) (ast.Expr, error) {
 	}
 	return ident(s), nil
 }
+
+// TODO: Results
 
 // Literal converts Fun Literal to Go AST.
 func Literal(o fun.Literal) (ast.Expr, error) {
@@ -135,8 +136,8 @@ func Slice(t fun.Slice) (ast.ArrayType, error) {
 	return ast.ArrayType{Elt: v}, err
 }
 
-// Results converts function return list to Go AST.
-func Results(types []fun.Type) (*ast.FieldList, error) {
+// typeList converts function return list to Go AST.
+func typeList(types []fun.Type) (*ast.FieldList, error) {
 	var err error
 	var xs []*ast.Field
 	if len(types) > 0 {
@@ -197,7 +198,9 @@ func convertExprs(xs []fun.Expr) ([]ast.Expr, error) {
 
 /* Printer */
 
-// PrintAST formats node in canonical gofmt style and writes the result to dst.
-func PrintAST(dst io.Writer, node interface{}) error {
-	return format.Node(dst, nil, node)
+// PrintAST formats node in canonical gofmt style.
+func PrintAST(node interface{}) (string, error) {
+	var buf bytes.Buffer
+	err := format.Node(&buf, nil, node)
+	return buf.String(), err
 }

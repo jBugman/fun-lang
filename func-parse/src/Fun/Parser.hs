@@ -36,7 +36,7 @@ funFuncDecl = do
 funcResults :: Parser [Fun.Type]
 funcResults = do
     xs <- try (parensList identifier) <|> try (count 1 identifier) <|> return []
-    return $ map Fun.Atomic xs -- TODO add more
+    return $ map Fun.Atomic xs -- TODO: add more
 
 funcParams :: Parser [Fun.Param]
 funcParams = do

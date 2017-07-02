@@ -89,7 +89,7 @@ func TestPackage_func_params(t *testing.T) {
 				Body: fun.Single{
 					Expr: fun.IntegerLit{V: 42},
 				}}}}
-	/// TODO add BinaryOp to parser
+	/// TODO: add BinaryOp to parser
 	// Expr: fun.BinaryOp{
 	// 	X:  fun.IntegerLit{V: 42},
 	// 	Op: fun.Operator("+"),

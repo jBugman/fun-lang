@@ -34,7 +34,7 @@ func (fd FuncDecl) isTopLevel() {}
 /* Var */
 
 // Var represents variable
-type Var string // TODO move to Expr
+type Var string // TODO: move to Expr
 
 func (v Var) isExpr() {}
 
@@ -147,7 +147,7 @@ func (b Inline) isFuncBody() {}
 // FuncName represents function addressed by name.
 type FuncName struct {
 	V string
-	// TODO split it back
+	// TODO: split it back
 	// Package string
 	// Name    string
 }
@@ -192,7 +192,7 @@ type Results []Expr
 func (e Results) isExpr() {}
 
 /* ForHeader */
-// TODO add
+// TODO: add
 
 /* Literal */
 

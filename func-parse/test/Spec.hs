@@ -211,7 +211,7 @@ main = hspec $ do
             (Single $ Application (FuncName "fmt.Println") [Lit $ StringLit "hello world"])]
 
   describe "Fun.Types.ToJSON" $ do
-    it "wrap works correctly" $ -- TODO use quickcheck
+    it "wrap works correctly" $ -- TODO: use quickcheck
       wrap "Import" [ "path" .= ("fmt" :: String) ] `shouldBe`
         J.Object [ ("$type", J.String "Import"), ("$data", J.Object [ ("path", "fmt") ]) ]
 

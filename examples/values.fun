@@ -9,6 +9,6 @@ func main = do
     print ("7.0/3.0 =", 7.0 / 3.0)
 
     // Booleans, with boolean operators as you'd expect.
-    print (true && false) // TODO or should it be True && False
+    print (true && false) // TODO: or should it be True && False
     print (true || false)
     print (not true)

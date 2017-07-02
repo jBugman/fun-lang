@@ -79,8 +79,8 @@ data Expr
     = Application FuncName [Expr]
     | Lit Literal
     | DoBlock [Expr]
-    -- TODO Var is really an Expr
-    -- TODO add return list
+    -- TODO: Var is really an Expr
+    -- TODO: add return list
     -- | For ForHeader Expr
     -- | BinaryOp Op Expr Expr
         deriving (Eq, Show)

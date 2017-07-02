@@ -43,6 +43,7 @@ func (v Var) isExpr() {}
 // Type represents type.
 type Type interface {
 	isType()
+	Field() Field
 }
 
 // Atomic represents basic type.
@@ -51,6 +52,11 @@ type Atomic struct {
 }
 
 func (t Atomic) isType() {}
+
+// Field returns type wrapped in Field with an empty name.
+func (t Atomic) Field() Field {
+	return Field{Type: t}
+}
 
 // Supported atomic type singletons
 var (
@@ -67,12 +73,22 @@ type Slice struct {
 
 func (t Slice) isType() {}
 
+// Field returns type wrapped in Field with an empty name.
+func (t Slice) Field() Field {
+	return Field{Type: t}
+}
+
 // Map represents a Go map.
 type Map struct {
 	K, V Type
 }
 
 func (t Map) isType() {}
+
+// Field returns type wrapped in Field with an empty name.
+func (t Map) Field() Field {
+	return Field{Type: t}
+}
 
 /* Field */
 

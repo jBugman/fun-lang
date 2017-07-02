@@ -87,21 +87,12 @@ func unwrapStruct(src reflect.Type, target reflect.Type, data interface{}) (inte
 		if err = decodeMap(payload, &result); err != nil {
 			return nil, err
 		}
-		if len(result.Imports) == 0 {
-			result.Imports = nil
-		}
 		return result, nil
 
 	case "FuncDecl":
 		var result fun.FuncDecl
 		if err = decodeMap(payload, &result); err != nil {
 			return nil, err
-		}
-		if len(result.Params) == 0 {
-			result.Params = nil
-		}
-		if len(result.Results) == 0 {
-			result.Results = nil
 		}
 		return result, nil
 
@@ -130,9 +121,6 @@ func unwrapStruct(src reflect.Type, target reflect.Type, data interface{}) (inte
 		var result fun.Application
 		if err = decodeMap(payload, &result); err != nil {
 			return nil, err
-		}
-		if len(result.Args) == 0 {
-			result.Args = nil
 		}
 		return result, nil
 
@@ -166,6 +154,17 @@ func decodeMap(data, result interface{}) error {
 		fmt.Fprintln(os.Stderr, "data:", data)
 		fmt.Fprintln(os.Stderr)
 		return err
+	}
+	// Set empty slices in the struct fields to nil.
+	v := reflect.ValueOf(result).Elem()
+	if v.Kind() != reflect.Struct {
+		return nil
+	}
+	for i := 0; i < v.NumField(); i++ {
+		fld := v.Field(i)
+		if fld.Kind() == reflect.Slice && fld.Len() == 0 {
+			fld.Set(reflect.Zero(fld.Type()))
+		}
 	}
 	return nil
 }

@@ -74,6 +74,33 @@ func TestPackage_helloWorld(t *testing.T) {
 	}
 }
 
+func TestPackage_func_params(t *testing.T) {
+	src := ex(`
+	package pkg
+	
+	func foo (x int) = 42
+	`)
+	ast := fun.Package{
+		Name: "pkg",
+		TopLevels: []fun.TopLevel{
+			fun.FuncDecl{
+				Name:   "foo",
+				Params: []fun.Param{fun.NewParam("x", "int")},
+				Body: fun.Single{
+					Expr: fun.IntegerLit{V: 42},
+				}}}}
+	/// TODO add BinaryOp to parser
+	// Expr: fun.BinaryOp{
+	// 	X:  fun.IntegerLit{V: 42},
+	// 	Op: fun.Operator("+"),
+	// 	Y:  fun.Var("x"),
+	// }}}}}
+	result, err := parse.Package([]byte(src))
+	if assert.NoError(t, err) {
+		assert.Equal(t, ast, *result)
+	}
+}
+
 func ex(source string) string {
 	lines := strings.Split(strings.TrimSpace(source), "\n")
 	for i := 0; i < len(lines); i++ {

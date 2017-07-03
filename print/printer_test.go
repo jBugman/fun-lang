@@ -29,7 +29,7 @@ func ex(source string) string {
 
 func TestPackage(t *testing.T) {
 	tree := fun.Package{
-		Name: "Main",
+		Name: "main",
 		Imports: []fun.Import{
 			{Path: "fmt"},
 		},

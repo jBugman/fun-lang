@@ -21,7 +21,7 @@ func Import(imp fun.Import) (ast.Spec, error) {
 	return &ast.ImportSpec{
 		// Doc     *CommentGroup // associated documentation; or nil
 		Name: alias,
-		Path: txt(imp.Path),
+		Path: stringLit(imp.Path),
 		// Comment *CommentGroup // line comments; or nil
 		// EndPos  token.Pos     // end of spec (overrides Path.Pos if nonzero)
 	}, nil
@@ -63,40 +63,74 @@ func funcType(ps []fun.Param, rs []fun.Type) (*ast.FuncType, error) {
 }
 
 // TODO: FuncBody
-func FuncBody(f fun.FuncBody) (*ast.BlockStmt, error) {
-	return nil, fmt.Errorf("not implemented: %#v", f)
+func FuncBody(x fun.FuncBody) (*ast.BlockStmt, error) {
+	switch t := x.(type) {
+	default:
+		return nil, fmt.Errorf("not implemented FuncBody for a %#v", t)
+	}
 }
 
-// TODO: Parameters
-func Parameters(xs []fun.Param) (*ast.FieldList, error) {
-	return nil, fmt.Errorf("not implemented: %#v", xs)
+// Parameters converts function parameters to Go AST.
+func Parameters(params []fun.Param) (*ast.FieldList, error) {
+	var xs []*ast.Field
+	if len(params) > 0 {
+		for i := 0; i < len(params); i++ {
+			x, err := Field(params[i].V)
+			if err != nil {
+				return nil, err
+			}
+			xs = append(xs, x)
+		}
+	}
+	return &ast.FieldList{List: xs}, nil
 }
 
-// TODO: Type
+// Type converts type literals to Go AST.
 func Type(t fun.Type) (ast.Expr, error) {
-	return nil, fmt.Errorf("not implemented: %#v", t)
+	switch x := t.(type) {
+	case fun.Atomic:
+		return Atomic(x)
+	case fun.Slice:
+		return Slice(x)
+	// TODO: add Map
+	default:
+		return nil, fmt.Errorf("not implemented Type for a %#v", x)
+	}
 }
 
 // TODO: BinaryOp
 
 // Expression
 func Expression(expr fun.Expr) (ast.Expr, error) {
-	return nil, fmt.Errorf("not implemented: %#v", expr)
+	switch t := expr.(type) {
+	case fun.Literal:
+		return Literal(t)
+	default:
+		return nil, fmt.Errorf("not implemented Expression for a %#v", t)
+	}
 }
 
 // Application converts Fun Application to Go AST.
 func Application(fa fun.Application) (ast.Expr, error) {
 	exprs, err := convertExprs(fa.Args)
+	if err != nil {
+		return nil, err
+	}
+	sel, err := FuncName(fa.Name)
+	if err != nil {
+		return nil, err
+	}
 	return &ast.CallExpr{
-		Fun: ident(fa.Name.V),
-		// Lparen   token.Pos // position of "("
+		Fun:  sel,
 		Args: exprs,
 		// Ellipsis token.Pos // position of "..." (token.NoPos if there is no "...")
-		// Rparen   token.Pos // position of ")"
-	}, err
+	}, nil
 }
 
-// TODO: FuncName ?
+// TODO: FuncName
+func FuncName(x fun.FuncName) (ast.Expr, error) {
+	return nil, fmt.Errorf("not implemented Expression for a %#v", x)
+}
 
 // Atomic converts Fun Atomic type to Go AST.
 func Atomic(t fun.Atomic) (ast.Expr, error) {
@@ -116,7 +150,7 @@ func Literal(o fun.Literal) (ast.Expr, error) {
 	case fun.CharLit:
 		return &ast.BasicLit{Kind: token.CHAR, Value: fmt.Sprintf("'%c'", v.V)}, nil
 	case fun.StringLit:
-		return &ast.BasicLit{Kind: token.STRING, Value: fmt.Sprintf("\"%s\"", v.V)}, nil
+		return stringLit(v.V), nil
 	case fun.BoolLit:
 		return &ast.Ident{Name: fmt.Sprintf("%v", v.V)}, nil
 	case fun.DoubleLit:
@@ -131,9 +165,9 @@ func Literal(o fun.Literal) (ast.Expr, error) {
 }
 
 // Slice converts Fun Slice to Go AST.
-func Slice(t fun.Slice) (ast.ArrayType, error) {
+func Slice(t fun.Slice) (*ast.ArrayType, error) {
 	v, err := Type(t.V)
-	return ast.ArrayType{Elt: v}, err
+	return &ast.ArrayType{Elt: v}, err
 }
 
 // typeList converts function return list to Go AST.
@@ -163,7 +197,7 @@ func Field(f fun.Field) (*ast.Field, error) {
 	t, err := Type(f.Type)
 	return &ast.Field{
 		// Doc     *CommentGroup // associated documentation; or nil
-		Names: []*ast.Ident{ident(f.Name)},
+		Names: []*ast.Ident{varname(f.Name)},
 		Type:  t,
 		// Tag     *BasicLit     // field tag; or nil
 		// Comment *CommentGroup // line comments; or nil
@@ -180,8 +214,15 @@ func ident(v string) *ast.Ident {
 	}
 }
 
-func txt(v string) *ast.BasicLit {
-	return &ast.BasicLit{Kind: token.STRING, Value: v}
+func varname(x string) *ast.Ident {
+	return &ast.Ident{
+		Name: x,
+		Obj:  &ast.Object{Kind: ast.Var, Name: x},
+	}
+}
+
+func stringLit(x string) *ast.BasicLit {
+	return &ast.BasicLit{Kind: token.STRING, Value: fmt.Sprintf("\"%s\"", x)}
 }
 
 func convertExprs(xs []fun.Expr) ([]ast.Expr, error) {

@@ -23,14 +23,23 @@ func Package(pk fun.Package) ([]byte, error) {
 	// Package
 	fmt.Fprintf(&buf, "package %s%s\n", strings.ToLower(string(pk.Name[0])), pk.Name[1:])
 	// Imports
+	var s string
 	switch len(pk.Imports) {
 	case 0: // do nothing
 	case 1:
-		fmt.Fprintln(&buf, "import ", Import(pk.Imports[0]))
+		s, err = Import(pk.Imports[0])
+		if err != nil {
+			return nil, err
+		}
+		fmt.Fprintln(&buf, "import ", s)
 	default:
 		fmt.Fprintln(&buf, "import (")
 		for _, imp := range pk.Imports {
-			fmt.Fprintln(&buf, Import(imp))
+			s, err = Import(imp)
+			if err != nil {
+				return nil, err
+			}
+			fmt.Fprintln(&buf, s)
 		}
 		fmt.Fprintln(&buf, ")")
 	}
@@ -52,8 +61,12 @@ func Package(pk fun.Package) ([]byte, error) {
 }
 
 // Import prints fun.Import.
-func Import(imp fun.Import) string {
-	return fmt.Sprintf("%s \"%s\"", imp.Alias, imp.Path)
+func Import(x fun.Import) (string, error) {
+	node, err := togo.Import(x)
+	if err != nil {
+		return "", err
+	}
+	return togo.PrintAST(node)
 }
 
 // FuncDecl prints fun.Decl.
@@ -120,16 +133,12 @@ func typeSlice(xs []fun.Type) (string, error) {
 }
 
 // Type prints instances of fun.Type interface
-func Type(arg fun.Type) (string, error) {
-	switch t := arg.(type) {
-	case fun.Atomic:
-		return Atomic(t)
-	case fun.Slice:
-		return Slice(t)
-	// TODO: add map
-	default:
-		return "", fmt.Errorf("not supported: %s", t)
+func Type(x fun.Type) (string, error) {
+	node, err := togo.Type(x)
+	if err != nil {
+		return "", err
 	}
+	return togo.PrintAST(node)
 }
 
 // BinaryOp prints fun.BinaryOp.
@@ -164,17 +173,12 @@ func Expression(e fun.Expr) (string, error) {
 }
 
 // Application prints fun.Application.
-func Application(fa fun.Application) (string, error) {
-	var err error
-	n := len(fa.Args)
-	ss := make([]string, n)
-	for i := 0; i < n; i++ {
-		ss[i], err = Expression(fa.Args[i])
-		if err != nil {
-			return "", err
-		}
+func Application(x fun.Application) (string, error) {
+	node, err := togo.Application(x)
+	if err != nil {
+		return "", err
 	}
-	return fmt.Sprintf("%s(%s)", FuncName(fa.Name), strings.Join(ss, ", ")), nil
+	return togo.PrintAST(node)
 }
 
 // FuncName prints fun.FuncName.

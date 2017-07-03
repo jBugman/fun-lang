@@ -16,11 +16,11 @@ func Test_Import(t *testing.T) {
 	goTree := &ast.ImportSpec{
 		Path: &ast.BasicLit{
 			Kind:  token.STRING,
-			Value: "fmt",
+			Value: "\"fmt\"",
 		},
 	}
 	result, err := togo.Import(funTree)
 	if assert.NoError(t, err) {
-		assert.Equal(t, goTree, result)
+		assert.EqualValues(t, goTree, result)
 	}
 }

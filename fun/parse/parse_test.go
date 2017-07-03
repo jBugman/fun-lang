@@ -65,7 +65,7 @@ func TestPackage_helloWorld(t *testing.T) {
 				Name: "main",
 				Body: fun.Single{
 					Expr: fun.Application{
-						Name: fun.FuncName{V: "print"},
+						Fun:  fun.Selector{X: "print"},
 						Args: []fun.Expr{fun.StringLit{V: "hello world"}},
 					}}}}}
 	result, err := parse.Package([]byte(src))

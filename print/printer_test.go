@@ -38,7 +38,7 @@ func TestPackage(t *testing.T) {
 				Name: "main",
 				Body: fun.Single{
 					Expr: fun.Application{
-						Name: fun.FuncName{V: "fmt.Println"},
+						Fun: fun.Selector{X: "fmt", Sel: "Println"},
 						Args: []fun.Expr{
 							fun.StringLit{V: "Hello World!"},
 						}}}}}}
@@ -185,7 +185,7 @@ func TestFuncDecl_listTypeArg(t *testing.T) {
 		Results: []fun.Type{fun.IntT},
 		Body: fun.Single{
 			Expr: fun.Application{
-				Name: fun.FuncName{V: "len"},
+				Fun:  fun.Selector{X: "len"},
 				Args: []fun.Expr{fun.Var("xs")},
 			},
 		},

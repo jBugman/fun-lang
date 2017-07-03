@@ -69,14 +69,14 @@ instance ToJSON FuncBody where
     toJSON (Single expr)  = wrap "Single"    [ "expr" .= expr ]
     toJSON (Inline block) = wrap "Inline"    [ "block" .= block ]
 
-newtype FuncName = FuncName String
+data Selector = Selector String (Maybe String)
     deriving (Eq, Show)
 
-instance ToJSON FuncName where
-    toJSON (FuncName s) = wrap "FuncName" [ "v" .= s ]
+instance ToJSON Selector where
+    toJSON (Selector x sel) = wrap "Selector" [ "x" .= x, "sel" .= sel ]
 
 data Expr
-    = Application FuncName [Expr]
+    = Application Selector [Expr]
     | Lit Literal
     | DoBlock [Expr]
     -- TODO: Var is really an Expr
@@ -86,7 +86,7 @@ data Expr
         deriving (Eq, Show)
 
 instance ToJSON Expr where
-    toJSON (Application name args) = wrap "Application" [ "name" .= name, "args" .= args ]
+    toJSON (Application f args) = wrap "Application" [ "fun" .= f, "args" .= args ]
     toJSON (Lit lit)               = toJSON lit -- see 'instance ToJSON Literal'
     toJSON (DoBlock exprs)         = wrap "DoBlock" [ "exprs" .= exprs ]
     -- toJSON For ForHeader Expr

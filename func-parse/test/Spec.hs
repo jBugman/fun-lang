@@ -6,7 +6,7 @@ import Test.Hspec (hspec, describe, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldParse, shouldFailOn)
 
 import Data.Aeson (toJSON, (.=))
-import qualified Data.Aeson.Types as J (Value (Object, String, Array))
+import qualified Data.Aeson.Types as J (Value (Object, String, Array, Null))
 
 import Fun.Parser
 import Fun.Types
@@ -104,15 +104,15 @@ main = hspec $ do
       prs inline "inline\n    {\n        struct{}{}\n    }\n    // inline comment\n\n // comment" `shouldParse`
         Inline ["{", "    struct{}{}", "}", "// inline comment"]
 
-  describe "Fun.Parser.funcNameP" $ do
+  describe "Fun.Parser.selector" $ do
     it "parses just name" $
-      prs funcNameP "f" `shouldParse` FuncName "f"
+      prs selector "f" `shouldParse` Selector "f" Nothing
 
     it "fails on not an ident" $
-      prs funcNameP `shouldFailOn` "42"
+      prs selector `shouldFailOn` "42"
 
     it "parses selector" $
-      prs funcNameP "fmt.Println" `shouldParse` FuncName "fmt.Println"
+      prs selector "fmt.Println" `shouldParse` Selector "fmt" (Just "Println")
 
   describe "Fun.Parser.literals" $ do
     describe "intLit" $ do
@@ -181,24 +181,24 @@ main = hspec $ do
 
   describe "Fun.Parser.funcApplication" $ do
     it "parses simplest case" $
-      prs funcApplication "f 42" `shouldParse` Application (FuncName "f") [Lit (IntegerLit 42)]
+      prs funcApplication "f 42" `shouldParse` Application (Selector "f" Nothing) [Lit (IntegerLit 42)]
 
     it "parses println" $
       prs funcApplication "fmt.Println \"foo\"" `shouldParse`
-        Application (FuncName "fmt.Println") [Lit (StringLit "foo")]
+        Application (Selector "fmt" (Just "Println")) [Lit (StringLit "foo")]
 
   describe "Fun.Parser.package" $ do
     it "parses helloworld" $
       prs package "package main\n\nfunc main = print \"hello world\"" `shouldParse`
         Package "main" [] [
             FuncDecl "main" [] []
-              (Single $ Application (FuncName "print") [Lit $ StringLit "hello world"])]
+              (Single $ Application (Selector "print" Nothing) [Lit $ StringLit "hello world"])]
 
     it "parses package with import" $
       prs package "package foo\n\nimport \"fmt\"\n\nfunc Hello = fmt.Println \"hello world\"" `shouldParse`
         Package "foo" [ Import "fmt" Nothing ] [
           FuncDecl "Hello" [] []
-            (Single $ Application (FuncName "fmt.Println") [Lit $ StringLit "hello world"])]
+            (Single $ Application (Selector "fmt" (Just "Println")) [Lit $ StringLit "hello world"])]
 
     it "parses package with multiple imports" $
       prs package "package bar\n\nimport \"fmt\"\nimport \"looong/pkg\" as \"l\"\n\nfunc Greet = fmt.Println \"hello world\""
@@ -208,7 +208,7 @@ main = hspec $ do
           , Import "looong/pkg" (Just "l")
           ][
           FuncDecl "Greet" [] []
-            (Single $ Application (FuncName "fmt.Println") [Lit $ StringLit "hello world"])]
+            (Single $ Application (Selector "fmt" (Just "Println")) [Lit $ StringLit "hello world"])]
 
   describe "Fun.Types.ToJSON" $ do
     it "wrap works correctly" $ -- TODO: use quickcheck
@@ -219,7 +219,7 @@ main = hspec $ do
       toJSON
         (Package "main" [] [
           FuncDecl "main" [] []
-            (Single $ Application (FuncName "print") [Lit $ StringLit "hello world"])])
+            (Single $ Application (Selector "print" Nothing) [Lit $ StringLit "hello world"])])
         `shouldBe` wrap "Package"
           [ ("name", J.String "main")
           , ("imports", J.Array [])
@@ -230,7 +230,7 @@ main = hspec $ do
               , ("results", J.Array [])
               , ("body", wrap "Single"
                 [ ("expr", wrap "Application"
-                  [ ("name", wrap "FuncName" [ ("v", J.String "print") ] )
+                  [ ("fun", wrap "Selector" [ ("x", J.String "print"), ("sel", J.Null) ] )
                   , ("args", J.Array [ wrap "StringLit" [ ("v", J.String "hello world") ] ] )
                   -- Parens all the way down
                   ])

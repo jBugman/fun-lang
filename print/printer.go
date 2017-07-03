@@ -181,17 +181,6 @@ func Application(x fun.Application) (string, error) {
 	return togo.PrintAST(node)
 }
 
-// FuncName prints fun.FuncName.
-func FuncName(v fun.FuncName) string {
-	// var buf bytes.Buffer
-	// if v.Module != "" {
-	// 	fmt.Fprint(&buf, v.Module, ".")
-	// }
-	// fmt.Fprint(&buf, v.Name)
-	// return buf.String()
-	return v.V
-}
-
 // Atomic prints fun.Atomic.
 func Atomic(x fun.Atomic) (string, error) {
 	node, err := togo.Atomic(x)

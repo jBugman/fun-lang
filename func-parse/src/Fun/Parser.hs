@@ -86,20 +86,23 @@ topLevel = funFuncDecl
 
 funcApplication :: Parser Fun.Expr
 funcApplication = do
-    name <- funcNameP
+    name <- selector
     args <- try (many expr) <|> return []
     return $ Fun.Application name args
 
-funcNameP :: Parser Fun.FuncName
-funcNameP = do
-    s <- try selector <|> identifier
-    return (Fun.FuncName s)
+selector :: Parser Fun.Selector
+selector = do
+    (x, sel) <- try selector' <|> singleSel
+    return (Fun.Selector x sel)
         where
-            selector = do
-                rec <- identifier
+            selector' = do
+                x <- identifier
                 _ <- char '.'
-                name <- identifier
-                return $ rec ++ "." ++ name
+                sel <- identifier
+                return $ (x, Just sel)
+            singleSel = do
+                 s <- identifier
+                 return $ (s, Nothing)
 
 expr :: Parser Fun.Expr
 expr = try literal <|> funcApplication

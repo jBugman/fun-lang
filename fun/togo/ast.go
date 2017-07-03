@@ -111,12 +111,12 @@ func Expression(expr fun.Expr) (ast.Expr, error) {
 }
 
 // Application converts Fun Application to Go AST.
-func Application(fa fun.Application) (ast.Expr, error) {
-	exprs, err := convertExprs(fa.Args)
+func Application(a fun.Application) (ast.Expr, error) {
+	sel, err := Selector(a.Fun)
 	if err != nil {
 		return nil, err
 	}
-	sel, err := FuncName(fa.Name)
+	exprs, err := convertExprs(a.Args)
 	if err != nil {
 		return nil, err
 	}
@@ -127,8 +127,8 @@ func Application(fa fun.Application) (ast.Expr, error) {
 	}, nil
 }
 
-// TODO: FuncName
-func FuncName(x fun.FuncName) (ast.Expr, error) {
+// TODO: Selector
+func Selector(x fun.Selector) (ast.Expr, error) {
 	return nil, fmt.Errorf("not implemented Expression for a %#v", x)
 }
 

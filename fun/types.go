@@ -144,15 +144,13 @@ func (b Inline) isFuncBody() {}
 
 /* FuncName */
 
-// FuncName represents function addressed by name.
-type FuncName struct {
-	V string
-	// TODO: split it back
-	// Package string
-	// Name    string
+// Selector represents function addressed by name.
+type Selector struct {
+	X   string
+	Sel string
 }
 
-func (fa FuncName) isExpr() {}
+func (s Selector) isExpr() {}
 
 /* Expr */
 
@@ -163,7 +161,7 @@ type Expr interface {
 
 // Application represents function application.
 type Application struct {
-	Name FuncName
+	Fun  Selector
 	Args []Expr
 }
 

@@ -139,8 +139,8 @@ func unwrapStruct(src reflect.Type, target reflect.Type, data interface{}) (inte
 		err = decodeMap(payload, &result)
 		return result, err
 
-	case "FuncName":
-		var result fun.FuncName
+	case "Selector":
+		var result fun.Selector
 		err = decodeMap(payload, &result)
 		return result, err
 

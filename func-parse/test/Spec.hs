@@ -4,7 +4,9 @@ module Main where
 
 import Test.Hspec (hspec, describe, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldParse, shouldFailOn)
+import Test.QuickCheck (property, Gen, forAll, listOf1, arbitrary)
 
+import Data.Text (pack)
 import Data.Aeson (toJSON, (.=))
 import qualified Data.Aeson.Types as J (Value (Object, String, Array, Null))
 
@@ -211,9 +213,10 @@ main = hspec $ do
             (Single $ Application (Selector "fmt" (Just "Println")) [Lit $ StringLit "hello world"])]
 
   describe "Fun.Types.ToJSON" $ do
-    it "wrap works correctly" $ -- TODO: use quickcheck
-      wrap "Import" [ "path" .= ("fmt" :: String) ] `shouldBe`
-        J.Object [ ("$type", J.String "Import"), ("$data", J.Object [ ("path", "fmt") ]) ]
+    it "wrap works correctly" $
+      property $ forAll nonEmptyString $ \s ->
+        wrap "Import" [ "path" .= s ] ==
+          J.Object [ ("$type", J.String "Import"), ("$data", J.Object [ ("path", J.String (pack s)) ]) ]
 
     it "serializes helloworld" $
       toJSON
@@ -238,3 +241,6 @@ main = hspec $ do
               ]
             ])
           ]
+
+nonEmptyString :: Gen String
+nonEmptyString = listOf1 arbitrary

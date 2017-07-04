@@ -24,9 +24,7 @@ satom = do
     return $ S.Atom (pack s)
 
 list :: Parser [S.Expression]
-list = do 
-    xs <- sepBy (choice [slist, sunit, stuple, satom]) sp
-    return xs
+list = sepBy (choice [slist, sunit, stuple, satom]) sp
 
 slist :: Parser S.Expression
 slist = do
@@ -39,6 +37,4 @@ stuple = do
     return (S.Exp xs)
 
 sexp :: Parser S.Expression
-sexp = do
-    s <- try stuple <|> satom
-    return s
+sexp = try stuple <|> satom

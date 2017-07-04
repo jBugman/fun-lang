@@ -26,7 +26,7 @@ print (S.Exp ("package":name:topLevels)) = Right $ F.format "package {}\n\n{}" (
 
 -- import
 print (S.Exp ["import", path]) = Right $ F.format "import \"{}\"" $ F.Only path
-print (S.Exp ["import", path, alias]) = Right $ F.format "import {} \"{}\"" ((unquote alias), path)
+print (S.Exp ["import", path, alias]) = Right $ F.format "import {} \"{}\"" (unquote alias, path)
 
 -- func
 print (S.Exp ["func", name, body]) = case print body of

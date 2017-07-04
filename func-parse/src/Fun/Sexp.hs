@@ -9,7 +9,7 @@ data Expression = Exp [Expression] | List [Expression] | Atom Text | Unit
     deriving (Eq, Show)
 
 instance IsString Expression where
-    fromString s = Atom . pack $ s
+    fromString = Atom . pack
 
 instance Buildable Expression where
     build (Atom s) = B.fromText s

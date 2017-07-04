@@ -79,7 +79,7 @@ main = hspec $ do
       prs sexp "(< foo 10)" `shouldParse` S.Exp [S.Atom "<", S.Atom "foo", S.Atom "10"]
 
     it "parses import" $
-      prs sexp "import \"foo\"" `shouldParse` S.Exp ["import", "\"foo\""]
+      prs sexp "(import \"foo\")" `shouldParse` S.Exp ["import", "\"foo\""]
 
     it "parses HelloWorld" $
       prs sexp "(package main\n\n  (func main (print \"hello world\")))" `shouldParse` S.Exp

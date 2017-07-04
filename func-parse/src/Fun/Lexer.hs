@@ -2,15 +2,19 @@ module Fun.Lexer where
 
 import Control.Applicative (empty)
 import Control.Monad (void)
-import Text.Megaparsec (try, many, char, char', string, letterChar, alphaNumChar, spaceChar, between, notFollowedBy, sepBy, oneOf, newline, count, manyTill)
+import Text.Megaparsec (try, many, skipMany, char, char', string, letterChar, alphaNumChar,
+                        spaceChar, between, notFollowedBy, sepBy, oneOf, newline, count, manyTill)
 import Text.Megaparsec.String (Parser)
 import qualified Text.Megaparsec.Lexer as L
 
 lineComment :: Parser ()
 lineComment  = L.skipLineComment "//"
 
+ws :: Parser ()
+ws = skipMany spaceChar
+
 splf :: Parser () -- whitespace consumer for indentation
-splf = L.space (void spaceChar) lineComment empty
+splf = L.space ws lineComment empty
 
 sp :: Parser () -- whitespace consumer for lexemes
 sp = L.space (void $ oneOf " \t") lineComment empty

@@ -13,18 +13,18 @@ import qualified Fun.Types as Fun
 prs :: Parser a -> String -> Either (ParseError Char _) a
 prs rule = runParser rule ""
 
-funImport :: Parser Fun.Import
-funImport = do
+importP :: Parser Fun.Import
+importP = do
     rword "import"
-    path <- quoted $ joinedBy '/' $ joinedBy '.' $ joinedBy '-' identifier
-    alias <- optional (sp *> rword "as" *> quoted identifier)
+    path <- (quoted $ joinedBy '/' $ joinedBy '.' $ joinedBy '-' identifier) <* sp
+    alias <- optional (rword "as" *> quoted identifier)
     return $ Fun.Import path alias
     where
         joinedBy :: Char -> Parser String -> Parser String
         joinedBy c p = intercalate [c] <$> sepBy1 p (char c) -- black Applicative magic
 
-funFuncDecl :: Parser Fun.TopLevel
-funFuncDecl = do
+funcDecl :: Parser Fun.TopLevel
+funcDecl = do
     rword "func"
     name <- identifier
     params <- try funcParams <|> return []
@@ -68,21 +68,22 @@ inline = do
     return $ Fun.Inline xs
         where
             indentedLine :: Parser String
-            indentedLine = indentation *> manyTill anyChar (lf <|> eof)
+            indentedLine = indentation *> manyTill anyChar (try lf <|> eof)
 
 imports :: Parser [Fun.Import]
-imports = sepEndBy funImport (skipSome lf)
+imports = sepEndBy importP $ skipSome (try lineComment <|> lf)
 
 package :: Parser Fun.Package
 package = do
-    name <- rword "package" *> identifier <* skipMany lf
+    name <- rword "package" *> identifier
+    skipMany (try lf <|> lineComment)
     imps <- imports
-    tops <- endBy1 topLevel (skipSome lf <|> eof)
+    tops <- endBy1 topLevel (skipSome (try lf <|> lineComment) <|> eof)
     eof
     return $ Fun.Package name imps tops
 
 topLevel :: Parser Fun.TopLevel
-topLevel = funFuncDecl
+topLevel = funcDecl
 
 funcApplication :: Parser Fun.Expr
 funcApplication = do

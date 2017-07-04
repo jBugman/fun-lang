@@ -16,24 +16,30 @@ import Fun.Types
 
 main :: IO ()
 main = hspec $ do
-  describe "Fun.Parser.funImport" $ do
+  describe "Fun.Parser.importP" $ do
     it "parses short form" $
-      prs funImport "import \"fmt\"" `shouldParse` Import "fmt" Nothing
+      prs importP "import \"fmt\"" `shouldParse` Import "fmt" Nothing
+
+    it "parses short form with comment" $
+      prs importP "import \"fmt\" // comment" `shouldParse` Import "fmt" Nothing
 
     it "returns error on malformed input" $
-      prs funImport `shouldFailOn` "i_mport \"fmt\""
+      prs importP `shouldFailOn` "i_mport \"fmt\""
 
     it "checks what import must not be indented" $
-      prs funImport `shouldFailOn` "    import \"fmt\""
+      prs importP `shouldFailOn` "    import \"fmt\""
 
     it "parses alias" $
-      prs funImport "import \"longpackagename\" as \"pkg\"" `shouldParse` Import "longpackagename" (Just "pkg")
+      prs importP "import \"longpackagename\" as \"pkg\"" `shouldParse` Import "longpackagename" (Just "pkg")
+
+    it "parses alias with comment" $
+      prs importP "import \"longpackagename\" as \"pkg\" // comment" `shouldParse` Import "longpackagename" (Just "pkg")
 
     it "parses nested packages" $
-      prs funImport "import \"io/ioutil\"" `shouldParse` Import "io/ioutil" Nothing
+      prs importP "import \"io/ioutil\"" `shouldParse` Import "io/ioutil" Nothing
 
     it "parses github urls" $
-      prs funImport "import \"github.com/jBugman/fun-lang/fun\"" `shouldParse` Import "github.com/jBugman/fun-lang/fun" Nothing
+      prs importP "import \"github.com/jBugman/fun-lang/fun\"" `shouldParse` Import "github.com/jBugman/fun-lang/fun" Nothing
 
   describe "Fun.Parser.imports" $ do
     it "parses multiple imports" $
@@ -45,6 +51,10 @@ main = hspec $ do
 
     it "parses no imports" $
       prs imports "func main = undefined" `shouldParse` []
+
+    it "parses multiple imports with comments" $
+      prs imports "import \"pkg1\"\n// comment 1\n\nimport \"pkg2\" // comment2\n" `shouldParse`
+        [Import "pkg1" Nothing, Import "pkg2" Nothing]
 
   describe "Fun.Parser.funcParams" $ do
     it "parses empty list" $
@@ -67,27 +77,33 @@ main = hspec $ do
     it "parses multiple results" $
       prs funcResults "(int, error)" `shouldParse` [Atomic "int", Atomic "error"]
 
-  describe "Fun.Parser.funFuncDecl" $ do
+  describe "Fun.Parser.funcDecl" $ do
     it "parses simplest decl" $
-      prs funFuncDecl "func f = undefined" `shouldParse` FuncDecl "f" [] [] Undefined
+      prs funcDecl "func f = undefined" `shouldParse` FuncDecl "f" [] [] Undefined
+
+    -- it "parses func with comment before" $
+    --   prs funcDecl "// f does something\nfunc f = undefined" `shouldParse` FuncDecl "f" [] [] Undefined
+
+    it "parses func with comment after" $
+      prs funcDecl "func f = undefined // f does something" `shouldParse` FuncDecl "f" [] [] Undefined
 
     it "parses func with some params" $
-      prs funFuncDecl "func g (a int, b int) = undefined" `shouldParse`
+      prs funcDecl "func g (a int, b int) = undefined" `shouldParse`
         FuncDecl "g" [Param $ Field "a" (Atomic "int"), Param $ Field "b" (Atomic "int")] [] Undefined
 
     it "parses func witout params" $
-      prs funFuncDecl "func read () -> (header, error) = undefined" `shouldParse`
+      prs funcDecl "func read () -> (header, error) = undefined" `shouldParse`
         FuncDecl "read" [] [Atomic "header", Atomic "error"] Undefined
 
     it "parses params and results" $
-      prs funFuncDecl "func h (a int, b string) -> (int, string) = undefined" `shouldParse`
+      prs funcDecl "func h (a int, b string) -> (int, string) = undefined" `shouldParse`
         FuncDecl "h"
           [ Param $ Field "a" (Atomic "int")
           , Param $ Field "b" (Atomic "string")
           ] [ Atomic "int", Atomic "string" ] Undefined
 
     it "parses inline as body" $
-      prs funFuncDecl "func test () = inline\n    ping <- true" `shouldParse`
+      prs funcDecl "func test () = inline\n    ping <- true" `shouldParse`
         FuncDecl "test" [] [] (Inline ["ping <- true"])
 
   describe "Fun.Parser.inline" $ do
@@ -181,6 +197,9 @@ main = hspec $ do
     it "parses string literal" $
       prs expr "\"foo\"" `shouldParse` Lit (StringLit "foo")
 
+    it "parses literal followed by comment" $
+      prs expr "42 // that was the question?" `shouldParse` Lit (IntegerLit 42)
+
   describe "Fun.Parser.funcApplication" $ do
     it "parses simplest case" $
       prs funcApplication "f 42" `shouldParse` Application (Selector "f" Nothing) [Lit (IntegerLit 42)]
@@ -211,6 +230,12 @@ main = hspec $ do
           ][
           FuncDecl "Greet" [] []
             (Single $ Application (Selector "fmt" (Just "Println")) [Lit $ StringLit "hello world"])]
+
+    it "ignores comments" $
+      prs package "package main\n\n// this is a main func\nfunc main = print \"hello world\" // do smth" `shouldParse`
+        Package "main" [] [
+            FuncDecl "main" [] []
+              (Single $ Application (Selector "print" Nothing) [Lit $ StringLit "hello world"])]
 
   describe "Fun.Types.ToJSON" $ do
     it "wrap works correctly" $

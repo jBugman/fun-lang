@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE OverloadedLists #-}
 module Main where
 
-import Test.Hspec (hspec, describe, it)
+import Prelude hiding (print)
+import Test.Hspec (hspec, describe, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldParse, shouldFailOn)
 
 import Fun.Parser
 import qualified Fun.Sexp as S
+import Fun.GoPrinter (print)
 
 
 main :: IO ()
@@ -77,8 +78,19 @@ main = hspec $ do
     it "parses comparison" $
       prs sexp "(< foo 10)" `shouldParse` S.Exp [S.Atom "<", S.Atom "foo", S.Atom "10"]
 
+    it "parses import" $
+      prs sexp "import \"foo\"" `shouldParse` S.Exp ["import", "\"foo\""]
+
     it "parses HelloWorld" $
       prs sexp "(package main\n\n  (func main (print \"hello world\")))" `shouldParse` S.Exp
           [ S.Atom "package", S.Atom "main", S.Exp
             [ S.Atom "func", S.Atom "main", S.Exp
               [ S.Atom "print", S.Atom "\"hello world\""]]]
+
+
+  describe "Fun.GoPrinter.print" $ do
+    it "prints import" $
+      print (S.Exp ["import", "fmt"]) `shouldBe` Right "import \"fmt\""
+
+    it "prints import with alias" $
+      print (S.Exp ["import", "very/long-package", "pkg"]) `shouldBe` Right "import pkg \"very/long-package\""

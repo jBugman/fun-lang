@@ -3,7 +3,7 @@ module Fun.Lexer where
 import Control.Applicative (empty)
 import Control.Monad (void)
 import Text.Megaparsec (char, char', letterChar, alphaNumChar, spaceChar, between, manyTill, some, symbolChar)
-import Text.Megaparsec.String (Parser)
+import Text.Megaparsec.Text (Parser)
 import qualified Text.Megaparsec.Lexer as L
 
 lineComment :: Parser ()

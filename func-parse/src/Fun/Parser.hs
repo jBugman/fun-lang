@@ -1,14 +1,15 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Fun.Parser where
 
+import Data.Text (Text, pack)
 import Text.Megaparsec (ParseError, runParser, (<|>), try, choice, sepBy)
-import Text.Megaparsec.String (Parser)
+import Text.Megaparsec.Text (Parser)
 
 import Fun.Lexer
 import qualified Fun.Sexp as S
 
 
-prs :: Parser a -> String -> Either (ParseError Char _) a
+prs :: Parser a -> Text -> Either (ParseError Char _) a
 prs rule = runParser rule ""
 
 
@@ -20,7 +21,7 @@ sunit = do
 satom :: Parser S.Expression
 satom = do
     s <- try stringLiteral <|> try op <|> try selector <|> ident
-    return (S.Atom s)
+    return $ S.Atom (pack s)
 
 list :: Parser [S.Expression]
 list = do 

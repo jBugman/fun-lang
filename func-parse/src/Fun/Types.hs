@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Fun.Types where
 
 import Data.Aeson (ToJSON, toJSON, (.=), object)

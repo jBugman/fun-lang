@@ -2,31 +2,15 @@ module Fun.Lexer where
 
 import Control.Applicative (empty)
 import Control.Monad (void)
-import Text.Megaparsec (try, many, skipMany, char, char', string, letterChar, alphaNumChar,
-                        spaceChar, between, notFollowedBy, sepBy, oneOf, newline, count, manyTill)
+import Text.Megaparsec (char, char', letterChar, alphaNumChar, spaceChar, between, manyTill, some, symbolChar)
 import Text.Megaparsec.String (Parser)
 import qualified Text.Megaparsec.Lexer as L
 
 lineComment :: Parser ()
-lineComment  = L.skipLineComment "//"
-
-ws :: Parser ()
-ws = skipMany spaceChar
-
-splf :: Parser () -- whitespace consumer for indentation
-splf = L.space ws lineComment empty
+lineComment  = L.skipLineComment ";"
 
 sp :: Parser () -- whitespace consumer for lexemes
-sp = L.space (void $ oneOf " \t") lineComment empty
-
-lf :: Parser ()
-lf = void newline
-
-nonIndented :: Parser a -> Parser a
-nonIndented = L.nonIndented splf
-
-indentation :: Parser ()
-indentation = void $ count 4 (char ' ')
+sp = L.space (void spaceChar) lineComment empty
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sp
@@ -34,28 +18,19 @@ lexeme = L.lexeme sp
 symbol :: String -> Parser String
 symbol = L.symbol sp
 
-rword :: String -> Parser ()
-rword w = string w *> notFollowedBy alphaNumChar *> sp
+ident :: Parser String
+ident = lexeme $ some alphaNumChar
 
-identifier :: Parser String
-identifier = (lexeme . try) (p >>= check)
-  where
-    p       = (:) <$> letterChar <*> many alphaNumChar
-    check x = if x `elem` rws
-                then fail $ "keyword " ++ show x ++ " cannot be an identifier"
-                else return x
+selector :: Parser String
+selector = lexeme $ do
+    x    <- letterChar
+    xs   <- some alphaNumChar
+    void (char '.')
+    sel <- some alphaNumChar
+    return $ (x : xs) ++ "." ++ sel
 
-rws :: [String] -- list of reserved words
-rws = [
-    "import",
-    "as",
-    "package",
-    "func",
-    "case",
-    "if",
-    "then",
-    "else"
- ]
+op :: Parser String
+op = lexeme $ some symbolChar
 
 hex :: Parser Integer
 hex = char '0' >> char' 'x' >> L.hexadecimal
@@ -66,9 +41,6 @@ double = lexeme L.float
 integer :: Parser Integer
 integer = lexeme L.integer
 
-word :: String -> Parser String
-word = lexeme . string
-
 signedInteger :: Parser Integer
 signedInteger = L.signed sp integer
 
@@ -77,28 +49,12 @@ charLiteral = between tick tick L.charLiteral
     where tick = void $ char '\''
 
 stringLiteral :: Parser String
-stringLiteral = char '"' >> manyTill L.charLiteral (char '"')
-
-dot :: Parser String
-dot = symbol "."
-
-comma :: Parser String
-comma = symbol ","
-
-commaSep :: Parser a -> Parser [a]
-commaSep p = p `sepBy` comma
+stringLiteral = do
+    xs <- char '"' >> manyTill L.charLiteral (char '"')
+    return $ "\"" ++ xs ++ "\""
 
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
-parensList :: Parser a -> Parser [a]
-parensList p = parens (commaSep p)
-
-quoted :: Parser a -> Parser a
-quoted = between (char '"') (char '"')
-
-braces :: Parser a -> Parser a
-braces = between (symbol "{") (symbol "}")
-
-bracesWhitespace :: Parser a -> Parser a
-bracesWhitespace = between (char '{') (char '}')
+brackets :: Parser a -> Parser a
+brackets = between (symbol "[") (symbol "]")

@@ -4,6 +4,7 @@ module Fun.GoPrinter (
 
 import Prelude hiding (print)
 import Data.Either (partitionEithers)
+import qualified Data.Either.Combinators as E
 import Data.Text (Text, dropAround)
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Format as F
@@ -29,24 +30,24 @@ print (S.Exp ["import", path]) = printf "import \"{}\"" $ F.Only path
 print (S.Exp ["import", path, alias]) = printf "import {} \"{}\"" (unquote alias, path)
 
 -- func
-print (S.Exp ["func", name, body]) = case print body of
-    Right s -> printf "func {}() {\n{}}" (name, indented s)
-    err     -> err
+print (S.Exp ["func", S.Atom name, body]) = printSubtree "func {}() {\n{}\n}" name body
 
 -- operators
-print (S.Exp ["=", S.Atom lhs, expr]) = case print expr of
-    Right s -> printf "{} = {}" (lhs, s)
-    err     -> err
+print (S.Exp ["=", S.Atom lhs, expr]) = printSubtree "{} = {}" lhs expr
 
 print s = syntaxErr $ F.format "not supported yet: {}" $ F.Only s
 
 
 -- Types --
+
 newtype SyntaxError = SyntaxError LT.Text deriving (Eq, Show)
 
 type PrintResult = Either SyntaxError LT.Text
 
 -- Utils --
+
+printSubtree :: F.Format -> Text -> S.Expression -> PrintResult
+printSubtree fmt x y = E.mapBoth id (\s -> F.format fmt (x, s)) (print y)
 
 printf :: F.Params ps => F.Format -> ps ->PrintResult
 printf fmt ps = Right $ F.format fmt ps
@@ -57,6 +58,3 @@ syntaxErr = Left . SyntaxError
 unquote :: S.Expression -> Maybe Text
 unquote (S.Atom t) = Just $ dropAround (== '\"') t
 unquote _ = Nothing
-
-indented :: LT.Text -> LT.Text
-indented t = LT.unlines $ map (LT.append "\t") (LT.lines t)

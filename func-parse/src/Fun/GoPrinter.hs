@@ -5,8 +5,8 @@ module Fun.GoPrinter (
 import Prelude hiding (print)
 import Data.Either (partitionEithers)
 import qualified Data.Either.Combinators as E
-import Data.Text (Text, dropAround)
-import qualified Data.Text.Lazy as LT
+import qualified Data.Text as ST
+import Data.Text.Lazy
 import qualified Data.Text.Format as F
 import qualified Data.Text.Format.Params as F
 
@@ -15,15 +15,15 @@ import qualified Fun.Sexp as S
 
 print :: S.Expression -> PrintResult
 -- empty
-print (S.Exp []) = syntaxErr ("empty expression" :: LT.Text)
+print (S.Exp []) = syntaxErr "empty expression"
 
 -- literal
-print (S.Atom s) = Right $ LT.fromStrict s
+print (S.Atom s) = Right $ fromStrict s
 
 -- package
-print (S.Exp ("package":name:topLevels)) = case partitionEithers $ map print topLevels of
+print (S.Exp ("package":name:topLevels)) = case partitionEithers $ fmap print topLevels of
     (err:_ , _) -> Left err
-    ([], txts)  -> printf "package {}\n\n{}" (name, LT.intercalate "\n\n" txts)
+    ([], txts)  -> printf "package {}\n\n{}" (name, intercalate "\n\n" txts)
 
 -- import
 print (S.Exp ["import", path]) = printf "import \"{}\"" $ F.Only path
@@ -40,21 +40,21 @@ print s = syntaxErr $ F.format "not supported yet: {}" $ F.Only s
 
 -- Types --
 
-newtype SyntaxError = SyntaxError LT.Text deriving (Eq, Show)
+newtype SyntaxError = SyntaxError Text deriving (Eq, Show)
 
-type PrintResult = Either SyntaxError LT.Text
+type PrintResult = Either SyntaxError Text
 
 -- Utils --
 
-printSubtree :: F.Format -> Text -> S.Expression -> PrintResult
+printSubtree :: F.Format -> ST.Text -> S.Expression -> PrintResult
 printSubtree fmt x y = E.mapBoth id (\s -> F.format fmt (x, s)) (print y)
 
 printf :: F.Params ps => F.Format -> ps ->PrintResult
 printf fmt ps = Right $ F.format fmt ps
 
-syntaxErr :: LT.Text -> PrintResult
+syntaxErr :: Text -> PrintResult
 syntaxErr = Left . SyntaxError
 
-unquote :: S.Expression -> Maybe Text
-unquote (S.Atom t) = Just $ dropAround (== '\"') t
+unquote :: S.Expression -> Maybe ST.Text
+unquote (S.Atom t) = Just $ ST.dropAround (== '\"') t
 unquote _ = Nothing

@@ -1,7 +1,8 @@
 module Fun.GoPrinter where
 
 import Prelude hiding (print)
-import Data.Text (Text, dropAround, intercalate)
+import Data.Either (partitionEithers)
+import Data.Text (Text, dropAround)
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Format as F
 
@@ -19,10 +20,9 @@ print (S.Exp []) = Left $ SyntaxError ("empty expression" :: LT.Text)
 print (S.Atom s) = Right $ LT.fromStrict s
 
 -- package
-print (S.Exp ("package":name:topLevels)) = Right $ F.format "package {}\n\n{}" (name, intercalate "\n\n" xs)
-    where
-        xs :: [Text]
-        xs = map undefined topLevels -- map print topLevels -- TODO: package
+print (S.Exp ("package":name:topLevels)) = case partitionEithers $ map print topLevels of
+    (err:_ , _) -> Left err
+    ([], txts)   -> Right $ F.format "package {}\n\n{}" (name, LT.intercalate "\n\n" txts)
 
 -- import
 print (S.Exp ["import", path]) = Right $ F.format "import \"{}\"" $ F.Only path

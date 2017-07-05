@@ -1,20 +1,20 @@
-module Fun.GoPrinter where
+module Fun.GoPrinter (
+    print, SyntaxError
+) where
 
 import Prelude hiding (print)
 import Data.Either (partitionEithers)
 import Data.Text (Text, dropAround)
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Format as F
+import qualified Data.Text.Format.Params as F
 
 import qualified Fun.Sexp as S
 
 
-newtype SyntaxError = SyntaxError LT.Text deriving (Eq, Show)
-
-
-print :: S.Expression -> Either SyntaxError LT.Text
+print :: S.Expression -> PrintResult
 -- empty
-print (S.Exp []) = Left $ SyntaxError ("empty expression" :: LT.Text)
+print (S.Exp []) = syntaxErr ("empty expression" :: LT.Text)
 
 -- literal
 print (S.Atom s) = Right $ LT.fromStrict s
@@ -22,24 +22,37 @@ print (S.Atom s) = Right $ LT.fromStrict s
 -- package
 print (S.Exp ("package":name:topLevels)) = case partitionEithers $ map print topLevels of
     (err:_ , _) -> Left err
-    ([], txts)   -> Right $ F.format "package {}\n\n{}" (name, LT.intercalate "\n\n" txts)
+    ([], txts)  -> printf "package {}\n\n{}" (name, LT.intercalate "\n\n" txts)
 
 -- import
-print (S.Exp ["import", path]) = Right $ F.format "import \"{}\"" $ F.Only path
-print (S.Exp ["import", path, alias]) = Right $ F.format "import {} \"{}\"" (unquote alias, path)
+print (S.Exp ["import", path]) = printf "import \"{}\"" $ F.Only path
+print (S.Exp ["import", path, alias]) = printf "import {} \"{}\"" (unquote alias, path)
 
 -- func
 print (S.Exp ["func", name, body]) = case print body of
-    Right s -> Right $ F.format "func {}() {\n{}}" (name, indented s)
+    Right s -> printf "func {}() {\n{}}" (name, indented s)
     err     -> err
 
 -- operators
 print (S.Exp ["=", S.Atom lhs, expr]) = case print expr of
-    Right s -> Right $ F.format "{} = {}" (lhs, s)
+    Right s -> printf "{} = {}" (lhs, s)
     err     -> err
 
-print s = Left $ SyntaxError $ F.format "not supported yet: {}" $ F.Only s
+print s = syntaxErr $ F.format "not supported yet: {}" $ F.Only s
 
+
+-- Types --
+newtype SyntaxError = SyntaxError LT.Text deriving (Eq, Show)
+
+type PrintResult = Either SyntaxError LT.Text
+
+-- Utils --
+
+printf :: F.Params ps => F.Format -> ps ->PrintResult
+printf fmt ps = Right $ F.format fmt ps
+
+syntaxErr :: LT.Text -> PrintResult
+syntaxErr = Left . SyntaxError
 
 unquote :: S.Expression -> Maybe Text
 unquote (S.Atom t) = Just $ dropAround (== '\"') t

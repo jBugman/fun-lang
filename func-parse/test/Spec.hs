@@ -7,8 +7,8 @@ import Test.Hspec.Megaparsec (shouldParse, shouldFailOn)
 
 import Fun.Parser
 import qualified Fun.Sexp as S
-import Fun.GoPrinter (print)
-import Go.Fmt (gofmt)
+import Fun.GoPrinter
+import Go.Fmt
 
 
 main :: IO ()
@@ -89,19 +89,19 @@ main = hspec $ do
               [ S.Atom "print", S.Atom "\"hello world\""]]]
 
 
-  describe "Fun.GoPrinter.print" $ do
+  describe "Fun.GoPrinter.printPretty" $ do
     it "prints import" $
-      print (S.Exp ["import", "fmt"]) `shouldBe` Right "import \"fmt\""
+      printPretty (S.Exp ["import", "fmt"]) `shouldBe` Right "import \"fmt\""
 
     it "prints import with alias" $
-      print (S.Exp ["import", "very/long-package", "pkg"]) `shouldBe` Right "import pkg \"very/long-package\""
+      printPretty (S.Exp ["import", "very/long-package", "pkg"]) `shouldBe` Right "import pkg \"very/long-package\""
 
     it "prints simple func" $
-      print (S.Exp [ "func", "setS", S.Exp [ "=", "s", "2"]]) `shouldBe` Right
+      printPretty (S.Exp [ "func", "setS", S.Exp [ "=", "s", "2"]]) `shouldBe` Right
         "func setS() {\n\ts = 2\n}"
 
     it "prints HelloWorld" $
-      print (S.Exp [ "package", "main", S.Exp [ "func", "main", S.Exp [ "print", "\"hello world\""]]]) `shouldBe` Right
+      printPretty (S.Exp [ "package", "main", S.Exp [ "func", "main", S.Exp [ "print", "\"hello world\""]]]) `shouldBe` Right
         "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}"
 
   describe "Go.Fmt.gofmt" $ do

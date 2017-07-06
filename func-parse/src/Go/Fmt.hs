@@ -13,6 +13,6 @@ gofmt :: String -> Either String String
 gofmt src = unsafePerformIO $ do
     s   <- newCString src
     res <- peekCString $ go_fmt s
-    if isPrefixOf "!ERR: " res
+    if "!ERR: " `isPrefixOf` res
         then return . Left $ drop 6 res
         else return $ Right res

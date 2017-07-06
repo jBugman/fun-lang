@@ -1,5 +1,5 @@
 module Fun.GoPrinter (
-    print, SyntaxError
+    printPretty, print, SyntaxError
 ) where
 
 import Prelude hiding (print)
@@ -11,7 +11,13 @@ import qualified Data.Text.Format as F
 import qualified Data.Text.Format.Params as F
 
 import qualified Fun.Sexp as S
+import Go.Fmt
 
+
+printPretty :: S.Expression -> PrintResult
+printPretty s = case print s of
+    Right txt -> E.mapBoth (SyntaxError . pack) pack (gofmt $ unpack txt)
+    err       -> err
 
 print :: S.Expression -> PrintResult
 -- empty

@@ -8,6 +8,7 @@ import Test.Hspec.Megaparsec (shouldParse, shouldFailOn)
 import Fun.Parser
 import qualified Fun.Sexp as S
 import Fun.GoPrinter (print)
+import Go.Fmt (gofmt)
 
 
 main :: IO ()
@@ -102,3 +103,10 @@ main = hspec $ do
     it "prints HelloWorld" $
       print (S.Exp [ "package", "main", S.Exp [ "func", "main", S.Exp [ "print", "\"hello world\""]]]) `shouldBe` Right
         "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}"
+
+  describe "Go.Fmt.gofmt" $ do
+    it "formats valid code" $
+      gofmt "func  foo  (  ) { \n i++}" `shouldBe` Right "func foo() {\n\ti++\n}"
+
+    it "returns err on a broken code" $
+      gofmt "func foo }( __" `shouldBe` Left "1:20: expected '(', found '}'"

@@ -1,5 +1,4 @@
 coverage.out
 coverage.html
 bin/
-temp/
-grammar/
+*.dylib

@@ -1,9 +1,11 @@
 module Fun.Sexp where
 
-import Data.String (IsString, fromString)
-import Data.Text (Text, pack)
+import Data.String         (IsString, fromString)
+import Data.Text           (Text, pack)
 import Data.Text.Buildable
+
 import qualified Data.Text.Lazy.Builder as B
+
 
 data Expression = Exp [Expression] | List [Expression] | Atom Text | Unit
     deriving (Eq, Show)

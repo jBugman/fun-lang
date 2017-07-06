@@ -1,0 +1,49 @@
+steps:
+  - simple_align:
+      cases: true
+      top_level_patterns: true
+      records: true
+
+  - imports:
+      # There are different ways we can align names and lists.
+      #
+      # - global: Align the import names and import list throughout the entire
+      #   file.
+      #
+      # - file: Like global, but don't add padding when there are no qualified
+      #   imports in the file.
+      #
+      # - group: Only align the imports per group (a group is formed by adjacent
+      #   import lines).
+      #
+      # - none: Do not perform any alignment.
+      #
+      # Default: global.
+      align: group
+
+      list_align: after_alias
+      long_list_align: inline
+      empty_list_align: inherit
+      list_padding: module_name
+      separate_lists: true
+
+  - language_pragmas:
+      style: vertical
+      align: true
+      remove_redundant: true
+
+  # Replace tabs by spaces. This is disabled by default.
+  # - tabs:
+  #     # Number of spaces to use for each tab. Default: 8, as specified by the
+  #     # Haskell report.
+  #     spaces: 8
+
+  # Remove trailing whitespace
+  - trailing_whitespace: {}
+
+columns: 100
+
+newline: native
+
+language_extensions:
+  - OverloadedStrings

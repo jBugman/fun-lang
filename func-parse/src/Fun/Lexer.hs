@@ -1,10 +1,13 @@
 module Fun.Lexer where
 
-import Control.Applicative (empty)
-import Control.Monad (void)
-import Text.Megaparsec (char, char', letterChar, alphaNumChar, spaceChar, between, manyTill, some, symbolChar)
+import Control.Applicative  (empty)
+import Control.Monad        (void)
+import Text.Megaparsec      (alphaNumChar, between, char, char', letterChar, manyTill, some,
+                             spaceChar, symbolChar)
 import Text.Megaparsec.Text (Parser)
+
 import qualified Text.Megaparsec.Lexer as L
+
 
 lineComment :: Parser ()
 lineComment  = L.skipLineComment ";"

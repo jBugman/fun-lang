@@ -1,11 +1,12 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Fun.Parser where
 
-import Data.Text (Text, pack)
-import Text.Megaparsec (ParseError, runParser, (<|>), try, choice, sepBy)
+import Data.Text            (Text, pack)
+import Text.Megaparsec      (ParseError, choice, runParser, sepBy, try, (<|>))
 import Text.Megaparsec.Text (Parser)
 
 import Fun.Lexer
+
 import qualified Fun.Sexp as S
 
 

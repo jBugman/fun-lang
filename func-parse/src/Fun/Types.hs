@@ -1,7 +1,8 @@
 module Fun.Types where
 
-import Data.Aeson (ToJSON, toJSON, (.=), object)
+import Data.Aeson       (ToJSON, object, toJSON, (.=))
 import Data.Aeson.Types (Pair, Value)
+
 
 type Name = String
 
@@ -86,8 +87,8 @@ data Expr
 
 instance ToJSON Expr where
     toJSON (Application f args) = wrap "Application" [ "fun" .= f, "args" .= args ]
-    toJSON (Lit lit)               = toJSON lit -- see 'instance ToJSON Literal'
-    toJSON (DoBlock exprs)         = wrap "DoBlock" [ "exprs" .= exprs ]
+    toJSON (Lit lit)            = toJSON lit -- see 'instance ToJSON Literal'
+    toJSON (DoBlock exprs)      = wrap "DoBlock" [ "exprs" .= exprs ]
     -- toJSON For ForHeader Expr
     -- toJSON Op Expr Expr
 

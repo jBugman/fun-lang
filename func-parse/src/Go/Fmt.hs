@@ -3,9 +3,10 @@ module Go.Fmt (
     gofmt
 ) where
 
-import Data.List (isPrefixOf)
+import Data.List        (isPrefixOf)
+import Foreign.C.String (CString, newCString, peekCString)
 import System.IO.Unsafe (unsafePerformIO)
-import Foreign.C.String (CString, peekCString, newCString)
+
 
 foreign import ccall unsafe "gofmt" go_fmt :: CString -> CString
 

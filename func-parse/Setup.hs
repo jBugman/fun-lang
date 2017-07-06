@@ -1,13 +1,13 @@
 import Data.Maybe
-import Distribution.Simple
-import Distribution.Simple.Setup
-import Distribution.Simple.Utils
-import Distribution.Simple.LocalBuildInfo
-import Distribution.Simple.UserHooks
 import Distribution.PackageDescription
+import Distribution.Simple
+import Distribution.Simple.LocalBuildInfo
+import Distribution.Simple.Setup
+import Distribution.Simple.UserHooks
+import Distribution.Simple.Utils
 import System.Directory
-import System.Process
 import System.FilePath
+import System.Process
 
 main = defaultMainWithHooks simpleUserHooks
     { confHook = customConfHook

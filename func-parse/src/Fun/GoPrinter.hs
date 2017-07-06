@@ -2,16 +2,18 @@ module Fun.GoPrinter (
     printPretty, print, SyntaxError
 ) where
 
-import Prelude hiding (print)
-import Data.Either (partitionEithers)
-import qualified Data.Either.Combinators as E
-import qualified Data.Text as ST
+import Data.Either    (partitionEithers)
 import Data.Text.Lazy
-import qualified Data.Text.Format as F
+import Prelude        hiding (print)
+
+import qualified Data.Either.Combinators as E
+import qualified Data.Text               as ST
+import qualified Data.Text.Format        as F
 import qualified Data.Text.Format.Params as F
 
-import qualified Fun.Sexp as S
 import Go.Fmt
+
+import qualified Fun.Sexp as S
 
 
 printPretty :: S.Expression -> PrintResult
@@ -63,4 +65,4 @@ syntaxErr = Left . SyntaxError
 
 unquote :: S.Expression -> Maybe ST.Text
 unquote (S.Atom t) = Just $ ST.dropAround (== '\"') t
-unquote _ = Nothing
+unquote _          = Nothing

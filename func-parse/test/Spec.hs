@@ -1,14 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Prelude hiding (print)
-import Test.Hspec (hspec, describe, it, shouldBe)
-import Test.Hspec.Megaparsec (shouldParse, shouldFailOn)
+import Prelude               hiding (print)
+import Test.Hspec            (describe, hspec, it, shouldBe)
+import Test.Hspec.Megaparsec (shouldFailOn, shouldParse)
 
-import Fun.Parser
-import qualified Fun.Sexp as S
 import Fun.GoPrinter
+import Fun.Parser
 import Go.Fmt
+
+import qualified Fun.Sexp as S
 
 
 main :: IO ()

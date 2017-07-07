@@ -40,9 +40,16 @@ main = hspec $ do
     it "fails on unit" $
       prs satom `shouldFailOn` "()"
 
+    it "fails on type lit" $
+      prs satom `shouldFailOn` ":int"
+
   describe "Fun.Parser.sop" $
     it "parses operator" $
       prs sop "+" `shouldParse` S.Op "+"
+
+  describe "Fun.Parser.stype" $
+    it "parses type lit" $
+      prs stype ":int" `shouldParse` S.Type "int"
 
   describe "Fun.Parser.list" $ do
     it "parses empty string" $

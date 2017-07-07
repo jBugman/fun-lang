@@ -22,11 +22,14 @@ satom :: Parser S.Expression
 satom = S.Atom . pack <$> (sp *> atoms)
     where atoms = try stringLiteral <|> try selector <|> ident
 
+stype :: Parser S.Expression
+stype = S.Type . pack <$> (sp *> typeLit)
+
 sop :: Parser S.Expression
 sop = S.Op . singleton <$> (sp *> op)
 
 list :: Parser [S.Expression]
-list = sepBy (choice [slist, sunit, stuple, sop, satom]) sp
+list = sepBy expr' sp
 
 slist :: Parser S.Expression
 slist = S.List <$> (sp *> brackets list)
@@ -35,4 +38,7 @@ stuple :: Parser S.Expression
 stuple = S.Exp <$> (sp *> parens list)
 
 sexp :: Parser S.Expression
-sexp = try stuple <|> try sop <|> satom
+sexp = sp *> expr'
+
+expr' :: Parser S.Expression
+expr' = choice [slist, sunit, stuple, stype, sop, satom]

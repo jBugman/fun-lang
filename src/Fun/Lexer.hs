@@ -29,6 +29,9 @@ word = lexeme . symbol
 ident :: Parser String
 ident = lexeme $ some alphaNumChar
 
+typeLit :: Parser String
+typeLit = lexeme $ char ':' *> some alphaNumChar
+
 selector :: Parser String
 selector = lexeme $ do
     x    <- letterChar

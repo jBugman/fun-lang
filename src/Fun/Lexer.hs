@@ -21,6 +21,9 @@ lexeme = L.lexeme sp
 symbol :: String -> Parser String
 symbol = L.symbol sp
 
+word :: String -> Parser String
+word = lexeme . symbol
+
 ident :: Parser String
 ident = lexeme $ some alphaNumChar
 
@@ -36,7 +39,7 @@ op :: Parser String
 op = lexeme $ some symbolChar
 
 hex :: Parser Integer
-hex = char '0' >> char' 'x' >> L.hexadecimal
+hex = lexeme $ char '0' >> char' 'x' >> L.hexadecimal
 
 double :: Parser Double
 double = lexeme L.float
@@ -45,19 +48,22 @@ integer :: Parser Integer
 integer = lexeme L.integer
 
 signedInteger :: Parser Integer
-signedInteger = L.signed sp integer
+signedInteger = lexeme $ L.signed sp integer
 
 charLiteral :: Parser Char
-charLiteral = between tick tick L.charLiteral
+charLiteral = lexeme $ between tick tick L.charLiteral
     where tick = void $ char '\''
 
 stringLiteral :: Parser String
-stringLiteral = do
+stringLiteral = lexeme $ do
     xs <- char '"' >> manyTill L.charLiteral (char '"')
     return $ "\"" ++ xs ++ "\""
 
 parens :: Parser a -> Parser a
-parens = between (symbol "(") (symbol ")")
+parens p = lexeme $ between (symbol "(") (symbol ")") p
 
 brackets :: Parser a -> Parser a
-brackets = between (symbol "[") (symbol "]")
+brackets p = lexeme $ between (symbol "[") (symbol "]") p
+
+trimWS :: Parser a -> Parser a
+trimWS p = sp *> p

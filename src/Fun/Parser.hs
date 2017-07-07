@@ -1,6 +1,7 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Fun.Parser where
 
+import Control.Monad        (void)
 import Data.Text            (Text, pack)
 import Text.Megaparsec      (ParseError, choice, runParser, sepBy, try, (<|>))
 import Text.Megaparsec.Text (Parser)
@@ -15,12 +16,12 @@ prs rule = runParser rule ""
 
 
 sunit :: Parser S.Expression
-sunit = do
-    _ <- symbol "()"
+sunit = trimWS $ do
+    void $ word "()"
     return S.Unit
 
 satom :: Parser S.Expression
-satom = do
+satom = trimWS $ do
     s <- try stringLiteral <|> try op <|> try selector <|> ident
     return $ S.Atom (pack s)
 
@@ -28,12 +29,12 @@ list :: Parser [S.Expression]
 list = sepBy (choice [slist, sunit, stuple, satom]) sp
 
 slist :: Parser S.Expression
-slist = do
+slist = trimWS $ do
     xs <- brackets list
     return (S.List xs)
 
 stuple :: Parser S.Expression
-stuple = do
+stuple = trimWS $ do
     xs <- parens list
     return (S.Exp xs)
 

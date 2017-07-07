@@ -34,6 +34,9 @@ main = hspec $ do
     it "parses ident" $
       prs satom "foo" `shouldParse` S.Atom "foo"
 
+    it "ignores comments" $
+      prs satom "; comment\nfoo" `shouldParse` S.Atom "foo"
+
     it "parses Go selector" $
       prs satom "fmt.Println" `shouldParse` S.Atom "fmt.Println"
 
@@ -60,12 +63,18 @@ main = hspec $ do
     it "parses ident list" $
       prs slist "[foo bar]" `shouldParse` S.List [S.Atom "foo", S.Atom "bar"]
 
+    it "ignores comments" $
+      prs slist "; comment 1\n[foo bar]\n; comment 2" `shouldParse` S.List ["foo", "bar"]
+
   describe "Fun.Parser.stuple" $ do
     it "parses unit" $
       prs stuple "(())" `shouldParse` S.Exp [S.Unit]
 
     it "parses op + ident + lit" $
       prs stuple "(< foo 10)" `shouldParse` S.Exp [S.Atom "<", S.Atom "foo", S.Atom "10"]
+
+    it "ignores comments" $
+      prs stuple "; comment\n(foo 10)" `shouldParse` S.Exp ["foo", "10"]
 
     it "parses func call" $
       prs stuple "(printf \"%+v\n\" v)" `shouldParse` S.Exp [S.Atom "printf", S.Atom "\"%+v\n\"", S.Atom "v"]
@@ -77,11 +86,20 @@ main = hspec $ do
     it "parses ident" $
       prs sexp "foo" `shouldParse` S.Atom "foo"
 
+    it "ignores comments" $
+      prs sexp "; this is a comment\nfoo" `shouldParse` S.Atom "foo"
+
     it "parses comparison" $
       prs sexp "(< foo 10)" `shouldParse` S.Exp [S.Atom "<", S.Atom "foo", S.Atom "10"]
 
     it "parses import" $
       prs sexp "(import \"foo\")" `shouldParse` S.Exp ["import", "\"foo\""]
+
+    it "parses multiline s-exp" $
+      prs sexp "(foo 123 456\n    789)" `shouldParse` S.Exp ["foo", "123", "456", "789"]
+
+    it "parses multiline s-exp with a comment" $
+      prs sexp "(foo 123 456\n; comment\n  bar)" `shouldParse` S.Exp ["foo", "123", "456", "bar"]
 
     it "parses HelloWorld" $
       prs sexp "(package main\n\n  (func main (print \"hello world\")))" `shouldParse` S.Exp

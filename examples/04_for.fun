@@ -4,7 +4,7 @@
   (var i 1)
   (for (< i 3) (
     (print i)
-    (= i (+ i 1))))
+    (set i (+ i 1))))
 
   (for (i 7 9) (print i))
 
@@ -13,5 +13,5 @@
     (break)))
 
   (for (n 0 5) (
-    (if (== (% n 2) 0) (continue))
+    (if (= (% n 2) 0) (continue))
     (print n))))))

@@ -31,4 +31,4 @@ instance Buildable Expression where
     build s        = B.fromString . show $ s
 
 opChars :: String
-opChars = "=+-*/<>"
+opChars = "=+-*/<>%"

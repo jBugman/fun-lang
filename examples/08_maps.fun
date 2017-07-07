@@ -3,8 +3,8 @@
 (func main (
   (var m (make :map[string]int))
 
-  (= (val m "k1") 7)
-  (= (val m "k2") 13)
+  (set (val m "k1") 7)
+  (set (val m "k2") 13)
 
   (print m)
 
@@ -16,7 +16,7 @@
   (delete m "k2")
   (print "map:" m)
 
-  (= _ prs (val m "k2"))
+  (set _ prs (val m "k2"))
   (print "prs:" prs)
 
   (var n (lit :map[string]int [("foo" 1) ("bar" 2)]))

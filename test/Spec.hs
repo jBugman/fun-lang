@@ -124,12 +124,18 @@ main = hspec $ do
       printPretty (S.Exp ["import", "very/long-package", "pkg"]) `shouldBe` Right "import pkg \"very/long-package\""
 
     it "prints simple func" $
-      printPretty (S.Exp [ "func", "setS", S.Exp ["=", "s", "2"]]) `shouldBe` Right
+      printPretty (S.Exp ["func", "setS", S.Exp ["set", "s", "2"]]) `shouldBe` Right
         "func setS() {\n\ts = 2\n}"
 
     it "prints HelloWorld" $
-      printPretty (S.Exp [ "package", "main", S.Exp [ "func", "main", S.Exp [ "print", "\"hello world\""]]]) `shouldBe` Right
+      printPretty (S.Exp ["package", "main", S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]]) `shouldBe` Right
         "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}"
+
+    it "prints lt op" $
+      printPretty (S.Exp ["<", "n", "10"]) `shouldBe` Right "n < 10"
+
+    it "prints eq op" $
+      printPretty (S.Exp ["=", "foo", "bar"]) `shouldBe` Right "foo == bar"
 
   describe "Go.Fmt.gofmt" $ do
     it "formats valid code" $

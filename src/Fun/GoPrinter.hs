@@ -41,8 +41,14 @@ print (S.Exp ["import", path, alias]) = printf "import {} \"{}\"" (unquote alias
 print (S.Exp ["func", S.Atom name, body]) = printSubtree "func {}() {\n{}\n}" name body
 
 -- operators
-print (S.Exp [S.Op "=", S.Atom lhs, expr]) = printSubtree "{} = {}" lhs expr
+print (S.Exp [S.Op op, lhs, rhs]) = case (print lhs, print rhs) of
+    (Left e, _)          -> Left e
+    (_, Left e)          -> Left e
+    (Right lt, Right rt) -> Right $ F.format "{} {} {}" (lt, o, rt)
+        where
+            o = if op == "=" then "==" else op
 
+-- catch-all todo case
 print s = syntaxErr $ F.format "not supported yet: {}" $ F.Only s
 
 

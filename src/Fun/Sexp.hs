@@ -28,7 +28,7 @@ instance Buildable Expression where
     build (Atom s) = B.fromText s
     build (Type s) = B.fromText s
     build (Op s)   = B.fromText s
-    build s        = B.fromString . show $ s
+    build s        = errorWithoutStackTrace $ "Can only print terminal nodes, but got " ++ (show s)
 
 opChars :: String
 opChars = "=+-*/<>%"

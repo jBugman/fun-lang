@@ -49,7 +49,7 @@ print (S.Exp [S.Op op, lhs, rhs]) = case (print lhs, print rhs) of
             o = if op == "=" then "==" else op
 
 -- catch-all todo case
-print s = syntaxErr $ F.format "not supported yet: {}" $ F.Only s
+print s = syntaxErr . pack $ "not supported yet: " ++ show s
 
 
 -- Types --

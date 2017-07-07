@@ -40,6 +40,12 @@ print (S.Exp ["import", path, alias]) = printf "import {} \"{}\"" (unquote alias
 -- func
 print (S.Exp ["func", S.Atom name, body]) = printSubtree "func {}() {\n{}\n}" name body
 
+-- assignment
+print (S.Exp ["set", S.Atom name, body]) = printSubtree "{} = {}" name body
+
+-- print placeholder -- TODO: proper desugar
+print (S.Exp ("print":args)) = funcCall "fmt.Println" args
+
 -- operators
 print (S.Exp [S.Op op, lhs, rhs]) = case (print lhs, print rhs) of
     (Left e, _)          -> Left e
@@ -50,6 +56,13 @@ print (S.Exp [S.Op op, lhs, rhs]) = case (print lhs, print rhs) of
 
 -- catch-all todo case
 print s = syntaxErr . pack $ "not supported yet: " ++ show s
+
+
+-- Function call printer
+funcCall :: Text -> [S.Expression] -> PrintResult
+funcCall name args = case partitionEithers $ fmap print args of
+    (err:_ , _) -> Left err
+    ([], txts)  -> printf "{}({})" (name, intercalate ", " txts)
 
 
 -- Types --

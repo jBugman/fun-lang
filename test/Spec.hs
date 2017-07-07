@@ -129,7 +129,7 @@ main = hspec $ do
 
     it "prints HelloWorld" $
       printPretty (S.Exp ["package", "main", S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]]) `shouldBe` Right
-        "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}"
+        "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"
 
     it "prints lt op" $
       printPretty (S.Exp ["<", "n", "10"]) `shouldBe` Right "n < 10"

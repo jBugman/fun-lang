@@ -28,9 +28,6 @@ main = hspec $ do
     it "parses int lit" $
       prs satom "42" `shouldParse` S.Atom "42"
 
-    it "parses operator" $
-      prs satom "+" `shouldParse` S.Atom "+"
-
     it "parses ident" $
       prs satom "foo" `shouldParse` S.Atom "foo"
 
@@ -43,12 +40,16 @@ main = hspec $ do
     it "fails on unit" $
       prs satom `shouldFailOn` "()"
 
+  describe "Fun.Parser.sop" $
+    it "parses operator" $
+      prs sop "+" `shouldParse` S.Op "+"
+
   describe "Fun.Parser.list" $ do
     it "parses empty string" $
       prs list "" `shouldParse` []
 
     it "parses op + ident" $
-      prs list "+ foo" `shouldParse` [S.Atom "+", S.Atom "foo"]
+      prs list "+ foo" `shouldParse` [S.Op "+", S.Atom "foo"]
 
     it "parses func call" $
       prs list "printf \"%+v\n\" v" `shouldParse` [S.Atom "printf", S.Atom "\"%+v\n\"", S.Atom "v"]
@@ -71,7 +72,7 @@ main = hspec $ do
       prs stuple "(())" `shouldParse` S.Exp [S.Unit]
 
     it "parses op + ident + lit" $
-      prs stuple "(< foo 10)" `shouldParse` S.Exp [S.Atom "<", S.Atom "foo", S.Atom "10"]
+      prs stuple "(< foo 10)" `shouldParse` S.Exp [S.Op "<", S.Atom "foo", S.Atom "10"]
 
     it "ignores comments" $
       prs stuple "; comment\n(foo 10)" `shouldParse` S.Exp ["foo", "10"]
@@ -90,7 +91,7 @@ main = hspec $ do
       prs sexp "; this is a comment\nfoo" `shouldParse` S.Atom "foo"
 
     it "parses comparison" $
-      prs sexp "(< foo 10)" `shouldParse` S.Exp [S.Atom "<", S.Atom "foo", S.Atom "10"]
+      prs sexp "(< foo 10)" `shouldParse` S.Exp [S.Op "<", S.Atom "foo", S.Atom "10"]
 
     it "parses import" $
       prs sexp "(import \"foo\")" `shouldParse` S.Exp ["import", "\"foo\""]
@@ -116,7 +117,7 @@ main = hspec $ do
       printPretty (S.Exp ["import", "very/long-package", "pkg"]) `shouldBe` Right "import pkg \"very/long-package\""
 
     it "prints simple func" $
-      printPretty (S.Exp [ "func", "setS", S.Exp [ "=", "s", "2"]]) `shouldBe` Right
+      printPretty (S.Exp [ "func", "setS", S.Exp ["=", "s", "2"]]) `shouldBe` Right
         "func setS() {\n\ts = 2\n}"
 
     it "prints HelloWorld" $

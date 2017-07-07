@@ -2,7 +2,7 @@
 module Fun.Parser where
 
 import Control.Monad        (void)
-import Data.Text            (Text, pack)
+import Data.Text            (Text, pack, singleton)
 import Text.Megaparsec      (ParseError, choice, runParser, sepBy, try, (<|>))
 import Text.Megaparsec.Text (Parser)
 
@@ -22,11 +22,16 @@ sunit = trimWS $ do
 
 satom :: Parser S.Expression
 satom = trimWS $ do
-    s <- try stringLiteral <|> try op <|> try selector <|> ident
+    s <- try stringLiteral <|> try selector <|> ident
     return $ S.Atom (pack s)
 
+sop :: Parser S.Expression
+sop = trimWS $ do
+    s <- op
+    return $ S.Op (singleton s)
+
 list :: Parser [S.Expression]
-list = sepBy (choice [slist, sunit, stuple, satom]) sp
+list = sepBy (choice [slist, sunit, stuple, sop, satom]) sp
 
 slist :: Parser S.Expression
 slist = trimWS $ do
@@ -39,4 +44,4 @@ stuple = trimWS $ do
     return (S.Exp xs)
 
 sexp :: Parser S.Expression
-sexp = try stuple <|> satom
+sexp = try stuple <|> try sop <|> satom

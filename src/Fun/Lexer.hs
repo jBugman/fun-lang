@@ -2,11 +2,13 @@ module Fun.Lexer where
 
 import Control.Applicative  (empty)
 import Control.Monad        (void)
-import Text.Megaparsec      (alphaNumChar, between, char, char', letterChar, manyTill, some,
-                             spaceChar, symbolChar)
+import Text.Megaparsec      (alphaNumChar, between, char, char', letterChar, manyTill, oneOf, some,
+                             spaceChar)
 import Text.Megaparsec.Text (Parser)
 
 import qualified Text.Megaparsec.Lexer as L
+
+import Fun.Sexp (opChars)
 
 
 lineComment :: Parser ()
@@ -35,8 +37,8 @@ selector = lexeme $ do
     sel <- some alphaNumChar
     return $ (x : xs) ++ "." ++ sel
 
-op :: Parser String
-op = lexeme $ some symbolChar
+op :: Parser Char
+op = lexeme $ oneOf opChars
 
 hex :: Parser Integer
 hex = lexeme $ char '0' >> char' 'x' >> L.hexadecimal

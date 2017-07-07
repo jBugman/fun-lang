@@ -16,32 +16,23 @@ prs rule = runParser rule ""
 
 
 sunit :: Parser S.Expression
-sunit = trimWS $ do
-    void $ word "()"
-    return S.Unit
+sunit = S.Unit <$ (sp *> void (word "()"))
 
 satom :: Parser S.Expression
-satom = trimWS $ do
-    s <- try stringLiteral <|> try selector <|> ident
-    return $ S.Atom (pack s)
+satom = S.Atom . pack <$> (sp *> atoms)
+    where atoms = try stringLiteral <|> try selector <|> ident
 
 sop :: Parser S.Expression
-sop = trimWS $ do
-    s <- op
-    return $ S.Op (singleton s)
+sop = S.Op . singleton <$> (sp *> op)
 
 list :: Parser [S.Expression]
 list = sepBy (choice [slist, sunit, stuple, sop, satom]) sp
 
 slist :: Parser S.Expression
-slist = trimWS $ do
-    xs <- brackets list
-    return (S.List xs)
+slist = S.List <$> (sp *> brackets list)
 
 stuple :: Parser S.Expression
-stuple = trimWS $ do
-    xs <- parens list
-    return (S.Exp xs)
+stuple = S.Exp <$> (sp *> parens list)
 
 sexp :: Parser S.Expression
 sexp = try stuple <|> try sop <|> satom

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Data.Text             (toUpper)
 import Prelude               hiding (print)
 import Test.Hspec            (describe, hspec, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldFailOn, shouldParse)
@@ -16,6 +17,12 @@ import qualified Fun.Sexp as S
 
 main :: IO ()
 main = hspec $ do
+
+  describe "S.Expression is a Functor" $ do
+    it "fmaps on S.Exp" $
+      (fmap (toUpper) (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]]))
+        `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR"]]
+
 
   describe "Fun.Parser.sunit" $ do
     it "parses SUnit" $

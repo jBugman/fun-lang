@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor     #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Fun.Sexp where
 
 import Data.List           (elem, intercalate, isPrefixOf, length)
@@ -8,29 +10,29 @@ import Data.Text.Buildable (Buildable, build)
 import qualified Data.Text.Lazy.Builder as B
 
 
-data Expression
-    = Exp  [Expression]
-    | List [Expression]
-    | Op   Text
-    | Type Text
-    | Atom Text
+data Expression a
+    = Exp  [Expression a]
+    | List [Expression a]
+    | Op   a
+    | Type a
+    | Atom a
     | Unit
-    deriving (Eq)
+    deriving (Eq, Functor)
 
-instance IsString Expression where
+instance IsString (Expression Text) where
     fromString s
         | isOpChar s         = Op   (pack s)
         | ":" `isPrefixOf` s = Type (pack s)
         | otherwise          = Atom (pack s)
         where isOpChar cs = (length cs == 1) && (head cs `elem` opChars)
 
-instance Buildable Expression where
+instance Buildable (Expression Text) where
     build (Atom s) = B.fromText s
     build (Type s) = B.fromText s
     build (Op s)   = B.fromText s
     build s        = errorWithoutStackTrace $ "Can only print terminal nodes, but got " ++ (show s)
 
-instance Show Expression where
+instance Show (Expression Text) where
     show Unit      = "()"
     show (Atom s)  = unpack s
     show (Type s)  = unpack s
@@ -38,8 +40,17 @@ instance Show Expression where
     show (List xs) = "[" ++ showContents xs ++ "]"
     show (Exp xs)  = "(" ++ showContents xs ++ ")"
 
-showContents :: [Expression] -> String
+showContents :: [Expression Text] -> String
 showContents xs = intercalate " " $ map show xs -- TODO: add line-fold on long lists and some keywords
+
+-- instance Functor Expression where
+--     fmap _ Unit      = Unit
+--     fmap f (Atom s)  = Atom $ f s
+--     fmap f (Type s)  = Type $ f s
+--     fmap f (Op s)    = Op   $ f s
+--     fmap f (List xs) = List $ fmap (fmap f) xs
+--     fmap f (Exp xs)  = Exp  $ fmap (fmap f) xs
+
 
 opChars :: String
 opChars = "=+-*/<>%"

@@ -55,6 +55,7 @@ test-suite fun-lang-test
                     , func
                     , hspec
                     , hspec-megaparsec
+                    , text
   ghc-options:        -Wall -threaded -rtsopts
   extra-libraries:    fungo
   default-language:   Haskell2010

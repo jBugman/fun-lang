@@ -135,10 +135,11 @@ main = hspec $ do
 
   describe "Fun.Go.Printer.printPretty" $ do
     it "prints import" $
-      printPretty (S.Exp ["import", "fmt"]) `shouldBe` Right "import \"fmt\""
+      printPretty (S.Exp ["import", "\"fmt\""]) `shouldBe` Right "import \"fmt\""
 
     it "prints import with alias" $
-      printPretty (S.Exp ["import", "very/long-package", "pkg"]) `shouldBe` Right "import pkg \"very/long-package\""
+      printPretty (S.Exp ["import", "\"very/long-package\"", "\"pkg\""])
+        `shouldBe` Right "import pkg \"very/long-package\""
 
     it "prints simple func" $
       printPretty (S.Exp ["func", "setS", S.Exp ["set", "s", "2"]]) `shouldBe` Right
@@ -184,4 +185,4 @@ main = hspec $ do
   describe "Fun.Main.translate" $
     it "works on example 01" $
       translate' "(package main\n\n(func main (print \"hello world\")))\n" `shouldBe`
-        Right "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"
+        Right "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"

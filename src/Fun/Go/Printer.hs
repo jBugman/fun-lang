@@ -35,8 +35,8 @@ print (S.Exp ("package":name:topLevels)) = case partitionEithers $ fmap print to
     ([], txts)  -> printf "package {}\n\n{}" (name, LT.intercalate "\n\n" txts)
 
 -- import
-print (S.Exp ["import", path]) = printf "import \"{}\"" $ F.Only path
-print (S.Exp ["import", path, alias]) = printf "import {} \"{}\"" (unquote alias, path)
+print (S.Exp ["import", path]) = printf "import {}" (F.Only path)
+print (S.Exp ["import", path, alias]) = printf "import {} {}" (unquote alias, path)
 
 -- func
 print (S.Exp ["func", S.Atom name, body]) = printSubtree "func {}() {\n{}\n}" name body
@@ -44,8 +44,8 @@ print (S.Exp ["func", S.Atom name, body]) = printSubtree "func {}() {\n{}\n}" na
 -- assignment
 print (S.Exp ["set", S.Atom name, body]) = printSubtree "{} = {}" name body
 
--- print placeholder -- TODO: proper desugar
-print (S.Exp ("print":args)) = funcCall "print" args
+-- function call
+print (S.Exp (S.Atom f : args)) = funcCall f args
 
 -- operators
 print (S.Exp [S.Op op, lhs, rhs]) = case (print lhs, print rhs) of

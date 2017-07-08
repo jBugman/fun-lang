@@ -5,7 +5,7 @@ import Prelude               hiding (print)
 import Test.Hspec            (describe, hspec, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldFailOn, shouldParse)
 
-import Fun.GoPrinter
+import Fun.Go.Printer
 import Fun.Parser
 import Go.Fmt
 

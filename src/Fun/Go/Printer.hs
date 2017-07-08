@@ -1,4 +1,4 @@
-module Fun.GoPrinter (
+module Fun.Go.Printer (
     printPretty, print, SyntaxError
 ) where
 
@@ -44,7 +44,7 @@ print (S.Exp ["func", S.Atom name, body]) = printSubtree "func {}() {\n{}\n}" na
 print (S.Exp ["set", S.Atom name, body]) = printSubtree "{} = {}" name body
 
 -- print placeholder -- TODO: proper desugar
-print (S.Exp ("print":args)) = funcCall "fmt.Println" args
+print (S.Exp ("print":args)) = funcCall "print" args
 
 -- operators
 print (S.Exp [S.Op op, lhs, rhs]) = case (print lhs, print rhs) of

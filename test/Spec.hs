@@ -5,7 +5,9 @@ import Prelude               hiding (print)
 import Test.Hspec            (describe, hspec, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldFailOn, shouldParse)
 
+import Fun.Go.Desugar
 import Fun.Go.Printer
+import Fun.Main       (translate')
 import Fun.Parser
 import Go.Fmt
 
@@ -14,12 +16,14 @@ import qualified Fun.Sexp as S
 
 main :: IO ()
 main = hspec $ do
+
   describe "Fun.Parser.sunit" $ do
     it "parses SUnit" $
       prs sunit "()" `shouldParse` S.Unit
 
     it "fails on random input" $
       prs sunit `shouldFailOn` "foo"
+
 
   describe "Fun.Parser.satom" $ do
     it "parses string lit" $
@@ -43,13 +47,16 @@ main = hspec $ do
     it "fails on type lit" $
       prs satom `shouldFailOn` ":int"
 
+
   describe "Fun.Parser.sop" $
     it "parses operator" $
       prs sop "+" `shouldParse` S.Op "+"
 
+
   describe "Fun.Parser.stype" $
     it "parses type lit" $
       prs stype ":int" `shouldParse` S.Type "int"
+
 
   describe "Fun.Parser.list" $ do
     it "parses empty string" $
@@ -64,6 +71,7 @@ main = hspec $ do
     it "parses selecor + unit" $
       prs list "fmt.Println ()" `shouldParse` [S.Atom "fmt.Println", S.Unit]
 
+
   describe "Fun.Parser.slist" $ do
     it "fails on empty string" $
       prs slist `shouldFailOn` ""
@@ -73,6 +81,7 @@ main = hspec $ do
 
     it "ignores comments" $
       prs slist "; comment 1\n[foo bar]\n; comment 2" `shouldParse` S.List ["foo", "bar"]
+
 
   describe "Fun.Parser.stuple" $ do
     it "parses unit" $
@@ -89,6 +98,7 @@ main = hspec $ do
 
     it "parses selecor + unit" $
       prs stuple "(fmt.Println ())" `shouldParse` S.Exp [S.Atom "fmt.Println", S.Unit]
+
 
   describe "Fun.Parser.sexp" $ do
     it "parses ident" $
@@ -116,7 +126,7 @@ main = hspec $ do
               [ S.Atom "print", S.Atom "\"hello world\""]]]
 
 
-  describe "Fun.GoPrinter.printPretty" $ do
+  describe "Fun.Go.Printer.printPretty" $ do
     it "prints import" $
       printPretty (S.Exp ["import", "fmt"]) `shouldBe` Right "import \"fmt\""
 
@@ -127,15 +137,12 @@ main = hspec $ do
       printPretty (S.Exp ["func", "setS", S.Exp ["set", "s", "2"]]) `shouldBe` Right
         "func setS() {\n\ts = 2\n}"
 
-    it "prints HelloWorld" $
-      printPretty (S.Exp ["package", "main", S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]]) `shouldBe` Right
-        "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"
-
     it "prints lt op" $
       printPretty (S.Exp ["<", "n", "10"]) `shouldBe` Right "n < 10"
 
     it "prints eq op" $
       printPretty (S.Exp ["=", "foo", "bar"]) `shouldBe` Right "foo == bar"
+
 
   describe "Go.Fmt.gofmt" $ do
     it "formats valid code" $
@@ -143,3 +150,21 @@ main = hspec $ do
 
     it "returns err on a broken code" $
       gofmt "func foo }( __" `shouldBe` Left "1:20: expected '(', found '}'"
+
+
+  describe "Fun.Go.Desugar.desugar" $ do
+    it "does nothing when there is nothing to do" $
+      desugar (S.Exp ["foo", "bar"]) `shouldBe` S.Exp ["foo", "bar"]
+
+    it "desugars print" $
+      desugar (S.Exp ["package", "main", S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
+        `shouldBe` (S.Exp
+          ["package", "main"
+          , S.Exp ["import", "\"fmt\""]
+          , S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
+
+
+  describe "Fun.Main.translate" $ do
+    it "works on example 01" $
+      translate' "(package main\n\n(func main (print \"hello world\")))\n" `shouldBe`
+        Right "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"

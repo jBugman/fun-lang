@@ -1,5 +1,5 @@
 name:                func
-version:             0.9.2.0-SNAPSHOT
+version:             0.10.0.0-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -18,9 +18,10 @@ custom-setup
 
 library
   hs-source-dirs:       src
-  exposed-modules:      Fun.Go.Printer
+  exposed-modules:      Fun.Go.Desugar
+                      , Fun.Go.Printer
                       , Fun.Lexer
-                   -- , Fun.Main
+                      , Fun.Main
                       , Fun.Parser
                       , Fun.Sexp
                    -- , Fun.Types

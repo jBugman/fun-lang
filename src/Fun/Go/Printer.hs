@@ -1,5 +1,5 @@
 module Fun.Go.Printer (
-    printPretty, print, SyntaxError
+    printPretty, print, SyntaxError(..)
 ) where
 
 import Data.Either    (partitionEithers)
@@ -20,6 +20,7 @@ printPretty :: S.Expression -> PrintResult
 printPretty s = case print s of
     Right txt -> E.mapBoth (SyntaxError . pack) pack (gofmt $ unpack txt)
     err       -> err
+
 
 print :: S.Expression -> PrintResult
 -- empty

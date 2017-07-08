@@ -17,4 +17,4 @@ translate txt = case prs sexp txt of
     Right se -> printPretty . desugar $ se
 
 translate' :: String -> Either SyntaxError String
-translate' txt = mapBoth id (unpack) (translate $ pack txt)
+translate' txt = mapBoth id unpack (translate $ pack txt)

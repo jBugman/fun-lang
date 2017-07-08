@@ -2,10 +2,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Fun.Sexp where
 
-import Data.List           (elem, intercalate, isPrefixOf, length)
-import Data.String         (IsString, fromString)
+import Data.List           (elem, isPrefixOf, length)
+import Data.String         (IsString, fromString, unwords)
 import Data.Text           (Text, pack, unpack)
 import Data.Text.Buildable (Buildable, build)
+import Prelude             hiding (unwords)
 
 import qualified Data.Text.Lazy.Builder as B
 
@@ -30,7 +31,7 @@ instance Buildable (Expression Text) where
     build (Atom s) = B.fromText s
     build (Type s) = B.fromText s
     build (Op s)   = B.fromText s
-    build s        = errorWithoutStackTrace $ "Can only print terminal nodes, but got " ++ (show s)
+    build s        = errorWithoutStackTrace $ "Can only print terminal nodes, but got " ++ show s
 
 instance Show (Expression Text) where
     show Unit      = "()"
@@ -41,7 +42,7 @@ instance Show (Expression Text) where
     show (Exp xs)  = "(" ++ showContents xs ++ ")"
 
 showContents :: [Expression Text] -> String
-showContents xs = intercalate " " $ map show xs -- TODO: add line-fold on long lists and some keywords
+showContents xs = unwords $ map show xs -- TODO: add line-fold on long lists and some keywords
 
 -- instance Functor Expression where
 --     fmap _ Unit      = Unit

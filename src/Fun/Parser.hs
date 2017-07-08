@@ -65,4 +65,4 @@ prettyError err = pack $
                 $ parseErrorTextPretty err
 
             replace :: Eq a => [a] -> [a] -> [a] -> [a]
-            replace old new xs = intercalate new . splitOn old $ xs
+            replace old new = intercalate new . splitOn old

@@ -1,10 +1,10 @@
 module Fun.Lexer where
 
-import Control.Applicative  (empty)
-import Control.Monad        (void)
-import Text.Megaparsec      (alphaNumChar, between, char, char', letterChar, manyTill, oneOf, some,
-                             spaceChar)
-import Text.Megaparsec.Text (Parser)
+import Control.Applicative       (empty)
+import Control.Monad             (void)
+import Text.Megaparsec           (alphaNumChar, between, char, char', letterChar, manyTill, oneOf,
+                                  some, spaceChar)
+import Text.Megaparsec.Text.Lazy (Parser)
 
 import qualified Text.Megaparsec.Lexer as L
 

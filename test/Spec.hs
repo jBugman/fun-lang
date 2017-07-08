@@ -18,9 +18,9 @@ import qualified Fun.Sexp as S
 main :: IO ()
 main = hspec $ do
 
-  describe "S.Expression is a Functor" $ do
+  describe "S.Expression is a Functor" $
     it "fmaps on S.Exp" $
-      (fmap (toUpper) (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]]))
+      fmap toUpper (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]])
         `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR"]]
 
 
@@ -165,13 +165,23 @@ main = hspec $ do
 
     it "desugars print" $
       desugar (S.Exp ["package", "main", S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
-        `shouldBe` (S.Exp
+        `shouldBe` S.Exp
           ["package", "main"
           , S.Exp ["import", "\"fmt\""]
-          , S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
+          , S.Exp ["func", "main", S.Exp ["fmt.Println", "\"hello world\""]]]
+
+    it "desugars print with existing import" $
+      desugar (S.Exp
+        ["package", "main"
+        , S.Exp ["import", "\"fmt\""]
+        , S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
+          `shouldBe` S.Exp
+          ["package", "main"
+          , S.Exp ["import", "\"fmt\""]
+          , S.Exp ["func", "main", S.Exp ["fmt.Println", "\"hello world\""]]]
 
 
-  describe "Fun.Main.translate" $ do
+  describe "Fun.Main.translate" $
     it "works on example 01" $
       translate' "(package main\n\n(func main (print \"hello world\")))\n" `shouldBe`
         Right "package main\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"

@@ -3,8 +3,10 @@ module Go.Fmt (
     gofmt
 ) where
 
-import Data.List        (isPrefixOf)
+import Control.Monad    (return)
+import Data.List        (drop, isPrefixOf)
 import Foreign.C.String (CString, newCString, peekCString)
+import Prelude          (Either (..), String, ($), (.))
 import System.IO.Unsafe (unsafePerformIO)
 
 

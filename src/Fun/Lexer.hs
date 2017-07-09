@@ -1,7 +1,9 @@
 module Fun.Lexer where
 
-import Control.Applicative       (empty)
-import Control.Monad             (void)
+import Control.Applicative       (empty, (*>))
+import Control.Monad             (return, void, (>>))
+import Data.List                 ((++))
+import Prelude                   (Char, Double, Integer, String, ($), (.))
 import Text.Megaparsec           (alphaNumChar, between, char, char', letterChar, manyTill, oneOf,
                                   some, spaceChar)
 import Text.Megaparsec.Text.Lazy (Parser)

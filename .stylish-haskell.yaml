@@ -46,4 +46,4 @@ columns: 100
 newline: native
 
 language_extensions:
-  - OverloadedStrings
+  - OverloadedStrings, NoImplicitPrelude

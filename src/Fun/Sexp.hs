@@ -2,11 +2,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Fun.Sexp where
 
-import Data.List           (elem, isPrefixOf, length)
+import Data.Functor        (Functor, fmap)
+import Data.List           (elem, head, isPrefixOf, length, (++))
 import Data.String         (IsString, fromString, unwords)
 import Data.Text           (Text, pack, unpack)
 import Data.Text.Buildable (Buildable, build)
-import Prelude             hiding (unwords)
+import Prelude             (Eq, Show, String, errorWithoutStackTrace, otherwise, show, ($), (&&),
+                            (==))
 
 import qualified Data.Text.Lazy.Builder as B
 
@@ -42,7 +44,7 @@ instance Show (Expression Text) where
     show (Exp xs)  = "(" ++ showContents xs ++ ")"
 
 showContents :: [Expression Text] -> String
-showContents xs = unwords $ map show xs -- TODO: add line-fold on long lists and some keywords
+showContents xs = unwords $ fmap show xs -- TODO: add line-fold on long lists and some keywords
 
 -- instance Functor Expression where
 --     fmap _ Unit      = Unit

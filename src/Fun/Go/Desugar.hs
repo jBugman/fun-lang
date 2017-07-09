@@ -1,8 +1,10 @@
 module Fun.Go.Desugar (desugar) where
 
-import Data.List        (nub, span)
-import Data.Text        (Text)
-import Data.Traversable (mapAccumR)
+import Control.Applicative ((<$>))
+import Data.List           (nub, span, (++))
+import Data.Text           (Text)
+import Data.Traversable    (mapAccumR)
+import Prelude             (Bool (..), ($))
 
 import qualified Fun.Sexp as S
 

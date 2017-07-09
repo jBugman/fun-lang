@@ -1,10 +1,10 @@
-module Fun.Main
-    ( translate
-    , translate'
-    ) where
+module Fun.Main (
+    translate , translate'
+) where
 
 import Data.Either.Combinators (mapBoth)
-import Data.Text.Lazy
+import Data.Text.Lazy          (Text, pack, unpack)
+import Prelude                 (Either (..), String, id, ($), (.))
 
 import Fun.Go.Desugar (desugar)
 import Fun.Go.Printer (SyntaxError (..), printPretty)

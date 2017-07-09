@@ -1,10 +1,12 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Fun.Parser where
 
+import Control.Applicative       ((*>), (<$), (<$>))
 import Control.Monad             (void)
-import Data.List                 (intercalate)
+import Data.List                 (intercalate, (++))
 import Data.List.Split           (splitOn)
 import Data.Text                 (Text, pack, singleton)
+import Prelude                   (Char, Either, Eq, show, ($), (.))
 import Text.Megaparsec           (ParseError, ShowErrorComponent, choice, errorPos, runParser,
                                   sepBy, sourceColumn, sourceLine, try, unPos, (<|>))
 import Text.Megaparsec.Error     (parseErrorTextPretty)

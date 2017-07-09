@@ -1,8 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Data.Functor          (fmap)
 import Data.Text             (toUpper)
-import Prelude               hiding (print)
+import Prelude               (Either (..), IO, ($))
 import Test.Hspec            (describe, hspec, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldFailOn, shouldParse)
 

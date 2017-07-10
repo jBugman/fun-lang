@@ -6,9 +6,10 @@ import Test.Hspec.Megaparsec (shouldFailOn, shouldParse)
 
 import Fun.Go.Desugar
 import Fun.Go.Printer
-import Fun.Main       (translate')
+import Fun.Main        (translate')
 import Fun.Parser
 import Go.Fmt
+import Test.Properties
 
 import qualified Fun.Sexp as S
 
@@ -16,10 +17,14 @@ import qualified Fun.Sexp as S
 main :: IO ()
 main = hspec $ do
 
-  describe "S.Expression is a MonoFunctor" $
-    it "omaps on S.Exp" $
+  describe "S.Expression is a MonoFunctor" $ do
+    it "manual omap" $
       omap toUpper (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]])
         `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR" :: S.Expression Text]]
+
+    it "identity property" monofunctorIdentity
+
+    it "compose property" monofunctorCompose
 
 
   describe "Fun.Parser.sunit" $ do

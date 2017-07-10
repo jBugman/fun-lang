@@ -52,11 +52,16 @@ test-suite fun-lang-test
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
   main-is:            Spec.hs
+  other-modules:      Test.Instances
+                    , Test.Properties
   build-depends:      base
                     , classy-prelude
                     , func
                     , hspec
                     , hspec-megaparsec
+                    , mono-traversable
+                    , QuickCheck
+                    , quickcheck-instances
                     , text
   ghc-options:        -Wall -threaded -rtsopts
   default-extensions: OverloadedStrings, NoImplicitPrelude

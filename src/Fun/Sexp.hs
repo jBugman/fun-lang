@@ -54,5 +54,13 @@ instance MonoFunctor (Expression Text) where
     omap f (List xs) = List $ omap (omap f) xs
     omap f (Exp xs)  = Exp  $ omap (omap f) xs
 
+-- instance Functor Expression where
+--     fmap _ Unit      = Unit
+--     fmap f (Atom s)  = Atom $ f s
+--     fmap f (Type s)  = Type $ f s
+--     fmap f (Op s)    = Op   $ f s
+--     fmap f (List xs) = List $ fmap (fmap f) xs
+--     fmap f (Exp xs)  = Exp  $ fmap (fmap f) xs
+
 opChars :: [Char]
 opChars = "=+-*/<>%"

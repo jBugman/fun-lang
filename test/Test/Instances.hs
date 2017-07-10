@@ -11,10 +11,26 @@ import Test.QuickCheck.Instances ()
 import qualified Fun.Sexp as S
 
 
-genExpr :: Gen (S.Expression Text)
-genExpr = do
+genBasic :: Gen (S.Expression Text)
+genBasic = do
     t <- arbitrary
-    oneof [return S.Unit, return (S.Atom t)] -- TODO: Gen for Exp and List
+    frequency [ (1, return S.Unit)
+              , (4, return (S.Atom t)) ]
+
+genElems :: Gen [S.Expression Text]
+genElems = resize 10 $ listOf1 genBasic
+
+genExp :: Gen (S.Expression Text)
+genExp = S.Exp <$> genElems
+
+genList :: Gen (S.Expression Text)
+genList = S.List <$> genElems
+
+genExpression :: Gen (S.Expression Text)
+genExpression = frequency
+    [ (3, genBasic)
+    , (1, genList)
+    , (4, genExp) ]
 
 instance Arbitrary (S.Expression Text) where
-    arbitrary = genExpr
+    arbitrary = genExpression

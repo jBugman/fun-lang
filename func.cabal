@@ -30,7 +30,7 @@ library
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   build-depends:        base >= 4.7 && < 5
                       , classy-prelude
-                      , aeson
+                   -- , aeson
                       , containers
                       , either
                       , megaparsec

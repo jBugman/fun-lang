@@ -2,41 +2,38 @@ module Fun.Go.Printer (
     printPretty, print, SyntaxError(..)
 ) where
 
-import Data.Either (partitionEithers)
-import Data.Text   (Text, dropAround, pack)
-import Prelude     hiding (print)
-
-import qualified Data.Either.Combinators as E
+import           ClassyPrelude           hiding (print)
+import           Data.Either             (partitionEithers)
+import           Data.Either.Combinators (mapBoth)
+import qualified Data.Text               as T
 import qualified Data.Text.Format        as F
 import qualified Data.Text.Format.Params as F
-import qualified Data.Text.Lazy          as LT
-
-import Go.Fmt
 
 import qualified Fun.Sexp as S
+import           Go.Fmt
 
 
-printPretty :: S.Expression Text -> PrintResult
+printPretty :: S.Expression Text -> Either SyntaxError Text
 printPretty s = case print s of
-    Right txt -> E.mapBoth (SyntaxError . pack) LT.pack (gofmt $ LT.unpack txt)
+    Right txt -> mapBoth SyntaxError id (gofmt txt)
     err       -> err
 
 
-print :: S.Expression Text -> PrintResult
+print :: S.Expression Text -> Either SyntaxError Text
 -- empty
 print (S.Exp []) = syntaxErr "empty expression"
 
 -- literal
-print (S.Atom s) = Right $ LT.fromStrict s
+print (S.Atom s) = Right s
 
 -- package
 print (S.Exp ("package":name:topLevels)) = case partitionEithers $ fmap print topLevels of
     (err:_ , _) -> Left err
-    ([], txts)  -> printf "package {}\n\n{}" (name, LT.intercalate "\n\n" txts)
+    ([], txts)  -> Right $ printf "package {}\n\n{}" (name, ointercalate "\n\n" txts)
 
 -- import
-print (S.Exp ["import", path]) = printf "import {}" (F.Only path)
-print (S.Exp ["import", path, alias]) = printf "import {} {}" (unquote alias, path)
+print (S.Exp ["import", path]) = Right $ printf "import {}" (F.Only path)
+print (S.Exp ["import", path, alias]) = Right $ printf "import {} {}" (unquote alias, path)
 
 -- func
 print (S.Exp ["func", S.Atom name, body]) = printSubtree "func {}() {\n{}\n}" name body
@@ -51,38 +48,36 @@ print (S.Exp (S.Atom f : args)) = funcCall f args
 print (S.Exp [S.Op op, lhs, rhs]) = case (print lhs, print rhs) of
     (Left e, _)          -> Left e
     (_, Left e)          -> Left e
-    (Right lt, Right rt) -> Right $ F.format "{} {} {}" (lt, o, rt)
+    (Right lt, Right rt) -> Right $ printf "{} {} {}" (lt, o, rt)
         where
             o = if op == "=" then "==" else op
 
 -- catch-all todo case
-print s = syntaxErr . pack $ "not supported yet: " ++ show s
+print s = syntaxErr $ printf "not supported yet: {}" (F.Only s)
 
 
 -- Function call printer
-funcCall :: Text -> [S.Expression Text] -> PrintResult
+funcCall :: Text -> [S.Expression Text] -> Either SyntaxError Text
 funcCall name args = case partitionEithers $ fmap print args of
     (err:_ , _) -> Left err
-    ([], txts)  -> printf "{}({})" (name, LT.intercalate ", " txts)
+    ([], txts)  -> Right $ printf "{}({})" (name, ointercalate ", " txts)
 
 
 -- Types --
 
 newtype SyntaxError = SyntaxError Text deriving (Eq, Show)
 
-type PrintResult = Either SyntaxError LT.Text
-
 -- Utils --
 
-printSubtree :: F.Format -> Text -> S.Expression Text -> PrintResult
-printSubtree fmt x y = E.mapBoth id (\s -> F.format fmt (x, s)) (print y)
+printSubtree :: F.Format -> Text -> S.Expression Text -> Either SyntaxError Text
+printSubtree fmt x y = mapBoth id (\s -> printf fmt (x, s)) (print y)
 
-printf :: F.Params ps => F.Format -> ps -> PrintResult
-printf fmt ps = Right $ F.format fmt ps
+printf :: F.Params ps => F.Format -> ps -> Text
+printf fmt ps = toStrict $ F.format fmt ps
 
-syntaxErr :: Text -> PrintResult
+syntaxErr :: Text -> Either SyntaxError Text
 syntaxErr = Left . SyntaxError
 
 unquote :: S.Expression Text -> Maybe Text
-unquote (S.Atom t) = Just $ dropAround (== '\"') t
+unquote (S.Atom t) = Just $ T.dropAround (== '\"') t
 unquote _          = Nothing

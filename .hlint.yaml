@@ -1,0 +1,12 @@
+# HLint configuration file
+# https://github.com/ndmitchell/hlint
+
+- ignore: {name: "Use String"}
+
+# Add custom hints for this project
+#
+# Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
+# - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
+
+# Generalise map to fmap, ++ to <>
+- group: {name: generalise, enabled: true}

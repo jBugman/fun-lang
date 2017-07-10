@@ -1,52 +1,47 @@
 module Fun.Lexer where
 
-import Control.Applicative       (empty, (*>))
-import Control.Monad             (return, void, (>>))
-import Data.List                 ((++))
-import Prelude                   (Char, Double, Integer, String, ($), (.))
-import Text.Megaparsec           (alphaNumChar, between, char, char', letterChar, manyTill, oneOf,
-                                  some, spaceChar)
-import Text.Megaparsec.Text.Lazy (Parser)
+import           ClassyPrelude
+import qualified Text.Megaparsec      as MP
+import           Text.Megaparsec.Text (Parser)
 
+import           Fun.Sexp              (opChars)
 import qualified Text.Megaparsec.Lexer as L
-
-import Fun.Sexp (opChars)
 
 
 lineComment :: Parser ()
 lineComment  = L.skipLineComment ";"
 
 sp :: Parser () -- whitespace consumer for lexemes
-sp = L.space (void spaceChar) lineComment empty
+sp = L.space (void MP.spaceChar) lineComment empty
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sp
 
-symbol :: String -> Parser String
-symbol = L.symbol sp
+symbol :: Text -> Parser Text
+symbol t = pack <$> L.symbol sp (unpack t)
 
-word :: String -> Parser String
+word :: Text -> Parser Text
 word = lexeme . symbol
 
-ident :: Parser String
-ident = lexeme $ some alphaNumChar
+ident :: Parser Text
+ident = lexeme $ pack <$> some MP.alphaNumChar
 
-typeLit :: Parser String
-typeLit = lexeme $ char ':' *> some alphaNumChar
+typeLit :: Parser Text
+typeLit = lexeme $ pack <$> (MP.char ':' *> some MP.alphaNumChar)
 
-selector :: Parser String
+selector :: Parser Text
 selector = lexeme $ do
-    x    <- letterChar
-    xs   <- some alphaNumChar
-    void (char '.')
-    sel <- some alphaNumChar
-    return $ (x : xs) ++ "." ++ sel
+    x    <- MP.letterChar
+    xs   <- some MP.alphaNumChar
+    void (MP.char '.')
+    sel  <- some MP.alphaNumChar
+    return . pack . oconcat $ [singleton x, xs, ".", sel]
 
-op :: Parser Char
-op = lexeme $ oneOf opChars
+op :: Parser Text
+op = singleton <$> lexeme (MP.oneOf opChars)
 
 hex :: Parser Integer
-hex = lexeme $ char '0' >> char' 'x' >> L.hexadecimal
+hex = lexeme $ MP.char '0' >> MP.char' 'x' >> L.hexadecimal
 
 double :: Parser Double
 double = lexeme L.float
@@ -58,19 +53,19 @@ signedInteger :: Parser Integer
 signedInteger = lexeme $ L.signed sp integer
 
 charLiteral :: Parser Char
-charLiteral = lexeme $ between tick tick L.charLiteral
-    where tick = void $ char '\''
+charLiteral = lexeme $ MP.between tick tick L.charLiteral
+    where tick = void $ MP.char '\''
 
-stringLiteral :: Parser String
+stringLiteral :: Parser Text
 stringLiteral = lexeme $ do
-    xs <- char '"' >> manyTill L.charLiteral (char '"')
-    return $ "\"" ++ xs ++ "\""
+    xs <- MP.char '"' >> MP.manyTill L.charLiteral (MP.char '"')
+    return $ "\"" <> pack xs <> "\""
 
 parens :: Parser a -> Parser a
-parens p = lexeme $ between (symbol "(") (symbol ")") p
+parens p = lexeme $ MP.between (symbol "(") (symbol ")") p
 
 brackets :: Parser a -> Parser a
-brackets p = lexeme $ between (symbol "[") (symbol "]") p
+brackets p = lexeme $ MP.between (symbol "[") (symbol "]") p
 
 trimWS :: Parser a -> Parser a
 trimWS p = sp *> p

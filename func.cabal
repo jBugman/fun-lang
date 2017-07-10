@@ -1,5 +1,5 @@
 name:                func
-version:             0.11.0.0-SNAPSHOT
+version:             0.12.0.0-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -29,6 +29,7 @@ library
   ghc-options:          -Wall -Wno-partial-type-signatures
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   build-depends:        base >= 4.7 && < 5
+                      , classy-prelude
                       , aeson
                       , containers
                       , either
@@ -52,6 +53,7 @@ test-suite fun-lang-test
   hs-source-dirs:     test
   main-is:            Spec.hs
   build-depends:      base
+                    , classy-prelude
                     , func
                     , hspec
                     , hspec-megaparsec

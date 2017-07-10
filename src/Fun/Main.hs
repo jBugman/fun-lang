@@ -2,9 +2,8 @@ module Fun.Main (
     translate , translate'
 ) where
 
+import ClassyPrelude
 import Data.Either.Combinators (mapBoth)
-import Data.Text.Lazy          (Text, pack, unpack)
-import Prelude                 (Either (..), String, id, ($), (.))
 
 import Fun.Go.Desugar (desugar)
 import Fun.Go.Printer (SyntaxError (..), printPretty)

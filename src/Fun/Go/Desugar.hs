@@ -1,18 +1,15 @@
 module Fun.Go.Desugar (desugar) where
 
-import Control.Applicative ((<$>))
-import Data.List           (nub, span, (++))
-import Data.Text           (Text)
-import Data.Traversable    (mapAccumR)
-import Prelude             (Bool (..), ($))
+import ClassyPrelude
+import Data.Traversable (mapAccumR)
 
 import qualified Fun.Sexp as S
 
 
 desugar :: S.Expression Text -> S.Expression Text
-desugar (S.Exp ("package":name:topLevels)) = S.Exp $ ["package", name] ++ imports ++ decls
+desugar (S.Exp ("package":name:topLevels)) = S.Exp $ ["package", name] <> imports <> decls
     where
-        imports = if didSwap then nub $ importFmt : imports' else imports'
+        imports = if didSwap then ordNub $ importFmt : imports' else imports'
         (didSwap, decls)   = swapPrint decls'
         (imports', decls') = span isImport topLevels
 

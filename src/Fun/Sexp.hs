@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies      #-}
 module Fun.Sexp where
 
 import ClassyPrelude
@@ -43,13 +44,15 @@ instance Show (Expression Text) where
 showContents :: [Expression Text] -> Text
 showContents xs = ointercalate " " $ fmap tshow xs -- TODO: add line-fold on long lists and some keywords
 
--- instance MonoFunctor Expression where
---     omap _ Unit      = Unit
---     omap f (Atom s)  = Atom $ f s
---     omap f (Type s)  = Type $ f s
---     omap f (Op s)    = Op   $ f s
---     omap f (List xs) = List $ omap (omap f) xs
---     omap f (Exp xs)  = Exp  $ omap (omap f) xs
+type instance Element (Expression a) = a
+
+instance MonoFunctor (Expression Text) where
+    omap _ Unit      = Unit
+    omap f (Atom s)  = Atom $ f s
+    omap f (Type s)  = Type $ f s
+    omap f (Op s)    = Op   $ f s
+    omap f (List xs) = List $ omap (omap f) xs
+    omap f (Exp xs)  = Exp  $ omap (omap f) xs
 
 opChars :: [Char]
 opChars = "=+-*/<>%"

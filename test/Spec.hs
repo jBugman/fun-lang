@@ -16,11 +16,10 @@ import qualified Fun.Sexp as S
 main :: IO ()
 main = hspec $ do
 
-  -- TODO: instance of MonoFunctor
-  -- describe "S.Expression is a Functor" $
-  --   it "fmaps on S.Exp" $
-  --     fmap toUpper (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]])
-  --       `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR"]]
+  describe "S.Expression is a MonoFunctor" $
+    it "omaps on S.Exp" $
+      omap toUpper (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]])
+        `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR" :: S.Expression Text]]
 
 
   describe "Fun.Parser.sunit" $ do

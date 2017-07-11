@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies      #-}
-module Fun.Sexp where
+module Fun.SExpression where
 
 import ClassyPrelude
 import Data.Semigroup         ((<>))

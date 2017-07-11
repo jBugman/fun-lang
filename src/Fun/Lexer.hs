@@ -4,7 +4,7 @@ import           ClassyPrelude
 import qualified Text.Megaparsec      as MP
 import           Text.Megaparsec.Text (Parser)
 
-import           Fun.Sexp              (opChars)
+import           Fun.SExpression       (opChars)
 import qualified Text.Megaparsec.Lexer as L
 
 

@@ -23,7 +23,7 @@ library
                       , Fun.Lexer
                       , Fun.Main
                       , Fun.Parser
-                      , Fun.Sexp
+                      , Fun.SExpression
                    -- , Fun.Types
                       , Go.Fmt
   ghc-options:          -Wall -Wno-partial-type-signatures

@@ -4,14 +4,13 @@ import ClassyPrelude
 import Test.Hspec            (describe, hspec, it, shouldBe)
 import Test.Hspec.Megaparsec (shouldFailOn, shouldParse)
 
-import Fun.Go.Desugar
-import Fun.Go.Printer
-import Fun.Main        (translate')
-import Fun.Parser
-import Go.Fmt
-import Test.Properties
-
-import qualified Fun.Sexp as S
+import           Fun.Go.Desugar
+import           Fun.Go.Printer
+import           Fun.Main        (translate')
+import           Fun.Parser
+import qualified Fun.SExpression as S
+import           Go.Fmt
+import           Test.Properties
 
 
 main :: IO ()

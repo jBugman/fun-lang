@@ -12,8 +12,8 @@ import           Data.Semigroup           ((<>))
 import           Test.QuickCheck
 import qualified Test.QuickCheck.Function as QC
 
-import qualified Fun.Sexp       as S
-import           Test.Instances ()
+import qualified Fun.SExpression as S
+import           Test.Instances  ()
 
 
 type SE = S.Expression

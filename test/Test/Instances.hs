@@ -9,7 +9,7 @@ import Data.Text                (pack, unpack)
 import Test.QuickCheck
 import Test.QuickCheck.Function
 
-import qualified Fun.Sexp as S
+import qualified Fun.SExpression as S
 
 
 -- Expression --

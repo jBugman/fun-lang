@@ -3,7 +3,7 @@ module Fun.Go.Desugar (desugar) where
 import ClassyPrelude
 import Data.Traversable (mapAccumR)
 
-import qualified Fun.Sexp as S
+import qualified Fun.SExpression as S
 
 
 desugar :: S.Expression -> S.Expression

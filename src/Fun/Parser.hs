@@ -8,9 +8,8 @@ import qualified Text.Megaparsec       as MP
 import qualified Text.Megaparsec.Error as MP
 import           Text.Megaparsec.Text  (Parser)
 
-import Fun.Lexer
-
-import qualified Fun.Sexp as S
+import           Fun.Lexer
+import qualified Fun.SExpression as S
 
 
 sunit :: Parser S.Expression

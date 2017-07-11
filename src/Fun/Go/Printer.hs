@@ -9,7 +9,7 @@ import qualified Data.Text               as T
 import qualified Data.Text.Format        as F
 import qualified Data.Text.Format.Params as F
 
-import qualified Fun.Sexp as S
+import qualified Fun.SExpression as S
 import           Go.Fmt
 
 

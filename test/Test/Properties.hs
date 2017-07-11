@@ -16,7 +16,7 @@ import qualified Fun.Sexp       as S
 import           Test.Instances ()
 
 
-type SE = S.Expression Text
+type SE = S.Expression
 
 monofunctorIdentity :: Property
 monofunctorIdentity = property (prop :: SE -> Bool)

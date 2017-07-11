@@ -8,16 +8,16 @@ import Data.Text.Buildable
 import Data.Text.Lazy.Builder (fromText)
 import GHC.Err                (errorWithoutStackTrace)
 
-data Expression a
-    = Exp  [Expression a]
-    | List [Expression a]
-    | Op   a
-    | Type a
-    | Atom a -- TODO: pack everything atomic-like into Atom
+data Expression
+    = Exp  [Expression]
+    | List [Expression]
+    | Op   Text
+    | Type Text
+    | Atom Text  -- TODO: pack everything atomic-like into Atom
     | Unit
     deriving (Eq, Ord)
 
-instance IsString (Expression Text) where
+instance IsString Expression where
     fromString s
         | isOpChar s         = Op   (pack s)
         | ":" `isPrefixOf` s = Type (pack s)
@@ -27,14 +27,14 @@ instance IsString (Expression Text) where
             isOpChar [c] = c `elem` opChars
             isOpChar _   = False
 
-instance Buildable (Expression Text) where
+instance Buildable Expression where
     build (Atom s) = fromText s
     build (Type s) = fromText s
     build (Op s)   = fromText s
     build s        = errorWithoutStackTrace . unpack $ "Can only print terminal nodes, but got " <> tshow s
 
 -- TODO: migrate to https://hackage.haskell.org/package/wl-pprint-text
-instance Show (Expression Text) where
+instance Show Expression where
     show Unit      = "()"
     show (Atom s)  = unpack s
     show (Type s)  = unpack s
@@ -42,12 +42,12 @@ instance Show (Expression Text) where
     show (List xs) = unpack $ mconcat ["[", showContents xs, "]"]
     show (Exp xs)  = unpack $ mconcat ["(", showContents xs, ")"]
 
-showContents :: [Expression Text] -> Text
+showContents :: [Expression] -> Text
 showContents xs = ointercalate " " $ fmap tshow xs -- TODO: add line-fold on long lists and some keywords
 
-type instance Element (Expression a) = a
+type instance Element Expression = Text
 
-instance MonoFunctor (Expression Text) where
+instance MonoFunctor Expression where
     omap _ Unit      = Unit
     omap f (Atom s)  = Atom $ f s
     omap f (Type s)  = Type $ f s
@@ -55,7 +55,7 @@ instance MonoFunctor (Expression Text) where
     omap f (List xs) = List $ omap (omap f) xs
     omap f (Exp xs)  = Exp  $ omap (omap f) xs
 
-instance Semigroup (Expression Text) where
+instance Semigroup Expression where
     (<>) (Atom x) (Atom y)   = Exp [Atom x, Atom y]
     (<>) (Atom x) (Op y)     = Exp [Atom x, Op y]
     (<>) (Atom x) (Exp xs)   = Exp [Atom x, Exp xs]
@@ -69,7 +69,7 @@ instance Semigroup (Expression Text) where
     (<>) (Exp xs) x          = Exp $ xs `snoc` x
     -- (<>) x y                = Exp [x, y]
 
-instance Monoid (Expression Text) where
+instance Monoid Expression where
     mempty = Unit
     mappend (Atom x) Unit = Exp [Atom x, Unit]
     -- mappend (Atom x) (Atom y) = Exp [x, y]

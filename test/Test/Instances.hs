@@ -14,7 +14,7 @@ import qualified Fun.Sexp as S
 
 -- Expression --
 
-genBasic :: Gen (S.Expression Text)
+genBasic :: Gen S.Expression
 genBasic = frequency
     [ (1, return S.Unit)
     , (2, return (S.Atom "foo"))
@@ -23,22 +23,22 @@ genBasic = frequency
     , (2, return (S.Type ":string"))
     , (3, return (S.Op "+")) ]
 
-genElems :: Gen [S.Expression Text]
+genElems :: Gen [S.Expression]
 genElems = resize 10 $ listOf1 genBasic
 
-genExp :: Gen (S.Expression Text)
+genExp :: Gen S.Expression
 genExp = S.Exp <$> genElems
 
-genList :: Gen (S.Expression Text)
+genList :: Gen S.Expression
 genList = S.List <$> genElems
 
-genExpression :: Gen (S.Expression Text)
+genExpression :: Gen S.Expression
 genExpression = frequency
     [ (3, genBasic)
     , (1, genList)
     , (4, genExp) ]
 
-instance Arbitrary (S.Expression Text) where
+instance Arbitrary S.Expression where
     arbitrary = genExpression
 
 

@@ -1,5 +1,5 @@
 name:                func
-version:             0.12.1.0-SNAPSHOT
+version:             0.13.0.0-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -30,7 +30,6 @@ library
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   build-depends:        base >= 4.7 && < 5
                       , classy-prelude
-                   -- , aeson
                       , containers
                       , either
                       , megaparsec
@@ -61,7 +60,6 @@ test-suite fun-lang-test
                     , hspec-megaparsec
                     , mono-traversable
                     , QuickCheck
-                --  , quickcheck-instances
                     , text
   ghc-options:        -Wall -threaded -rtsopts
   default-extensions: OverloadedStrings, NoImplicitPrelude

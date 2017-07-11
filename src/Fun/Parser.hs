@@ -13,32 +13,32 @@ import Fun.Lexer
 import qualified Fun.Sexp as S
 
 
-sunit :: Parser (S.Expression Text)
+sunit :: Parser S.Expression
 sunit = S.Unit <$ (sp *> void (word "()"))
 
-satom :: Parser (S.Expression Text)
+satom :: Parser S.Expression
 satom = S.Atom <$> (sp *> atoms)
     where atoms = try stringLiteral <|> try selector <|> ident
 
-stype :: Parser (S.Expression Text)
+stype :: Parser S.Expression
 stype = S.Type <$> (sp *> typeLit)
 
-sop :: Parser (S.Expression Text)
+sop :: Parser S.Expression
 sop = S.Op <$> (sp *> op)
 
-list :: Parser [S.Expression Text]
+list :: Parser [S.Expression]
 list = sepBy expr' sp
 
-slist :: Parser (S.Expression Text)
+slist :: Parser S.Expression
 slist = S.List <$> (sp *> brackets list)
 
-stuple :: Parser (S.Expression Text)
+stuple :: Parser S.Expression
 stuple = S.Exp <$> (sp *> parens list)
 
-sexp :: Parser (S.Expression Text)
+sexp :: Parser S.Expression
 sexp = sp *> expr'
 
-expr' :: Parser (S.Expression Text)
+expr' :: Parser S.Expression
 expr' = choice [slist, sunit, stuple, stype, sop, satom]
 
 

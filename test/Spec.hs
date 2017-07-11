@@ -20,7 +20,7 @@ main = hspec $ do
   describe "MonoFunctor" $ do
     it "manual omap" $
       omap toUpper (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]])
-        `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR" :: S.Expression Text]]
+        `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR" :: S.Expression]]
 
     it "identity" monofunctorIdentity
 

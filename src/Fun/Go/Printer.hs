@@ -13,13 +13,13 @@ import qualified Fun.Sexp as S
 import           Go.Fmt
 
 
-printPretty :: S.Expression Text -> Either SyntaxError Text
+printPretty :: S.Expression -> Either SyntaxError Text
 printPretty s = case print s of
     Right txt -> mapBoth SyntaxError id (gofmt txt)
     err       -> err
 
 
-print :: S.Expression Text -> Either SyntaxError Text
+print :: S.Expression -> Either SyntaxError Text
 -- empty
 print (S.Exp []) = syntaxErr "empty expression"
 
@@ -57,7 +57,7 @@ print s = syntaxErr $ printf "not supported yet: {}" (F.Only s)
 
 
 -- Function call printer
-funcCall :: Text -> [S.Expression Text] -> Either SyntaxError Text
+funcCall :: Text -> [S.Expression] -> Either SyntaxError Text
 funcCall name args = case partitionEithers $ fmap print args of
     (err:_ , _) -> Left err
     ([], txts)  -> Right $ printf "{}({})" (name, ointercalate ", " txts)
@@ -69,7 +69,7 @@ newtype SyntaxError = SyntaxError Text deriving (Eq, Show)
 
 -- Utils --
 
-printSubtree :: F.Format -> Text -> S.Expression Text -> Either SyntaxError Text
+printSubtree :: F.Format -> Text -> S.Expression -> Either SyntaxError Text
 printSubtree fmt x y = mapBoth id (\s -> printf fmt (x, s)) (print y)
 
 printf :: F.Params ps => F.Format -> ps -> Text
@@ -78,6 +78,6 @@ printf fmt ps = toStrict $ F.format fmt ps
 syntaxErr :: Text -> Either SyntaxError Text
 syntaxErr = Left . SyntaxError
 
-unquote :: S.Expression Text -> Maybe Text
+unquote :: S.Expression -> Maybe Text
 unquote (S.Atom t) = Just $ T.dropAround (== '\"') t
 unquote _          = Nothing

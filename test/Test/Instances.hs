@@ -15,10 +15,13 @@ import qualified Fun.Sexp as S
 -- Expression --
 
 genBasic :: Gen (S.Expression Text)
-genBasic = do
-    t <- arbitrary
-    frequency [ (1, return S.Unit)
-              , (4, return (S.Atom t)) ]
+genBasic = frequency
+    [ (1, return S.Unit)
+    , (2, return (S.Atom "foo"))
+    , (2, return (S.Atom "bar"))
+    , (2, return (S.Atom "baz"))
+    , (2, return (S.Type ":string"))
+    , (3, return (S.Op "+")) ]
 
 genElems :: Gen [S.Expression Text]
 genElems = resize 10 $ listOf1 genBasic
@@ -47,7 +50,7 @@ genText = pack <$> resize 8 (listOf1 genLetter)
         genLetter :: Gen Char
         genLetter = oneof $ fmap return letters
         letters :: [Char]
-        letters = ['A'..'Z'] <> ['a'..'z']
+        letters = ['A'..'Z'] <> ['0'..'9']
 
 instance Arbitrary Text where
     arbitrary = genText

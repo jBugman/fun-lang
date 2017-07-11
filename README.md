@@ -5,7 +5,8 @@ Idea is to provide alternative syntax with more syntax sugar using code-generati
 Also, there may be an ability to use raw inline Go code for more complex cases.
 
 ⚠️ Under active development. Expect changes to everything.
-⚠️ Examples in `examples/` may not be up to day.
+
+⚠️ Examples in `examples/` may not be up to date.
 
 Transpiling is mostly literal, but there are some differences from Go:
 

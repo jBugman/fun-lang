@@ -1,5 +1,5 @@
 name:                func
-version:             0.12.0.0-SNAPSHOT
+version:             0.12.1.0-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -61,7 +61,7 @@ test-suite fun-lang-test
                     , hspec-megaparsec
                     , mono-traversable
                     , QuickCheck
-                    , quickcheck-instances
+                --  , quickcheck-instances
                     , text
   ghc-options:        -Wall -threaded -rtsopts
   default-extensions: OverloadedStrings, NoImplicitPrelude

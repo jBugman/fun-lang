@@ -17,14 +17,22 @@ import qualified Fun.Sexp as S
 main :: IO ()
 main = hspec $ do
 
-  describe "S.Expression is a MonoFunctor" $ do
+  describe "MonoFunctor" $ do
     it "manual omap" $
       omap toUpper (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]])
         `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR" :: S.Expression Text]]
 
-    it "identity property" monofunctorIdentity
+    it "identity" monofunctorIdentity
 
-    it "compose property" monofunctorCompose
+    it "composability" monofunctorCompose
+
+  describe "Semigroup" $
+    it "associativity" semigroupAssociativity
+
+  describe "Monoid" $ do
+    it "associativity" monoidAssociativity
+
+    it "left identity" monoidLeftIdentity
 
 
   describe "Fun.Parser.sunit" $ do

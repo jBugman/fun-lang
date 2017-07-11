@@ -3,6 +3,7 @@
 module Fun.Sexp where
 
 import ClassyPrelude
+import Data.Semigroup         ((<>))
 import Data.Text.Buildable
 import Data.Text.Lazy.Builder (fromText)
 import GHC.Err                (errorWithoutStackTrace)
@@ -12,7 +13,7 @@ data Expression a
     | List [Expression a]
     | Op   a
     | Type a
-    | Atom a
+    | Atom a -- TODO: pack everything atomic-like into Atom
     | Unit
     deriving (Eq, Ord)
 
@@ -54,13 +55,38 @@ instance MonoFunctor (Expression Text) where
     omap f (List xs) = List $ omap (omap f) xs
     omap f (Exp xs)  = Exp  $ omap (omap f) xs
 
--- instance Functor Expression where
---     fmap _ Unit      = Unit
---     fmap f (Atom s)  = Atom $ f s
---     fmap f (Type s)  = Type $ f s
---     fmap f (Op s)    = Op   $ f s
---     fmap f (List xs) = List $ fmap (fmap f) xs
---     fmap f (Exp xs)  = Exp  $ fmap (fmap f) xs
+instance Semigroup (Expression Text) where
+    (<>) (Atom x) (Atom y)   = Exp [Atom x, Atom y]
+    (<>) (Atom x) (Op y)     = Exp [Atom x, Op y]
+    (<>) (Atom x) (Exp xs)   = Exp [Atom x, Exp xs]
+    (<>) (Atom x) (List xs)  = Exp [Atom x, List xs]
+    (<>) (Op x) (Atom y)     = Exp [Op x, Atom y]
+    (<>) (Op x) (Op y)       = Exp [Op x, Op y] -- not really a valid case
+    (<>) (Op x) (List xs)    = Exp [Op x, List xs]
+    (<>) (List xs) (List ys) = List $ xs <> ys
+    (<>) (List xs) x         = List $ xs `snoc` x
+    (<>) (Exp xs) (Exp ys)   = Exp $ xs <> ys
+    (<>) (Exp xs) x          = Exp $ xs `snoc` x
+    -- (<>) x y                = Exp [x, y]
+
+instance Monoid (Expression Text) where
+    mempty = Unit
+    mappend (Atom x) Unit = Exp [Atom x, Unit]
+    -- mappend (Atom x) (Atom y) = Exp [x, y]
+
+-- instance MonoFoldable (Expression Text) where
+-- --  -- ofoldMap :: Monoid m => (Text -> m) -> Expression Text -> m
+--     -- ofoldMap _ Unit = Unit
+--     ofoldMap f = oconcat . omap f
+--     ofoldr _ x Unit = x
+
+-- instance MonoTraversable (Expression Text) where
+--     otraverse _ Unit     = Unit
+--     otraverse f (Atom s) = Atom $ f s
+--     -- fmap f (Type s)  = Type $ f s
+--     -- fmap f (Op s)    = Op   $ f s
+--     -- fmap f (List xs) = List $ fmap (fmap f) xs
+--     -- fmap f (Exp xs)  = Exp  $ fmap (fmap f) xs
 
 opChars :: [Char]
 opChars = "=+-*/<>%"

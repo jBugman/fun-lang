@@ -4,12 +4,15 @@ module Test.Instances (
     Arbitrary (..)
 ) where
 
-import ClassyPrelude
+import ClassyPrelude            hiding (pack, unpack)
+import Data.Text                (pack, unpack)
 import Test.QuickCheck
-import Test.QuickCheck.Instances ()
+import Test.QuickCheck.Function
 
 import qualified Fun.Sexp as S
 
+
+-- Expression --
 
 genBasic :: Gen (S.Expression Text)
 genBasic = do
@@ -34,3 +37,23 @@ genExpression = frequency
 
 instance Arbitrary (S.Expression Text) where
     arbitrary = genExpression
+
+
+-- Text --
+
+genText :: Gen Text
+genText = pack <$> resize 8 (listOf1 genLetter)
+    where
+        genLetter :: Gen Char
+        genLetter = oneof $ fmap return letters
+        letters :: [Char]
+        letters = ['A'..'Z'] <> ['a'..'z']
+
+instance Arbitrary Text where
+    arbitrary = genText
+
+instance Function Text where
+    function = functionMap unpack pack
+
+instance CoArbitrary Text where
+    coarbitrary = coarbitrary . unpack

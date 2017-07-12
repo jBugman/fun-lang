@@ -4,39 +4,63 @@ module Test.Instances (
     Arbitrary (..)
 ) where
 
-import ClassyPrelude            hiding (pack, unpack)
-import Data.Text                (pack, unpack)
+import ClassyPrelude                hiding (pack, unpack)
+import Data.SCargot.Repr.WellFormed
+import Data.Text                    (pack, unpack)
 import Test.QuickCheck
 import Test.QuickCheck.Function
 
 import qualified Fun.SExpression as S
 
 
+-- Atomic --
+
+genIdent :: Gen S.Atom
+genIdent = frequency
+    [ (2, return (S.Ident "foo"))
+    , (2, return (S.Ident "bar"))
+    , (2, return (S.Ident "baz")) ]
+
+genType :: Gen S.Atom
+genType = frequency
+    [ (1, return (S.Type ":string"))
+    , (1, return (S.Type ":int")) ]
+
+genOp :: Gen S.Atom
+genOp = return (S.Op "+")
+
+genAtom :: Gen S.Atom
+genAtom = frequency
+    [ (3, genIdent)
+    , (2, genType)
+    , (1, genOp) ]
+
+instance Arbitrary S.Atom where
+    arbitrary = genAtom
+
+instance Function S.Atom where
+    function = functionMap show fromString
+
+instance CoArbitrary S.Atom where
+    coarbitrary = coarbitrary . show
+
 -- Expression --
 
-genBasic :: Gen S.Expression
-genBasic = frequency
-    [ (1, return S.Unit)
-    , (2, return (S.Atom "foo"))
-    , (2, return (S.Atom "bar"))
-    , (2, return (S.Atom "baz"))
-    , (2, return (S.Type ":string"))
-    , (3, return (S.Op "+")) ]
+genAtomic :: Gen S.Expression
+genAtomic = WFSAtom <$> genAtom
 
-genElems :: Gen [S.Expression]
-genElems = resize 10 $ listOf1 genBasic
-
-genExp :: Gen S.Expression
-genExp = S.Exp <$> genElems
+genElem :: Gen S.Expression
+genElem = frequency
+    [ (1, return (WFSList []))
+    , (5, genAtomic) ]
 
 genList :: Gen S.Expression
-genList = S.List <$> genElems
+genList = WFSList <$> resize 10 (listOf1 genElem)
 
 genExpression :: Gen S.Expression
 genExpression = frequency
-    [ (3, genBasic)
-    , (1, genList)
-    , (4, genExp) ]
+    [ (3, genAtomic)
+    , (4, genList) ]
 
 instance Arbitrary S.Expression where
     arbitrary = genExpression

@@ -2,50 +2,55 @@ module Fun.Go.Printer (
     printPretty, print, SyntaxError(..)
 ) where
 
-import           ClassyPrelude           hiding (print)
-import           Data.Either             (partitionEithers)
-import           Data.Either.Combinators (mapBoth)
-import qualified Data.Text               as T
-import qualified Data.Text.Format        as F
-import qualified Data.Text.Format.Params as F
+import           ClassyPrelude                hiding (print)
+import           Data.Either                  (partitionEithers)
+import           Data.Either.Combinators      (mapBoth)
+import           Data.SCargot.Repr.WellFormed
+import           Data.Text                    (dropAround)
+import qualified Data.Text.Format             as F
+import qualified Data.Text.Format.Params      as F
 
-import qualified Fun.SExpression as S
-import           Go.Fmt
+import Fun.SExpression (Atom (..), Expression, Lit (..))
+import Go.Fmt
 
 
-printPretty :: S.Expression -> Either SyntaxError Text
+printPretty :: Expression -> Either SyntaxError Text
 printPretty s = case print s of
     Right txt -> mapBoth SyntaxError id (gofmt txt)
     err       -> err
 
 
-print :: S.Expression -> Either SyntaxError Text
+print :: Expression -> Either SyntaxError Text
 -- empty
-print (S.Exp []) = syntaxErr "empty expression"
+print Nil = syntaxErr "empty expression"
+
+-- ident
+print (A (Ident x)) = Right x
 
 -- literal
-print (S.Atom s) = Right s
+print (A (Lit x)) = Right $ printf "{}" (F.Only x)
 
 -- package
-print (S.Exp ("package":name:topLevels)) = case partitionEithers $ fmap print topLevels of
+print (L (A (Ident "package") : A (Ident name) : topLevels)) = case partitionEithers $ fmap print topLevels of
     (err:_ , _) -> Left err
     ([], txts)  -> Right $ printf "package {}\n\n{}" (name, ointercalate "\n\n" txts)
 
 -- import
-print (S.Exp ["import", path]) = Right $ printf "import {}" (F.Only path)
-print (S.Exp ["import", path, alias]) = Right $ printf "import {} {}" (unquote alias, path)
+print (L [A (Ident "import"), A (Lit (S path))]) = Right $ printf "import {}" (F.Only path)  -- FIXME:
+print (L [A (Ident "import"), A (Lit (S path)), A (Lit (S alias))]) =
+    Right $ printf "import {} {}" (unquote alias, path)  -- FIXME:
 
 -- func
-print (S.Exp ["func", S.Atom name, body]) = printSubtree "func {}() {\n{}\n}" name body
+print (L [A (Ident "func"), A (Ident name), body]) = printSubtree "func {}() {\n{}\n}" name body
 
 -- assignment
-print (S.Exp ["set", S.Atom name, body]) = printSubtree "{} = {}" name body
+print (L [A (Ident "set"), A (Ident name), body]) = printSubtree "{} = {}" name body
 
 -- function call
-print (S.Exp (S.Atom f : args)) = funcCall f args
+print (L (A (Ident f) : args)) = funcCall f args
 
 -- operators
-print (S.Exp [S.Op op, lhs, rhs]) = case (print lhs, print rhs) of
+print (L [A (Op op), lhs, rhs]) = case (print lhs, print rhs) of
     (Left e, _)          -> Left e
     (_, Left e)          -> Left e
     (Right lt, Right rt) -> Right $ printf "{} {} {}" (lt, o, rt)
@@ -57,7 +62,7 @@ print s = syntaxErr $ printf "not supported yet: {}" (F.Only s)
 
 
 -- Function call printer
-funcCall :: Text -> [S.Expression] -> Either SyntaxError Text
+funcCall :: Text -> [Expression] -> Either SyntaxError Text
 funcCall name args = case partitionEithers $ fmap print args of
     (err:_ , _) -> Left err
     ([], txts)  -> Right $ printf "{}({})" (name, ointercalate ", " txts)
@@ -69,7 +74,7 @@ newtype SyntaxError = SyntaxError Text deriving (Eq, Show)
 
 -- Utils --
 
-printSubtree :: F.Format -> Text -> S.Expression -> Either SyntaxError Text
+printSubtree :: F.Format -> Text -> Expression -> Either SyntaxError Text
 printSubtree fmt x y = mapBoth id (\s -> printf fmt (x, s)) (print y)
 
 printf :: F.Params ps => F.Format -> ps -> Text
@@ -78,6 +83,5 @@ printf fmt ps = toStrict $ F.format fmt ps
 syntaxErr :: Text -> Either SyntaxError Text
 syntaxErr = Left . SyntaxError
 
-unquote :: S.Expression -> Maybe Text
-unquote (S.Atom t) = Just $ T.dropAround (== '\"') t
-unquote _          = Nothing
+unquote :: Text -> Text
+unquote = dropAround (== '\"')

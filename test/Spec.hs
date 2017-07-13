@@ -1,14 +1,14 @@
 module Main where
 
-import ClassyPrelude
+import ClassyPrelude                hiding (print)
 import Data.SCargot.Repr.WellFormed
 import Test.Hspec                   (Expectation, describe, expectationFailure, hspec, it, shouldBe)
 
 -- import           Fun.Go.Desugar
--- import           Fun.Go.Printer
 -- import           Fun.Main        (translate')
+import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
-import Fun.SExpression (Atom (..), Expression)
+import Fun.SExpression (Atom (..), Expression, Lit (..))
 import Go.Fmt
 import Test.Properties
 
@@ -71,10 +71,11 @@ main = hspec $ do
       parse "(+ foo)" `shouldParse` L [A (Op "+"), A (Ident "foo")]
 
     it "parses func call" $
-      parse "(printf \"%+v\n\" v)" `shouldParse` L [A (Ident "printf"), A "\"%+v\n\"", A (Ident "v")] -- FIXME:
+      parse "(printf \"%+v\n\" v)" `shouldParse`
+      L [A (Ident "printf"), A (Lit (S "\"%+v\n\"")), A (Ident "v")]
 
     it "parses selecor + unit" $
-      parse "(fmt.Println ())" `shouldParse` L [A "fmt.Println", Nil] -- FIXME:
+      parse "(fmt.Println ())" `shouldParse` L [A (Ident "fmt.Println"), Nil] -- FIXME:
 
     it "parses ident list" $
       parse "(foo bar)" `shouldParse` L [A (Ident "foo"), A (Ident "bar")]
@@ -86,10 +87,10 @@ main = hspec $ do
       parse "(())" `shouldParse` L [Nil]
 
     it "parses op + ident + lit" $
-      parse "(< foo 10)" `shouldParse` L [A (Op "<"), A (Ident "foo"), A "10"] -- FIXME:
+      parse "(< foo 10)" `shouldParse` L [A (Op "<"), A (Ident "foo"), A (Lit (I 10))]
 
     it "parses import" $
-      parse "(import \"foo\")" `shouldParse` L [A "import", A "\"foo\""] -- FIXME:
+      parse "(import \"foo\")" `shouldParse` L [A (Ident "import"), A (Lit (S "\"foo\""))]
 
     it "parses multiline s-exp" $
       parse "(+ foo bar\n    :int)" `shouldParse`
@@ -103,28 +104,63 @@ main = hspec $ do
       parse "(package main\n\n  (func main (print \"hello world\")))" `shouldParse`
       L [ A (Ident "package"), A (Ident "main")
         , L [ A (Ident "func"), A (Ident "main")
-            , L [ A (Ident "print"), A "\"hello world\"" ] -- FIXME:
+            , L [ A (Ident "print"), A (Lit (S "\"hello world\"")) ]
             ]
         ]
 
 
-  -- describe "Fun.Go.Printer.printPretty" $ do
-  --   it "prints import" $
-  --     printPretty (S.Exp ["import", "\"fmt\""]) `shouldBe` Right "import \"fmt\""
+  describe "Fun.Go.Printer.print" $ do
 
-  --   it "prints import with alias" $
-  --     printPretty (S.Exp ["import", "\"very/long-package\"", "\"pkg\""])
-  --       `shouldBe` Right "import pkg \"very/long-package\""
+    it "prints import" $
+      print (L [A (Ident "import"), A (Lit (S "\"fmt\""))]) `shouldBe`
+      Right "import \"fmt\""
 
-  --   it "prints simple func" $
-  --     printPretty (S.Exp ["func", "setS", S.Exp ["set", "s", "2"]]) `shouldBe` Right
-  --       "func setS() {\n\ts = 2\n}"
+    it "prints import with alias" $ print (L
+      [ A (Ident "import")
+      , A (Lit (S "\"very/long-package\""))
+      , A (Lit (S "\"pkg\""))
+        ]) `shouldBe`
+      Right "import pkg \"very/long-package\""
 
-  --   it "prints lt op" $
-  --     printPretty (S.Exp ["<", "n", "10"]) `shouldBe` Right "n < 10"
+    it "prints simple func" $ print (L
+      [ A (Ident "func")
+      , A (Ident "setS")
+      , L [A (Ident "set"), A (Ident "s"), A (Lit (I 2))]
+        ]) `shouldBe`
+      Right "func setS() {\ns = 2\n}"
 
-  --   it "prints eq op" $
-  --     printPretty (S.Exp ["=", "foo", "bar"]) `shouldBe` Right "foo == bar"
+    it "prints lt op" $
+      print (L [A (Op "<"), A (Ident "n"), A (Lit (I 10))]) `shouldBe` Right "n < 10"
+
+    it "prints eq op" $
+      print (L [A (Op "="), A (Ident "foo"), A (Ident "bar")]) `shouldBe` Right "foo == bar"
+
+
+  describe "Fun.Go.Printer.printPretty" $ do
+
+    it "prettyprints import" $
+      printPretty (L [A (Ident "import"), A (Lit (S "\"fmt\""))]) `shouldBe`
+      Right "import \"fmt\""
+
+    it "prettyprints import with alias" $ printPretty (L
+      [ A (Ident "import")
+      , A (Lit (S "\"very/long-package\""))
+      , A (Lit (S "\"pkg\""))
+        ]) `shouldBe`
+      Right "import pkg \"very/long-package\""
+
+    it "prettyprints simple func" $ printPretty (L
+      [ A (Ident "func")
+      , A (Ident "setS")
+      , L [A (Ident "set"), A (Ident "s"), A (Lit (I 2))]
+        ]) `shouldBe`
+      Right "func setS() {\n\ts = 2\n}"
+
+    it "prettyprints lt op" $
+      printPretty (L [A (Op "<"), A (Ident "n"), A (Lit (I 10))]) `shouldBe` Right "n < 10"
+
+    it "prettyprints eq op" $
+      printPretty (L [A (Op "="), A (Ident "foo"), A (Ident "bar")]) `shouldBe` Right "foo == bar"
 
 
   describe "Go.Fmt.gofmt" $ do

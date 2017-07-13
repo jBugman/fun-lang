@@ -12,8 +12,8 @@ import Test.Hspec.Expectations.Contrib (isLeft)
 -- import           Fun.Main        (translate')
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
-import Fun.SExpression (Expression, pattern HL, pattern ID, pattern IL, pattern OP, pattern SL,
-                        pattern TP)
+import Fun.SExpression (pattern CL, Expression, pattern HL, pattern ID, pattern IL, pattern OP,
+                        pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
 import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
 
@@ -45,6 +45,18 @@ main = hspec $ do
 
     it "parses string lit" $
       parse "\"test\"" `shouldParse` SL "test"
+
+    it "parses char lit" $
+      parse "\'z\'" `shouldParse` CL "z"
+
+    it "parses char lit" $
+      parse "'\\''" `shouldParse` CL "\\'"
+
+    it "parses newline char" $
+      parse "'\\n'" `shouldParse` CL "\\n"
+
+    it "parses on non-singleton char lit" $
+      parse `shouldFailOn` "\'foo\'"
 
     it "parses int lit" $
       parse "42" `shouldParse` IL 42

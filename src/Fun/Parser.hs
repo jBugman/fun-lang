@@ -9,7 +9,7 @@ import Data.SCargot.Atom       (atom, mkAtomParser)
 import Data.SCargot.Comments   (withLispComments)
 import Data.SCargot.Common     (hexNumber, signedDecNumber)
 import Data.SCargot.Repr       (SExpr)
-import Text.Parsec             (char, choice, many, noneOf, satisfy, (<?>))
+import Text.Parsec             (char, choice, many, noneOf, oneOf, satisfy, (<?>))
 import Text.Parsec.Char        (string)
 import Text.Parsec.Text        (Parser)
 
@@ -26,6 +26,7 @@ parseAtom :: SExprParser Atom (SExpr Atom)
 parseAtom = mkAtomParser
     [ atom Op    (pack <$> parseOp)
     , atom Lit   (Str . pack <$> parseStringLit)
+    , atom Lit   (Chr . pack <$> parseCharLit)
     , atom Type  (pack <$> parseType)
     , atom Ident (pack <$> parseIdent)
     , atom Lit   (Hex  <$> parseHexLit)
@@ -49,6 +50,19 @@ parseOp = choice (fmap string operators) <?> "operator"
 parseStringLit :: Parser String
 parseStringLit = char q *> many (noneOf (singleton q)) <* char q <?> "string literal"
     where q = '"'
+
+parseCharLit :: Parser String
+parseCharLit = do
+    void $ char '\''
+    s <- parseEscape <|> parseSingleChar
+    void $ char '\''
+    return s
+    where
+        parseSingleChar = singleton <$> noneOf "\'"
+        parseEscape = do
+            slash <- char '\\'
+            c <- oneOf ['a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'']
+            return [slash, c]
 
 parseHexLit :: Parser Integer
 parseHexLit = (string "0x" <|> string "0X") *> hexNumber <?> "hex literal"

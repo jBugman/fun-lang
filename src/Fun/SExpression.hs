@@ -15,12 +15,14 @@ data Atom
     = Ident Text
     | Type  Text
     | Op    Text
+    | Lit   Lit
     deriving (Eq, Ord, Show)
 
--- instance Show Atom where
---     show (Ident s) = unpack s
---     show (Type s)  = unpack s
---     show (Op s)    = unpack s
+data Lit
+    = S Text
+    | I Integer
+    | D Double
+    deriving (Eq, Ord, Show)
 
 instance IsString Atom where
     fromString s
@@ -28,11 +30,17 @@ instance IsString Atom where
         | ":" `isPrefixOf` s = Type  (pack s)
         | otherwise          = Ident (pack s)
 
+instance Buildable Lit where
+    build (S t) = fromText t
+    build (I i) = fromText $ tshow i
+    build (D d) = fromText $ tshow d
+
 instance Buildable Expression where
     build (WFSAtom x) = case x of
         (Ident s) -> fromText s
         (Type s)  -> fromText s
         (Op s)    -> fromText s
+        (Lit lit) -> build lit
     build (WFSList x) = errorWithoutStackTrace $ unpack ("Can only print terminal nodes, but got " <> tshow x)
 
 -- TODO: use s-cargot printer

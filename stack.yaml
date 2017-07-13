@@ -1,6 +1,7 @@
+resolver: lts-8.21
 flags: {}
 extra-package-dbs: []
 packages:
 - '.'
 extra-deps:
-resolver: lts-8.21
+- s-cargot-0.1.2.0

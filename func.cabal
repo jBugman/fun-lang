@@ -18,14 +18,15 @@ custom-setup
 
 library
   hs-source-dirs:       src
-  exposed-modules:      Fun.Go.Desugar
-                      , Fun.Go.Printer
-                      , Fun.Lexer
-                      , Fun.Main
-                      , Fun.Parser
-                      , Fun.SExpression
-                   -- , Fun.Types
-                      , Go.Fmt
+  exposed-modules:    Fun.SExpression
+                    -- , Fun.Go.Desugar
+                    -- , Fun.Go.Printer
+                    -- , Fun.Lexer
+                    -- , Fun.Main
+                    -- , Fun.Parser
+                    -- , Fun.SExpression
+                    -- , Fun.Types
+                    -- , Go.Fmt
   ghc-options:          -Wall -Wno-partial-type-signatures
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   build-depends:        base >= 4.7 && < 5
@@ -33,6 +34,7 @@ library
                       , containers
                       , either
                       , megaparsec
+                      , s-cargot
                       , split
                       , text
                       , text-format
@@ -58,8 +60,8 @@ test-suite fun-lang-test
                     , func
                     , hspec
                     , hspec-megaparsec
-                    , mono-traversable
                     , QuickCheck
+                    , s-cargot
                     , text
   ghc-options:        -Wall -threaded -rtsopts
   default-extensions: OverloadedStrings, NoImplicitPrelude

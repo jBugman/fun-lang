@@ -58,6 +58,7 @@ test-suite fun-lang-test
                     , classy-prelude
                     , func
                     , hspec
+                    , hspec-expectations
                     , QuickCheck
                     , s-cargot
                     , text

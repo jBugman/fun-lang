@@ -1,9 +1,12 @@
 {-# LANGUAGE PatternSynonyms #-}
 module Main where
 
-import ClassyPrelude                hiding (print)
-import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
-import Test.Hspec                   (Expectation, describe, expectationFailure, hspec, it, shouldBe)
+import ClassyPrelude                   hiding (print)
+import Data.SCargot.Repr.WellFormed    (pattern A, pattern L, pattern Nil)
+import Test.Hspec                      (Expectation, describe, hspec, it, shouldBe)
+import Test.Hspec.Expectations         (shouldSatisfy)
+import Test.Hspec.Expectations.Contrib (isLeft)
+
 
 -- import           Fun.Go.Desugar
 -- import           Fun.Main        (translate')
@@ -14,16 +17,8 @@ import Go.Fmt
 import Test.Properties
 
 
-
 shouldParse :: Either Text Expression -> Expression -> Expectation
-r `shouldParse` v = case r of
-    Left e  -> expectationFailure . unpack $ "expected: " <> tshow v <> "\nbut parsing failed with error:\n" <> e
-    Right x -> unless (x == v) . expectationFailure $ "expected: " <> show v <> "\nbut got: " <> show x
-
-shouldFailOn :: (Text -> Either Text Expression) -> Text -> Expectation
-p `shouldFailOn` s = case p s of
-  Left _  -> return ()
-  Right v -> expectationFailure . unpack $ "the parser is expected to fail, but it parsed: " <> show v
+y `shouldParse` x = y `shouldBe` Right x
 
 
 main :: IO ()
@@ -66,7 +61,7 @@ main = hspec $ do
       parse "+" `shouldParse` OP "+"
 
     it "fails on empty string" $
-      parse `shouldFailOn` ""
+      parse "" `shouldSatisfy` isLeft
 
     it "parses op + ident" $
       parse "(+ foo)" `shouldParse` L [ OP "+" , ID "foo" ]
@@ -94,8 +89,8 @@ main = hspec $ do
       parse "(import \"foo\")" `shouldParse` L [ ID "import" , SL "foo" ]
 
     it "parses multiline s-exp" $
-      parse "(+ foo bar\n    :int)" `shouldBe` Right (
-      L [ OP "+" , ID "foo" , ID "bar" , TP ":int" ] )
+      parse "(+ foo bar\n    :int)" `shouldParse`
+      L [ OP "+" , ID "foo" , ID "bar" , TP ":int" ]
 
     it "parses multiline s-exp with a comment" $
       parse "(foo 123 456\n; comment\n  bar)" `shouldParse`

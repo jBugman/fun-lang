@@ -1,9 +1,10 @@
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternSynonyms  #-}
 module Main where
 
 import ClassyPrelude                   hiding (print)
 import Data.SCargot.Repr.WellFormed    (pattern A, pattern L, pattern Nil)
-import Test.Hspec                      (Expectation, describe, hspec, it, shouldBe)
+import Test.Hspec                      (Expectation, HasCallStack, describe, hspec, it, shouldBe)
 import Test.Hspec.Expectations         (shouldSatisfy)
 import Test.Hspec.Expectations.Contrib (isLeft)
 
@@ -17,8 +18,11 @@ import Go.Fmt
 import Test.Properties
 
 
-shouldParse :: Either Text Expression -> Expression -> Expectation
-y `shouldParse` x = y `shouldBe` Right x
+shouldParse :: (HasCallStack) => Either Text Expression -> Expression -> Expectation
+actual `shouldParse` expected = actual `shouldBe` Right expected
+
+shouldFailOn :: (HasCallStack) => (Text -> Either Text Expression) -> Text -> Expectation
+parser `shouldFailOn` input = parser input `shouldSatisfy` isLeft
 
 
 main :: IO ()
@@ -61,7 +65,7 @@ main = hspec $ do
       parse "+" `shouldParse` OP "+"
 
     it "fails on empty string" $
-      parse "" `shouldSatisfy` isLeft
+      parse `shouldFailOn` ""
 
     it "parses op + ident" $
       parse "(+ foo)" `shouldParse` L [ OP "+" , ID "foo" ]

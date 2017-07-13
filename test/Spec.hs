@@ -1,168 +1,134 @@
 module Main where
 
 import ClassyPrelude
-import Test.Hspec            (describe, hspec, it, shouldBe)
-import Test.Hspec.Megaparsec (shouldFailOn, shouldParse)
+import Data.SCargot.Repr.WellFormed
+import Test.Hspec                   (Expectation, describe, expectationFailure, hspec, it, shouldBe)
 
-import           Fun.Go.Desugar
-import           Fun.Go.Printer
-import           Fun.Main        (translate')
-import           Fun.Parser
-import qualified Fun.SExpression as S
-import           Go.Fmt
-import           Test.Properties
+-- import           Fun.Go.Desugar
+-- import           Fun.Go.Printer
+-- import           Fun.Main        (translate')
+import Fun.Parser      (parse)
+import Fun.SExpression (Atom (..), Expression)
+import Go.Fmt
+import Test.Properties
+
+
+
+shouldParse :: Either Text Expression -> Expression -> Expectation
+r `shouldParse` v = case r of
+    Left e  -> expectationFailure . unpack $ "expected: " <> tshow v <> "\nbut parsing failed with error:\n" <> e
+    Right x -> unless (x == v) . expectationFailure $ "expected: " <> show v <> "\nbut got: " <> show x
+
+shouldFailOn :: (Text -> Either Text Expression) -> Text -> Expectation
+p `shouldFailOn` s = case p s of
+  Left _  -> return ()
+  Right v -> expectationFailure . unpack $ "the parser is expected to fail, but it parsed: " <> show v
 
 
 main :: IO ()
 main = hspec $ do
 
-  describe "MonoFunctor" $ do
-    it "manual omap" $
-      omap toUpper (S.Exp ["foo", S.Unit, "42", S.Exp ["barbar"]])
-        `shouldBe` S.Exp [S.Atom "FOO", S.Unit, S.Atom "42", S.Exp[S.Atom "BARBAR" :: S.Expression]]
+  describe "Expression Functor" $ do
+    -- it "manual fmap" $
+    --   fmap toUpper (S.List ["foo", S.List [], "42", S.List ["barbar"]])
+    --     `shouldBe` S.List [S.Atom (S.Ident "FOO"), S.List [], S.Atom (S.Ident "42"), S.List [S.Atom (S.Ident "BARBAR")]]
 
-    it "identity" monofunctorIdentity
+    it "identity" exprFunctorIdentity
 
-    it "composability" monofunctorCompose
-
-  describe "Semigroup" $
-    it "associativity" semigroupAssociativity
-
-  describe "Monoid" $ do
-    it "associativity" monoidAssociativity
-
-    it "left identity" monoidLeftIdentity
+    it "composability" exprFunctorCompose
 
 
-  describe "Fun.Parser.sunit" $ do
-    it "parses SUnit" $
-      prs sunit "()" `shouldParse` S.Unit
+  describe "Fun.Parser.parse" $ do
 
-    it "fails on random input" $
-      prs sunit `shouldFailOn` "foo"
+    it "parses empty list" $
+      parse "()" `shouldParse` Nil
 
-
-  describe "Fun.Parser.satom" $ do
     it "parses string lit" $
-      prs satom "\"test\"" `shouldParse` S.Atom "\"test\""
+      parse "\"test\"" `shouldParse` A "\"test\"" -- FIXME:
 
     it "parses int lit" $
-      prs satom "42" `shouldParse` S.Atom "42"
+      parse "42" `shouldParse` A "42" -- FIXME:
 
     it "parses ident" $
-      prs satom "foo" `shouldParse` S.Atom "foo"
+      parse "foo" `shouldParse` A (Ident "foo")
 
     it "ignores comments" $
-      prs satom "; comment\nfoo" `shouldParse` S.Atom "foo"
+      parse "; comment\nfoo" `shouldParse` A (Ident "foo")
 
     it "parses Go selector" $
-      prs satom "fmt.Println" `shouldParse` S.Atom "fmt.Println"
+      parse "fmt.Println" `shouldParse` A "fmt.Println"
 
-    it "fails on unit" $
-      prs satom `shouldFailOn` "()"
-
-    it "fails on type lit" $
-      prs satom `shouldFailOn` ":int"
-
-
-  describe "Fun.Parser.sop" $
-    it "parses operator" $
-      prs sop "+" `shouldParse` S.Op "+"
-
-
-  describe "Fun.Parser.stype" $
     it "parses type lit" $
-      prs stype ":int" `shouldParse` S.Type "int"
+      parse ":int" `shouldParse` A (Type ":int")
 
+    it "parses operator" $
+      parse "+" `shouldParse` A (Op "+")
 
-  describe "Fun.Parser.list" $ do
-    it "parses empty string" $
-      prs list "" `shouldParse` []
+    it "fails on empty string" $
+      parse `shouldFailOn` ""
 
     it "parses op + ident" $
-      prs list "+ foo" `shouldParse` [S.Op "+", S.Atom "foo"]
+      parse "(+ foo)" `shouldParse` L [A (Op "+"), A (Ident "foo")]
 
     it "parses func call" $
-      prs list "printf \"%+v\n\" v" `shouldParse` [S.Atom "printf", S.Atom "\"%+v\n\"", S.Atom "v"]
+      parse "(printf \"%+v\n\" v)" `shouldParse` L [A (Ident "printf"), A "\"%+v\n\"", A (Ident "v")] -- FIXME:
 
     it "parses selecor + unit" $
-      prs list "fmt.Println ()" `shouldParse` [S.Atom "fmt.Println", S.Unit]
-
-
-  describe "Fun.Parser.slist" $ do
-    it "fails on empty string" $
-      prs slist `shouldFailOn` ""
+      parse "(fmt.Println ())" `shouldParse` L [A "fmt.Println", Nil] -- FIXME:
 
     it "parses ident list" $
-      prs slist "[foo bar]" `shouldParse` S.List [S.Atom "foo", S.Atom "bar"]
+      parse "(foo bar)" `shouldParse` L [A (Ident "foo"), A (Ident "bar")]
 
     it "ignores comments" $
-      prs slist "; comment 1\n[foo bar]\n; comment 2" `shouldParse` S.List ["foo", "bar"]
+      parse "; comment 1\n(foo bar)\n; comment 2" `shouldParse` L [A (Ident "foo"), A (Ident "bar")]
 
-
-  describe "Fun.Parser.stuple" $ do
-    it "parses unit" $
-      prs stuple "(())" `shouldParse` S.Exp [S.Unit]
+    it "parses nested empty list" $
+      parse "(())" `shouldParse` L [Nil]
 
     it "parses op + ident + lit" $
-      prs stuple "(< foo 10)" `shouldParse` S.Exp [S.Op "<", S.Atom "foo", S.Atom "10"]
-
-    it "ignores comments" $
-      prs stuple "; comment\n(foo 10)" `shouldParse` S.Exp ["foo", "10"]
-
-    it "parses func call" $
-      prs stuple "(printf \"%+v\n\" v)" `shouldParse` S.Exp [S.Atom "printf", S.Atom "\"%+v\n\"", S.Atom "v"]
-
-    it "parses selecor + unit" $
-      prs stuple "(fmt.Println ())" `shouldParse` S.Exp [S.Atom "fmt.Println", S.Unit]
-
-
-  describe "Fun.Parser.sexp" $ do
-    it "parses ident" $
-      prs sexp "foo" `shouldParse` S.Atom "foo"
-
-    it "ignores comments" $
-      prs sexp "; this is a comment\nfoo" `shouldParse` S.Atom "foo"
-
-    it "parses comparison" $
-      prs sexp "(< foo 10)" `shouldParse` S.Exp [S.Op "<", S.Atom "foo", S.Atom "10"]
+      parse "(< foo 10)" `shouldParse` L [A (Op "<"), A (Ident "foo"), A "10"] -- FIXME:
 
     it "parses import" $
-      prs sexp "(import \"foo\")" `shouldParse` S.Exp ["import", "\"foo\""]
+      parse "(import \"foo\")" `shouldParse` L [A "import", A "\"foo\""] -- FIXME:
 
     it "parses multiline s-exp" $
-      prs sexp "(foo 123 456\n    789)" `shouldParse` S.Exp ["foo", "123", "456", "789"]
+      parse "(+ foo bar\n    :int)" `shouldParse`
+      L [A (Op "+"), A (Ident "foo"), A (Ident "bar"), A (Type ":int")]
 
     it "parses multiline s-exp with a comment" $
-      prs sexp "(foo 123 456\n; comment\n  bar)" `shouldParse` S.Exp ["foo", "123", "456", "bar"]
+      parse "(foo 123 456\n; comment\n  bar)" `shouldParse`
+      L [A (Ident "foo"), A "123", A "456", A (Ident "bar")]
 
     it "parses HelloWorld" $
-      prs sexp "(package main\n\n  (func main (print \"hello world\")))" `shouldParse` S.Exp
-          [ S.Atom "package", S.Atom "main", S.Exp
-            [ S.Atom "func", S.Atom "main", S.Exp
-              [ S.Atom "print", S.Atom "\"hello world\""]]]
+      parse "(package main\n\n  (func main (print \"hello world\")))" `shouldParse`
+      L [ A (Ident "package"), A (Ident "main")
+        , L [ A (Ident "func"), A (Ident "main")
+            , L [ A (Ident "print"), A "\"hello world\"" ] -- FIXME:
+            ]
+        ]
 
 
-  describe "Fun.Go.Printer.printPretty" $ do
-    it "prints import" $
-      printPretty (S.Exp ["import", "\"fmt\""]) `shouldBe` Right "import \"fmt\""
+  -- describe "Fun.Go.Printer.printPretty" $ do
+  --   it "prints import" $
+  --     printPretty (S.Exp ["import", "\"fmt\""]) `shouldBe` Right "import \"fmt\""
 
-    it "prints import with alias" $
-      printPretty (S.Exp ["import", "\"very/long-package\"", "\"pkg\""])
-        `shouldBe` Right "import pkg \"very/long-package\""
+  --   it "prints import with alias" $
+  --     printPretty (S.Exp ["import", "\"very/long-package\"", "\"pkg\""])
+  --       `shouldBe` Right "import pkg \"very/long-package\""
 
-    it "prints simple func" $
-      printPretty (S.Exp ["func", "setS", S.Exp ["set", "s", "2"]]) `shouldBe` Right
-        "func setS() {\n\ts = 2\n}"
+  --   it "prints simple func" $
+  --     printPretty (S.Exp ["func", "setS", S.Exp ["set", "s", "2"]]) `shouldBe` Right
+  --       "func setS() {\n\ts = 2\n}"
 
-    it "prints lt op" $
-      printPretty (S.Exp ["<", "n", "10"]) `shouldBe` Right "n < 10"
+  --   it "prints lt op" $
+  --     printPretty (S.Exp ["<", "n", "10"]) `shouldBe` Right "n < 10"
 
-    it "prints eq op" $
-      printPretty (S.Exp ["=", "foo", "bar"]) `shouldBe` Right "foo == bar"
+  --   it "prints eq op" $
+  --     printPretty (S.Exp ["=", "foo", "bar"]) `shouldBe` Right "foo == bar"
 
 
   describe "Go.Fmt.gofmt" $ do
+
     it "formats valid code" $
       gofmt "func  foo  (  ) { \n i++}" `shouldBe` Right "func foo() {\n\ti++\n}"
 
@@ -170,29 +136,30 @@ main = hspec $ do
       gofmt "func foo }( __" `shouldBe` Left "1:20: expected '(', found '}'"
 
 
-  describe "Fun.Go.Desugar.desugar" $ do
-    it "does nothing when there is nothing to do" $
-      desugar (S.Exp ["foo", "bar"]) `shouldBe` S.Exp ["foo", "bar"]
+  -- describe "Fun.Go.Desugar.desugar" $ do
+  --   it "does nothing when there is nothing to do" $
+  --     desugar (S.Exp ["foo", "bar"]) `shouldBe` S.Exp ["foo", "bar"]
 
-    it "desugars print" $
-      desugar (S.Exp ["package", "main", S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
-        `shouldBe` S.Exp
-          ["package", "main"
-          , S.Exp ["import", "\"fmt\""]
-          , S.Exp ["func", "main", S.Exp ["fmt.Println", "\"hello world\""]]]
+  --   it "desugars print" $
+  --     desugar (S.Exp ["package", "main", S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
+  --       `shouldBe` S.Exp
+  --         ["package", "main"
+  --         , S.Exp ["import", "\"fmt\""]
+  --         , S.Exp ["func", "main", S.Exp ["fmt.Println", "\"hello world\""]]]
 
-    it "desugars print with existing import" $
-      desugar (S.Exp
-        ["package", "main"
-        , S.Exp ["import", "\"fmt\""]
-        , S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
-          `shouldBe` S.Exp
-          ["package", "main"
-          , S.Exp ["import", "\"fmt\""]
-          , S.Exp ["func", "main", S.Exp ["fmt.Println", "\"hello world\""]]]
+  --   it "desugars print with existing import" $
+  --     desugar (S.Exp
+  --       ["package", "main"
+  --       , S.Exp ["import", "\"fmt\""]
+  --       , S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
+  --         `shouldBe` S.Exp
+  --         ["package", "main"
+  --         , S.Exp ["import", "\"fmt\""]
+  --         , S.Exp ["func", "main", S.Exp ["fmt.Println", "\"hello world\""]]]
 
 
-  describe "Fun.Main.translate" $
-    it "works on example 01" $
-      translate' "(package main\n\n(func main (print \"hello world\")))\n" `shouldBe`
-        Right "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"
+  -- describe "Fun.Main.translate" $
+  --   it "works on example 01" $
+  --     translate' "(package main\n\n(func main (print \"hello world\")))\n" `shouldBe`
+  --       Right "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"
+

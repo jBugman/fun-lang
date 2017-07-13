@@ -15,22 +15,18 @@ data Atom
     = Ident Text
     | Type  Text
     | Op    Text
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
-instance Show Atom where
-    show (Ident s) = unpack s
-    show (Type s)  = unpack s
-    show (Op s)    = unpack s
+-- instance Show Atom where
+--     show (Ident s) = unpack s
+--     show (Type s)  = unpack s
+--     show (Op s)    = unpack s
 
 instance IsString Atom where
     fromString s
-        | isOpChar s         = Op    (pack s)
+        | s `elem` operators = Op    (pack s)
         | ":" `isPrefixOf` s = Type  (pack s)
         | otherwise          = Ident (pack s)
-        where
-            isOpChar :: String -> Bool
-            isOpChar [c] = c `elem` opChars
-            isOpChar _   = False
 
 instance Buildable Expression where
     build (WFSAtom x) = case x of
@@ -39,7 +35,7 @@ instance Buildable Expression where
         (Op s)    -> fromText s
     build (WFSList x) = errorWithoutStackTrace $ unpack ("Can only print terminal nodes, but got " <> tshow x)
 
--- TODO: migrate to https://hackage.haskell.org/package/wl-pprint-text
+-- TODO: use s-cargot printer
 -- instance Show Expression where
 --     show (List xs) = unpack $ mconcat ["(", showContents xs, ")"]
 --     show (Ident s) = unpack s
@@ -49,5 +45,17 @@ instance Buildable Expression where
 -- showContents :: [Expression] -> Text
 -- showContents xs = ointercalate " " $ fmap tshow xs -- TODO: add line-fold on long lists and some keywords
 
-opChars :: [Char]
-opChars = "=+-*/<>%"
+operators :: [String]
+operators =
+    [ "="
+    , "+"
+    , "-"
+    , "*"
+    , "/"
+    , "<"
+    , ">"
+    , "%"
+    , "&"
+    , "&&"
+    , "||"
+    ]

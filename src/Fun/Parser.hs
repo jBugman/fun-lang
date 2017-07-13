@@ -1,59 +1,43 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Fun.Parser where
 
-import           ClassyPrelude         hiding (try)
-import qualified Data.List.NonEmpty    as L
-import           Text.Megaparsec       (ParseError, choice, runParser, sepBy, try, (<|>))
-import qualified Text.Megaparsec       as MP
-import qualified Text.Megaparsec.Error as MP
-import           Text.Megaparsec.Text  (Parser)
+import ClassyPrelude
+import Data.Char               (isDigit, isLower, isUpper)
+import Data.Either.Combinators (mapLeft)
+import Data.SCargot
+import Data.SCargot.Atom
+import Data.SCargot.Comments   (withLispComments)
+import Data.SCargot.Repr       (SExpr)
+import Text.Parsec             (char, choice, satisfy)
+import Text.Parsec.Char        (string)
+import Text.Parsec.Text        (Parser)
 
-import           Fun.Lexer
 import qualified Fun.SExpression as S
 
 
-sunit :: Parser S.Expression
-sunit = S.Unit <$ (sp *> void (word "()"))
+parse :: Text -> Either Text S.Expression
+parse = mapLeft pack <$> decodeOne parser
 
-satom :: Parser S.Expression
-satom = S.Atom <$> (sp *> atoms)
-    where atoms = try stringLiteral <|> try selector <|> ident
+parser :: SExprParser S.Atom S.Expression
+parser = withLispComments $ asWellFormed parseAtom
 
-stype :: Parser S.Expression
-stype = S.Type <$> (sp *> typeLit)
+parseAtom :: SExprParser S.Atom (SExpr S.Atom)
+parseAtom = mkAtomParser
+    [ atom S.Op    (pack <$> parseOp)
+    , atom S.Type  (pack <$> parseType)
+    , atom S.Ident (pack <$> parseIdent)
+    ]
 
-sop :: Parser S.Expression
-sop = S.Op <$> (sp *> op)
-
-list :: Parser [S.Expression]
-list = sepBy expr' sp
-
-slist :: Parser S.Expression
-slist = S.List <$> (sp *> brackets list)
-
-stuple :: Parser S.Expression
-stuple = S.Exp <$> (sp *> parens list)
-
-sexp :: Parser S.Expression
-sexp = sp *> expr'
-
-expr' :: Parser S.Expression
-expr' = choice [slist, sunit, stuple, stype, sop, satom]
-
-
--- Wrapper --
-
-prs :: Parser a -> Text -> Either (ParseError Char _) a
-prs rule = runParser rule ""
-
-prettyError :: MP.ShowErrorComponent e => ParseError Char e -> Text
-prettyError err = oconcat [msg, "at Ln ", line, ", Col ", col]
+parseIdent :: Parser String
+parseIdent = (:) <$> (lk <|> uk) <*> many
+    (lk <|> uk <|> dg <|> char '_')
     where
-        pos  = L.head $ MP.errorPos err
-        line = tshow $ MP.unPos $ MP.sourceLine pos
-        col  = tshow $ MP.unPos $ MP.sourceColumn pos
-        msg  = repl "\n" " "
-            $ repl "unexpected" "found"
-            $ repl "expecting" "expected"
-            $ pack (MP.parseErrorTextPretty err)
-        repl = replaceSeqStrictText
+        lk = satisfy isLower
+        uk = satisfy isUpper
+        dg = satisfy isDigit
+
+parseType :: Parser String
+parseType = (:) <$> char ':' <*> parseIdent
+
+parseOp :: Parser String
+parseOp = choice $ fmap string S.operators

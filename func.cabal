@@ -18,22 +18,22 @@ custom-setup
 
 library
   hs-source-dirs:       src
-  exposed-modules:    Fun.SExpression
+  exposed-modules:      Fun.SExpression
                     -- , Fun.Go.Desugar
                     -- , Fun.Go.Printer
                     -- , Fun.Lexer
                     -- , Fun.Main
-                    -- , Fun.Parser
+                      , Fun.Parser
                     -- , Fun.SExpression
                     -- , Fun.Types
-                    -- , Go.Fmt
+                      , Go.Fmt
   ghc-options:          -Wall -Wno-partial-type-signatures
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   build-depends:        base >= 4.7 && < 5
                       , classy-prelude
                       , containers
                       , either
-                      , megaparsec
+                      , parsec
                       , s-cargot
                       , split
                       , text

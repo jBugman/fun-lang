@@ -8,7 +8,7 @@ import Data.SCargot
 import Data.SCargot.Atom
 import Data.SCargot.Comments   (withLispComments)
 import Data.SCargot.Repr       (SExpr)
-import Text.Parsec             (char, choice, satisfy)
+import Text.Parsec             (char, choice, satisfy, (<?>))
 import Text.Parsec.Char        (string)
 import Text.Parsec.Text        (Parser)
 
@@ -30,14 +30,14 @@ parseAtom = mkAtomParser
 
 parseIdent :: Parser String
 parseIdent = (:) <$> (lk <|> uk) <*> many
-    (lk <|> uk <|> dg <|> char '_')
+    (lk <|> uk <|> dg <|> char '_') <?> "ident"
     where
         lk = satisfy isLower
         uk = satisfy isUpper
         dg = satisfy isDigit
 
 parseType :: Parser String
-parseType = (:) <$> char ':' <*> parseIdent
+parseType = (:) <$> char ':' <*> parseIdent <?> "type literal"
 
 parseOp :: Parser String
-parseOp = choice $ fmap string S.operators
+parseOp = choice (fmap string S.operators) <?> "operator"

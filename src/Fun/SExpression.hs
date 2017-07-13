@@ -7,6 +7,7 @@ module Fun.SExpression
     , Literal (..)
     , pattern SL
     , pattern IL
+    , pattern HL
     , pattern DL
     , pattern ID
     , pattern TP
@@ -32,6 +33,7 @@ data Atom
 data Literal
     = Str Text
     | Int Integer
+    | Hex Integer
     | Dbl Double
     deriving (Eq, Ord, Show)
 
@@ -50,6 +52,9 @@ pattern SL x = WFSAtom (Lit (Str x))
 pattern IL :: Integer -> Expression
 pattern IL x = WFSAtom (Lit (Int x))
 
+pattern HL :: Integer -> Expression
+pattern HL x = WFSAtom (Lit (Hex x))
+
 pattern DL :: Double -> Expression
 pattern DL x = WFSAtom (Lit (Dbl x))
 
@@ -62,6 +67,7 @@ instance IsString Atom where
 instance Buildable Literal where
     build (Str t) = fromText t
     build (Int i) = fromText $ tshow i
+    build (Hex i) = fromText $ tshow i  -- TODO: proper printing
     build (Dbl d) = fromText $ tshow d
 
 instance Buildable Expression where

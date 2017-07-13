@@ -1,12 +1,13 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Fun.Parser (parse) where
 
-import ClassyPrelude           hiding (many)
+import ClassyPrelude           hiding (Int, many)
 import Data.Char               (isDigit, isLower, isUpper)
 import Data.Either.Combinators (mapLeft)
 import Data.SCargot            (SExprParser, asWellFormed, decodeOne)
 import Data.SCargot.Atom       (atom, mkAtomParser)
 import Data.SCargot.Comments   (withLispComments)
+import Data.SCargot.Common     (hexNumber, signedDecNumber)
 import Data.SCargot.Repr       (SExpr)
 import Text.Parsec             (char, choice, many, noneOf, satisfy, (<?>))
 import Text.Parsec.Char        (string)
@@ -23,10 +24,12 @@ parser = withLispComments $ asWellFormed parseAtom
 
 parseAtom :: SExprParser Atom (SExpr Atom)
 parseAtom = mkAtomParser
-    [ atom Lit   (Str . pack <$> parseStringLit)
-    , atom Op    (pack <$> parseOp)
+    [ atom Op    (pack <$> parseOp)
+    , atom Lit   (Str . pack <$> parseStringLit)
     , atom Type  (pack <$> parseType)
     , atom Ident (pack <$> parseIdent)
+    , atom Lit   (Hex  <$> parseHexLit)
+    , atom Lit   (Int  <$> signedDecNumber)
     ]
 
 parseIdent :: Parser String
@@ -46,3 +49,6 @@ parseOp = choice (fmap string operators) <?> "operator"
 parseStringLit :: Parser String
 parseStringLit = char q *> many (noneOf (singleton q)) <* char q <?> "string literal"
     where q = '"'
+
+parseHexLit :: Parser Integer
+parseHexLit = (string "0x" <|> string "0X") *> hexNumber <?> "hex literal"

@@ -8,12 +8,12 @@ import Test.Hspec                      (Expectation, HasCallStack, describe, hsp
 import Test.Hspec.Expectations         (shouldSatisfy)
 import Test.Hspec.Expectations.Contrib (isLeft)
 
-
 -- import           Fun.Go.Desugar
 -- import           Fun.Main        (translate')
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
-import Fun.SExpression (Expression, pattern ID, pattern IL, pattern OP, pattern SL, pattern TP)
+import Fun.SExpression (Expression, pattern HL, pattern ID, pattern IL, pattern OP, pattern SL,
+                        pattern TP)
 import Go.Fmt          (gofmt)
 import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
 
@@ -49,6 +49,9 @@ main = hspec $ do
     it "parses int lit" $
       parse "42" `shouldParse` IL 42
 
+    it "parses hex lit" $
+      parse "0x2A" `shouldParse` HL 42
+
     it "parses ident" $
       parse "foo" `shouldParse` ID "foo"
 
@@ -69,6 +72,9 @@ main = hspec $ do
 
     it "parses op + ident" $
       parse "(+ foo)" `shouldParse` L [ OP "+" , ID "foo" ]
+
+    it "parses op hex int" $
+      parse "(= 0xff 255)" `shouldParse` L [ OP "=" , HL 255 , IL 255 ]
 
     it "parses func call" $
       parse "(printf \"%+v\n\" v)" `shouldParse`

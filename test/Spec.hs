@@ -14,8 +14,8 @@ import Test.Hspec.Expectations.Contrib (isLeft)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
 import Fun.SExpression (Expression, pattern ID, pattern IL, pattern OP, pattern SL, pattern TP)
-import Go.Fmt
-import Test.Properties
+import Go.Fmt          (gofmt)
+import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
 
 
 shouldParse :: (HasCallStack) => Either Text Expression -> Expression -> Expectation

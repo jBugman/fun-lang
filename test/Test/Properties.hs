@@ -10,33 +10,31 @@ module Test.Properties
     , exprFunctorCompose
 ) where
 
-import           ClassyPrelude
-import           Data.Monoid              (mappend)
-import           Data.Semigroup           ((<>))
-import           Test.QuickCheck          (Property, property)
-import qualified Test.QuickCheck.Function as QC
+import ClassyPrelude
+import Data.Monoid              (mappend)
+import Data.Semigroup           ((<>))
+import Test.QuickCheck          (Property, property)
+import Test.QuickCheck.Function (Fun (..))
 
-import qualified Fun.SExpression as S
-import           Test.Instances  ()
+import Fun.SExpression (Atom, Expression)
+import Test.Instances  ()
 
 -- S.Expression --
 
-type SE = S.Expression
-
 exprFunctorIdentity :: Property
-exprFunctorIdentity = property (functorIdentity :: SE -> Bool)
+exprFunctorIdentity = property (functorIdentity :: Expression -> Bool)
 
 exprFunctorCompose :: Property
 exprFunctorCompose = property
-    (functorCompose :: QC.Fun S.Atom S.Atom -> QC.Fun S.Atom S.Atom -> S.Expression -> Bool)
+    (functorCompose :: Fun Atom Atom -> Fun Atom Atom -> Expression -> Bool)
 
 -- Generalized --
 
 functorIdentity :: (Functor f, Eq (f a)) => f a -> Bool
 functorIdentity f = fmap id f == f
 
-functorCompose :: (Functor f, Eq (f c)) => QC.Fun a b -> QC.Fun b c -> f a -> Bool
-functorCompose (QC.Fun _ f) (QC.Fun _ g) x = (fmap g (fmap f x)) == (fmap (g . f) x)
+functorCompose :: (Functor f, Eq (f c)) => Fun a b -> Fun b c -> f a -> Bool
+functorCompose (Fun _ f) (Fun _ g) x = (fmap g (fmap f x)) == (fmap (g . f) x)
 
 monoidAssociativity :: (Monoid a, Eq a) => a -> a -> a -> Bool
 monoidAssociativity x y z = (x `mappend` y) `mappend` z == x `mappend` (y `mappend` z)

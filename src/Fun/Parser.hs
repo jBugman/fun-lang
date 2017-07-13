@@ -1,11 +1,11 @@
 {-# LANGUAGE PartialTypeSignatures #-}
-module Fun.Parser where
+module Fun.Parser (parse) where
 
 import ClassyPrelude           hiding (many)
 import Data.Char               (isDigit, isLower, isUpper)
 import Data.Either.Combinators (mapLeft)
-import Data.SCargot
-import Data.SCargot.Atom
+import Data.SCargot            (SExprParser, asWellFormed, decodeOne)
+import Data.SCargot.Atom       (atom, mkAtomParser)
 import Data.SCargot.Comments   (withLispComments)
 import Data.SCargot.Repr       (SExpr)
 import Text.Parsec             (char, choice, many, noneOf, satisfy, (<?>))

@@ -15,8 +15,8 @@ module Fun.SExpression
 ) where
 
 import ClassyPrelude
-import Data.SCargot.Repr.WellFormed
-import Data.Text.Buildable
+import Data.SCargot.Repr.WellFormed (WellFormedSExpr (..))
+import Data.Text.Buildable          (Buildable, build)
 import Data.Text.Lazy.Builder       (fromText)
 import GHC.Err                      (errorWithoutStackTrace)
 

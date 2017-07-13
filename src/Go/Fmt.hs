@@ -2,7 +2,7 @@
 module Go.Fmt (gofmt) where
 
 import ClassyPrelude
-import Foreign.C.String
+import Foreign.C.String (CString, newCString, peekCString)
 import System.IO.Unsafe (unsafePerformIO)
 
 

@@ -1,6 +1,8 @@
 {-# LANGUAGE PatternSynonyms #-}
-module Fun.Go.Printer (
-    printPretty, print, SyntaxError(..)
+module Fun.Go.Printer
+    ( SyntaxError(..)
+    , printPretty
+    , print
 ) where
 
 import           ClassyPrelude                hiding (print)
@@ -11,7 +13,7 @@ import qualified Data.Text.Format             as F
 import qualified Data.Text.Format.Params      as F
 
 import Fun.SExpression (Atom (..), Expression, pattern ID, pattern OP, pattern SL)
-import Go.Fmt
+import Go.Fmt          (gofmt)
 
 
 printPretty :: Expression -> Either SyntaxError Text

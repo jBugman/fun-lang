@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Fun.Go.Printer (
     printPretty, print, SyntaxError(..)
 ) where
@@ -5,12 +6,12 @@ module Fun.Go.Printer (
 import           ClassyPrelude                hiding (print)
 import           Data.Either                  (partitionEithers)
 import           Data.Either.Combinators      (mapBoth)
-import           Data.SCargot.Repr.WellFormed
+import           Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
 import           Data.Text                    (dropAround)
 import qualified Data.Text.Format             as F
 import qualified Data.Text.Format.Params      as F
 
-import Fun.SExpression (Atom (..), Expression, Lit (..))
+import Fun.SExpression (Atom (..), Expression, pattern ID, pattern OP, pattern SL)
 import Go.Fmt
 
 
@@ -25,35 +26,35 @@ print :: Expression -> Either SyntaxError Text
 print Nil = syntaxErr "empty expression"
 
 -- ident
-print (A (Ident x)) = Right x
+print (ID x) = Right x
 
 -- literal
 print (A (Lit x)) = Right $ printf "{}" (F.Only x)
 
 -- package
-print (L (A (Ident "package") : A (Ident name) : topLevels)) = case partitionEithers $ fmap print topLevels of
-    (err:_ , _) -> Left err
-    ([], txts)  -> Right $ printf "package {}\n\n{}" (name, ointercalate "\n\n" txts)
+print (L ( ID "package" : ID name : topLevels )) = case partitionEithers $ fmap print topLevels of
+    (err : _ , _) -> Left err
+    ([] , txts)   -> Right $ printf "package {}\n\n{}" (name, ointercalate "\n\n" txts)
 
 -- import
-print (L [A (Ident "import"), A (Lit (S path))]) = Right $ printf "import {}" (F.Only path)  -- FIXME:
-print (L [A (Ident "import"), A (Lit (S path)), A (Lit (S alias))]) =
-    Right $ printf "import {} {}" (unquote alias, path)  -- FIXME:
+print (L [ ID "import" , SL path ]) = Right $ printf "import {}" (F.Only path)
+print (L [ ID "import" , SL path , SL alias ]) =
+    Right $ printf "import {} {}" (unquote alias, path)
 
 -- func
-print (L [A (Ident "func"), A (Ident name), body]) = printSubtree "func {}() {\n{}\n}" name body
+print (L [ ID "func" , ID name , body ]) = printSubtree "func {}() {\n{}\n}" name body
 
 -- assignment
-print (L [A (Ident "set"), A (Ident name), body]) = printSubtree "{} = {}" name body
+print (L [ ID "set" , ID name , body ]) = printSubtree "{} = {}" name body
 
 -- function call
-print (L (A (Ident f) : args)) = funcCall f args
+print (L ( ID f : args )) = funcCall f args
 
 -- operators
-print (L [A (Op op), lhs, rhs]) = case (print lhs, print rhs) of
-    (Left e, _)          -> Left e
-    (_, Left e)          -> Left e
-    (Right lt, Right rt) -> Right $ printf "{} {} {}" (lt, o, rt)
+print (L [ OP op , lhs , rhs]) = case (print lhs, print rhs) of
+    (Left e , _)          -> Left e
+    (_ , Left e)          -> Left e
+    (Right lt , Right rt) -> Right $ printf "{} {} {}" (lt, o, rt)
         where
             o = if op == "=" then "==" else op
 
@@ -64,8 +65,8 @@ print s = syntaxErr $ printf "not supported yet: {}" (F.Only s)
 -- Function call printer
 funcCall :: Text -> [Expression] -> Either SyntaxError Text
 funcCall name args = case partitionEithers $ fmap print args of
-    (err:_ , _) -> Left err
-    ([], txts)  -> Right $ printf "{}({})" (name, ointercalate ", " txts)
+    (err : _ , _) -> Left err
+    ([] , txts)   -> Right $ printf "{}({})" (name, ointercalate ", " txts)
 
 
 -- Types --

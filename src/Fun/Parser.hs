@@ -12,20 +12,20 @@ import Text.Parsec             (char, choice, satisfy, (<?>))
 import Text.Parsec.Char        (string)
 import Text.Parsec.Text        (Parser)
 
-import qualified Fun.SExpression as S
+import Fun.SExpression (Atom (..), Expression, operators)
 
 
-parse :: Text -> Either Text S.Expression
+parse :: Text -> Either Text Expression
 parse = mapLeft pack <$> decodeOne parser
 
-parser :: SExprParser S.Atom S.Expression
+parser :: SExprParser Atom Expression
 parser = withLispComments $ asWellFormed parseAtom
 
-parseAtom :: SExprParser S.Atom (SExpr S.Atom)
+parseAtom :: SExprParser Atom (SExpr Atom)
 parseAtom = mkAtomParser
-    [ atom S.Op    (pack <$> parseOp)
-    , atom S.Type  (pack <$> parseType)
-    , atom S.Ident (pack <$> parseIdent)
+    [ atom Op    (pack <$> parseOp)
+    , atom Type  (pack <$> parseType)
+    , atom Ident (pack <$> parseIdent)
     ]
 
 parseIdent :: Parser String
@@ -40,4 +40,4 @@ parseType :: Parser String
 parseType = (:) <$> char ':' <*> parseIdent <?> "type literal"
 
 parseOp :: Parser String
-parseOp = choice (fmap string S.operators) <?> "operator"
+parseOp = choice (fmap string operators) <?> "operator"

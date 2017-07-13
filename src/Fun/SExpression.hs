@@ -1,7 +1,18 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE PatternSynonyms   #-}
 {-# LANGUAGE TypeFamilies      #-}
-
-module Fun.SExpression where
+module Fun.SExpression
+    ( Expression
+    , Atom (..)
+    , Literal (..)
+    , pattern SL
+    , pattern IL
+    , pattern DL
+    , pattern ID
+    , pattern TP
+    , pattern OP
+    , operators
+) where
 
 import ClassyPrelude
 import Data.SCargot.Repr.WellFormed
@@ -15,14 +26,32 @@ data Atom
     = Ident Text
     | Type  Text
     | Op    Text
-    | Lit   Lit
+    | Lit   Literal
     deriving (Eq, Ord, Show)
 
-data Lit
-    = S Text
-    | I Integer
-    | D Double
+data Literal
+    = Str Text
+    | Int Integer
+    | Dbl Double
     deriving (Eq, Ord, Show)
+
+pattern ID :: Text -> Expression
+pattern ID x = WFSAtom (Ident x)
+
+pattern TP :: Text -> Expression
+pattern TP x = WFSAtom (Type x)
+
+pattern OP :: Text -> Expression
+pattern OP x = WFSAtom (Op x)
+
+pattern SL :: Text -> Expression
+pattern SL x = WFSAtom (Lit (Str x))
+
+pattern IL :: Integer -> Expression
+pattern IL x = WFSAtom (Lit (Int x))
+
+pattern DL :: Double -> Expression
+pattern DL x = WFSAtom (Lit (Dbl x))
 
 instance IsString Atom where
     fromString s
@@ -30,10 +59,10 @@ instance IsString Atom where
         | ":" `isPrefixOf` s = Type  (pack s)
         | otherwise          = Ident (pack s)
 
-instance Buildable Lit where
-    build (S t) = fromText t
-    build (I i) = fromText $ tshow i
-    build (D d) = fromText $ tshow d
+instance Buildable Literal where
+    build (Str t) = fromText t
+    build (Int i) = fromText $ tshow i
+    build (Dbl d) = fromText $ tshow d
 
 instance Buildable Expression where
     build (WFSAtom x) = case x of

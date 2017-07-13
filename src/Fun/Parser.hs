@@ -37,7 +37,7 @@ parseIdent = (:) <$> (lk <|> uk) <*> many
         dg = satisfy isDigit
 
 parseType :: Parser String
-parseType = (:) <$> char ':' <*> parseIdent <?> "type literal"
+parseType = (:) <$> char ':' *> parseIdent <?> "type literal"
 
 parseOp :: Parser String
 parseOp = choice (fmap string operators) <?> "operator"

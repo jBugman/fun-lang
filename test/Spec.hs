@@ -59,7 +59,7 @@ main = hspec $ do
       parse "fmt.Println" `shouldParse` A "fmt.Println"
 
     it "parses type lit" $
-      parse ":int" `shouldParse` TP ":int"
+      parse ":int" `shouldParse` TP "int"
 
     it "parses operator" $
       parse "+" `shouldParse` OP "+"
@@ -94,7 +94,7 @@ main = hspec $ do
 
     it "parses multiline s-exp" $
       parse "(+ foo bar\n    :int)" `shouldParse`
-      L [ OP "+" , ID "foo" , ID "bar" , TP ":int" ]
+      L [ OP "+" , ID "foo" , ID "bar" , TP "int" ]
 
     it "parses multiline s-exp with a comment" $
       parse "(foo 123 456\n; comment\n  bar)" `shouldParse`

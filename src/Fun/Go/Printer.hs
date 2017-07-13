@@ -7,7 +7,6 @@ import           ClassyPrelude                hiding (print)
 import           Data.Either                  (partitionEithers)
 import           Data.Either.Combinators      (mapBoth)
 import           Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
-import           Data.Text                    (dropAround)
 import qualified Data.Text.Format             as F
 import qualified Data.Text.Format.Params      as F
 
@@ -29,6 +28,7 @@ print Nil = syntaxErr "empty expression"
 print (ID x) = Right x
 
 -- literal
+print (SL x) = Right $ printf "\"{}\"" (F.Only x)
 print (A (Lit x)) = Right $ printf "{}" (F.Only x)
 
 -- package
@@ -37,9 +37,8 @@ print (L ( ID "package" : ID name : topLevels )) = case partitionEithers $ fmap 
     ([] , txts)   -> Right $ printf "package {}\n\n{}" (name, ointercalate "\n\n" txts)
 
 -- import
-print (L [ ID "import" , SL path ]) = Right $ printf "import {}" (F.Only path)
-print (L [ ID "import" , SL path , SL alias ]) =
-    Right $ printf "import {} {}" (unquote alias, path)
+print (L [ ID "import" , SL path ]) = Right $ printf "import \"{}\"" (F.Only path)
+print (L [ ID "import" , SL path , SL alias ]) = Right $ printf "import {} \"{}\"" (alias, path)
 
 -- func
 print (L [ ID "func" , ID name , body ]) = printSubtree "func {}() {\n{}\n}" name body
@@ -83,6 +82,3 @@ printf fmt ps = toStrict $ F.format fmt ps
 
 syntaxErr :: Text -> Either SyntaxError Text
 syntaxErr = Left . SyntaxError
-
-unquote :: Text -> Text
-unquote = dropAround (== '\"')

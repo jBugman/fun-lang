@@ -73,9 +73,9 @@ main = hspec $ do
 
     it "parses func call" $
       parse "(printf \"%+v\n\" v)" `shouldParse`
-      L [ ID "printf", SL "\"%+v\n\"", ID "v" ]
+      L [ ID "printf", SL "%+v\n", ID "v" ]
 
-    it "parses selecor + unit" $
+    it "parses selector + unit" $
       parse "(fmt.Println ())" `shouldParse` L [ ID "fmt.Println", Nil ]
 
     it "parses ident list" $
@@ -91,11 +91,11 @@ main = hspec $ do
       parse "(< foo 10)" `shouldParse` L [ OP "<" , ID "foo" , IL 10 ]
 
     it "parses import" $
-      parse "(import \"foo\")" `shouldParse` L [ ID "import" , SL "\"foo\"" ]
+      parse "(import \"foo\")" `shouldParse` L [ ID "import" , SL "foo" ]
 
     it "parses multiline s-exp" $
-      parse "(+ foo bar\n    :int)" `shouldParse`
-      L [ OP "+" , ID "foo" , ID "bar" , TP ":int" ]
+      parse "(+ foo bar\n    :int)" `shouldBe` Right (
+      L [ OP "+" , ID "foo" , ID "bar" , TP ":int" ] )
 
     it "parses multiline s-exp with a comment" $
       parse "(foo 123 456\n; comment\n  bar)" `shouldParse`
@@ -105,7 +105,7 @@ main = hspec $ do
       parse "(package main\n\n  (func main (print \"hello world\")))" `shouldParse`
       L [ ID "package" , ID "main"
         , L [ ID "func" , ID "main"
-            , L [ ID "print" , SL "\"hello world\"" ]
+            , L [ ID "print" , SL "hello world" ]
             ]
         ]
 
@@ -113,11 +113,11 @@ main = hspec $ do
   describe "Fun.Go.Printer.print" $ do
 
     it "prints import" $
-      print (L [ ID "import" , SL "\"fmt\"" ]) `shouldBe`
+      print (L [ ID "import" , SL "fmt" ]) `shouldBe`
       Right "import \"fmt\""
 
     it "prints import with alias" $
-      print (L [ ID "import" , SL "\"very/long-package\"" , SL "\"pkg\"" ]) `shouldBe`
+      print (L [ ID "import" , SL "very/long-package" , SL "pkg" ]) `shouldBe`
       Right "import pkg \"very/long-package\""
 
     it "prints simple func" $
@@ -134,11 +134,11 @@ main = hspec $ do
   describe "Fun.Go.Printer.printPretty" $ do
 
     it "prettyprints import" $
-      printPretty (L [ ID "import" , SL "\"fmt\"" ]) `shouldBe`
+      printPretty (L [ ID "import" , SL "fmt" ]) `shouldBe`
       Right "import \"fmt\""
 
     it "prettyprints import with alias" $ printPretty (L
-      [ ID "import" , SL "\"very/long-package\"" , SL "\"pkg\"" ]) `shouldBe`
+      [ ID "import" , SL "very/long-package" , SL "pkg" ]) `shouldBe`
       Right "import pkg \"very/long-package\""
 
     it "prettyprints simple func" $ printPretty (L

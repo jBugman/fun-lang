@@ -9,7 +9,7 @@ import Data.SCargot.Atom       (atom, mkAtomParser)
 import Data.SCargot.Comments   (withLispComments)
 import Data.SCargot.Common     (hexNumber, signedDecNumber)
 import Data.SCargot.Repr       (SExpr)
-import Text.Parsec             (char, choice, many, noneOf, oneOf, satisfy, (<?>))
+import Text.Parsec             (char, choice, many, noneOf, oneOf, satisfy, sepBy1, (<?>))
 import Text.Parsec.Char        (string)
 import Text.Parsec.Text        (Parser)
 
@@ -34,7 +34,10 @@ parseAtom = mkAtomParser
     ]
 
 parseIdent :: Parser String
-parseIdent = (:) <$> (lk <|> uk) <*> many
+parseIdent = intercalate "." <$> sepBy1 parseIdent' (char '.')
+
+parseIdent' :: Parser String
+parseIdent' = (:) <$> (lk <|> uk) <*> many
     (lk <|> uk <|> dg <|> char '_') <?> "ident"
     where
         lk = satisfy isLower

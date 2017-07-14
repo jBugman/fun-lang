@@ -63,6 +63,12 @@ pattern HL x = WFSAtom (Lit (Hex x))
 pattern DL :: Double -> Expression
 pattern DL x = WFSAtom (Lit (Dbl x))
 
+instance Ord Expression where
+    compare (WFSList a) (WFSList b) = compare a b
+    compare (WFSAtom a) (WFSAtom b) = compare a b
+    compare (WFSList _) (WFSAtom _) = GT
+    compare (WFSAtom _) (WFSList _) = LT
+
 instance IsString Atom where
     fromString s
         | s `elem` operators = Op    (pack s)

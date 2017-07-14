@@ -1,13 +1,15 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Fun.Go.Desugar (desugar) where
 
 import ClassyPrelude
-import Data.Traversable (mapAccumR)
+import Data.SCargot.Repr.WellFormed (pattern L)
+import Data.Traversable             (mapAccumR)
 
-import qualified Fun.SExpression as S
+import Fun.SExpression (Expression, pattern ID, pattern SL)
 
 
-desugar :: S.Expression -> S.Expression
-desugar (S.Exp ("package":name:topLevels)) = S.Exp $ ["package", name] <> imports <> decls
+desugar :: Expression -> Expression
+desugar (L (ID "package" : ID name : topLevels)) = L $ [ ID "package", ID name ] <> imports <> decls
     where
         imports = if didSwap then ordNub $ importFmt : imports' else imports'
         (didSwap, decls)   = swapPrint decls'
@@ -16,19 +18,17 @@ desugar (S.Exp ("package":name:topLevels)) = S.Exp $ ["package", name] <> import
 desugar e = e
 
 
-importFmt :: S.Expression
-importFmt = S.Exp ["import", "\"fmt\""]
+importFmt :: Expression
+importFmt = L [ ID "import" , SL "fmt" ]
 
-isImport :: S.Expression -> Bool
-isImport (S.Exp ("import":_)) = True
-isImport _                    = False
+isImport :: Expression -> Bool
+isImport (L (ID "import" : _)) = True
+isImport _                     = False
 
-
-swapPrint :: [S.Expression] -> (Bool, [S.Expression])
-swapPrint = mapAccumR swapPrint' False
-
-swapPrint' :: Bool -> S.Expression -> (Bool, S.Expression)
-swapPrint' _ (S.Atom "print") = (True, S.Atom "fmt.Println")
-swapPrint' b (S.List xs)      = S.Exp <$> mapAccumR swapPrint' b xs
-swapPrint' b (S.Exp xs)       = S.Exp <$> mapAccumR swapPrint' b xs
-swapPrint' b ex               = (b, ex)
+swapPrint :: [Expression] -> (Bool, [Expression])
+swapPrint = mapAccumR go False
+    where
+        go :: Bool -> Expression -> (Bool, Expression)
+        go _ (ID "print") = (True, ID "fmt.Println")
+        go b (L xs)       = L <$> mapAccumR go b xs
+        go b ex           = (b, ex)

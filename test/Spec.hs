@@ -8,8 +8,8 @@ import Test.Hspec                      (Expectation, HasCallStack, describe, hsp
 import Test.Hspec.Expectations         (shouldSatisfy)
 import Test.Hspec.Expectations.Contrib (isLeft)
 
--- import           Fun.Go.Desugar
 -- import           Fun.Main        (translate')
+import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
 import Fun.SExpression (pattern CL, Expression, pattern HL, pattern ID, pattern IL, pattern OP,
@@ -178,26 +178,32 @@ main = hspec $ do
       gofmt "func foo }( __" `shouldBe` Left "1:20: expected '(', found '}'"
 
 
-  -- describe "Fun.Go.Desugar.desugar" $ do
-  --   it "does nothing when there is nothing to do" $
-  --     desugar (S.Exp ["foo", "bar"]) `shouldBe` S.Exp ["foo", "bar"]
+  describe "Fun.Go.Desugar.desugar" $ do
+    it "does nothing when there is nothing to do" $
+      desugar (L [ ID "foo" , ID "bar" ]) `shouldBe` L [ ID "foo" , ID "bar" ]
 
-  --   it "desugars print" $
-  --     desugar (S.Exp ["package", "main", S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
-  --       `shouldBe` S.Exp
-  --         ["package", "main"
-  --         , S.Exp ["import", "\"fmt\""]
-  --         , S.Exp ["func", "main", S.Exp ["fmt.Println", "\"hello world\""]]]
+    it "desugars print" $
+      desugar (L
+        [ ID "package" , ID "main" , L
+        [ ID "func" , ID "main" , L
+          [ ID "print" , SL "hello world"] ]])
+      `shouldBe` L
+        [ ID "package", ID "main" , L
+        [ ID "import" , SL "fmt" ] , L
+        [ ID "func" , ID "main" , L
+          [ ID "fmt.Println" , SL "hello world"] ]]
 
-  --   it "desugars print with existing import" $
-  --     desugar (S.Exp
-  --       ["package", "main"
-  --       , S.Exp ["import", "\"fmt\""]
-  --       , S.Exp ["func", "main", S.Exp ["print", "\"hello world\""]]])
-  --         `shouldBe` S.Exp
-  --         ["package", "main"
-  --         , S.Exp ["import", "\"fmt\""]
-  --         , S.Exp ["func", "main", S.Exp ["fmt.Println", "\"hello world\""]]]
+    it "desugars print with existing import" $
+      desugar (L
+        [ ID "package" , ID "main" , L
+        [ ID "import" , SL "fmt" ] , L
+        [ ID "func" , ID "main" , L
+          [ ID "print" , SL "hello world"] ]])
+      `shouldBe` L
+        [ ID "package" , ID "main" , L
+        [ ID "import" , SL "fmt" ] , L
+        [ ID "func" , ID "main" , L
+          [ ID "fmt.Println" , SL "hello world"] ]]
 
 
   -- describe "Fun.Main.translate" $

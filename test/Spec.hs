@@ -12,8 +12,8 @@ import Test.Hspec.Expectations.Contrib (isLeft)
 import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
-import Fun.SExpression (pattern CL, Expression, pattern HL, pattern ID, pattern IL, pattern OP,
-                        pattern SL, pattern TP)
+import Fun.SExpression (pattern CL, pattern DL, Expression, pattern HL, pattern ID, pattern IL,
+                        pattern OP, pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
 import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
 
@@ -60,6 +60,15 @@ main = hspec $ do
 
     it "parses int lit" $
       parse "42" `shouldParse` IL 42
+
+    it "parses double lit" $
+      parse "42.0" `shouldParse` DL 42.0
+
+    it "parses exp double lit" $
+      parse "1e3" `shouldParse` DL 1000
+
+    it "fails on american double" $
+      parse `shouldFailOn` ".223"
 
     it "parses hex lit" $
       parse "0x2A" `shouldParse` HL 42

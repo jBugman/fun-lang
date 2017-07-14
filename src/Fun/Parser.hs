@@ -1,17 +1,19 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Fun.Parser (parse) where
 
-import ClassyPrelude           hiding (Int, many)
-import Data.Char               (isDigit, isLower, isUpper)
-import Data.Either.Combinators (mapLeft)
-import Data.SCargot            (SExprParser, asWellFormed, decodeOne)
-import Data.SCargot.Atom       (atom, mkAtomParser)
-import Data.SCargot.Comments   (withLispComments)
-import Data.SCargot.Common     (hexNumber, signedDecNumber)
-import Data.SCargot.Repr       (SExpr)
-import Text.Parsec             (char, choice, many, noneOf, oneOf, satisfy, sepBy1, (<?>))
-import Text.Parsec.Char        (string)
-import Text.Parsec.Text        (Parser)
+import ClassyPrelude                  hiding (Int, many, try)
+import Data.Char                      (isDigit, isLower, isUpper)
+import Data.Either.Combinators        (mapLeft)
+import Data.SCargot                   (SExprParser, asWellFormed, decodeOne)
+import Data.SCargot.Atom              (atom, mkAtomParser)
+import Data.SCargot.Comments          (withLispComments)
+import Data.SCargot.Common            (hexNumber, signedDecNumber)
+import Data.SCargot.Language.HaskLike (parseHaskellFloat)
+import Data.SCargot.Repr              (SExpr)
+import Text.Parsec                    (char, choice, many, noneOf, oneOf, satisfy, sepBy1, try,
+                                       (<?>))
+import Text.Parsec.Char               (string)
+import Text.Parsec.Text               (Parser)
 
 import Fun.SExpression (Atom (..), Expression, Literal (..), operators)
 
@@ -29,6 +31,7 @@ parseAtom = mkAtomParser
     , atom Lit   (Chr . pack <$> parseCharLit)
     , atom Type  (pack <$> parseType)
     , atom Ident (pack <$> parseIdent)
+    , atom Lit   (Dbl  <$> parseFloat)
     , atom Lit   (Hex  <$> parseHexLit)
     , atom Lit   (Int  <$> signedDecNumber)
     ]
@@ -69,3 +72,6 @@ parseCharLit = do
 
 parseHexLit :: Parser Integer
 parseHexLit = (string "0x" <|> string "0X") *> hexNumber <?> "hex literal"
+
+parseFloat :: Parser Double
+parseFloat = try parseHaskellFloat <?> "float"

@@ -8,7 +8,7 @@ import Test.Hspec                      (Expectation, HasCallStack, describe, hsp
 import Test.Hspec.Expectations         (shouldSatisfy)
 import Test.Hspec.Expectations.Contrib (isLeft)
 
--- import           Fun.Main        (translate')
+import Fun             (translate)
 import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
@@ -215,8 +215,9 @@ main = hspec $ do
           [ ID "fmt.Println" , SL "hello world"] ]]
 
 
-  -- describe "Fun.Main.translate" $
-  --   it "works on example 01" $
-  --     translate' "(package main\n\n(func main (print \"hello world\")))\n" `shouldBe`
-  --       Right "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"
+  describe "Fun.Main.translate" $
+    it "works on example 01" $
+      translate "(package main\n\n(func main (print \"hello world\")))\n"
+      `shouldBe` Right
+      "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"
 

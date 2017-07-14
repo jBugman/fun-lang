@@ -29,9 +29,9 @@ main :: IO ()
 main = hspec $ do
 
   describe "Expression Functor" $ do
-    -- it "manual fmap" $
-    --   fmap toUpper (S.List ["foo", S.List [], "42", S.List ["barbar"]])
-    --     `shouldBe` S.List [S.Atom (S.Ident "FOO"), S.List [], S.Atom (S.Ident "42"), S.List [S.Atom (S.Ident "BARBAR")]]
+    it "manual fmap" $
+      fmap tshow (L [ ID "foo" , Nil , IL 42 , L [ ID "barbar" ] ])
+      `shouldBe` L [ "Ident \"foo\"" , Nil , "Lit (Int 42)" , L [ "Ident \"barbar\"" ] ]
 
     it "identity" exprFunctorIdentity
 

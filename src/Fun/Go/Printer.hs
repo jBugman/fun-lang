@@ -5,22 +5,20 @@ module Fun.Go.Printer
     , print
 ) where
 
-import           ClassyPrelude                hiding (print)
-import           Data.Either                  (partitionEithers)
-import           Data.Either.Combinators      (mapBoth)
-import           Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
-import qualified Data.Text.Format             as F
-import qualified Data.Text.Format.Params      as F
+import ClassyPrelude                hiding (print)
+import Data.Either                  (partitionEithers)
+import Data.Either.Combinators      (mapLeft)
+import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
+import Data.Text.Buildable          (Buildable)
+import Data.Text.Format             (Format, format)
+import Data.Text.Format.Params      (Params)
 
 import Fun.SExpression (Atom (..), Expression, pattern ID, pattern OP, pattern SL)
 import Go.Fmt          (gofmt)
 
 
 printPretty :: Expression -> Either SyntaxError Text
-printPretty s = case print s of
-    Right txt -> mapBoth SyntaxError id (gofmt txt)
-    err       -> err
-
+printPretty e = print e >>= (mapLeft SyntaxError . gofmt)
 
 print :: Expression -> Either SyntaxError Text
 -- empty
@@ -30,44 +28,43 @@ print Nil = syntaxErr "empty expression"
 print (ID x) = Right x
 
 -- literal
-print (SL x) = Right $ printf "\"{}\"" (F.Only x)
-print (A (Lit x)) = Right $ printf "{}" (F.Only x)
+print (SL x)      = Right $ printf1 "\"{}\"" x
+print (A (Lit x)) = Right $ printf1 "{}"     x
 
 -- package
 print (L ( ID "package" : ID name : topLevels )) = case partitionEithers $ fmap print topLevels of
     (err : _ , _) -> Left err
-    ([] , txts)   -> Right $ printf "package {}\n\n{}" (name, ointercalate "\n\n" txts)
+    ([] , txts)   -> Right $ printf2 "package {}\n\n{}" name (ointercalate "\n\n" txts)
 
 -- import
-print (L [ ID "import" , SL path ]) = Right $ printf "import \"{}\"" (F.Only path)
-print (L [ ID "import" , SL path , SL alias ]) = Right $ printf "import {} \"{}\"" (alias, path)
+print (L [ ID "import" , SL path ])            = Right $ printf1 "import \"{}\"" path
+print (L [ ID "import" , SL path , SL alias ]) = Right $ printf2 "import {} \"{}\"" alias path
 
 -- func
-print (L [ ID "func" , ID name , body ]) = printSubtree "func {}() {\n{}\n}" name body
+print (L [ ID "func" , ID name , body ]) = printf2 "func {}() {\n{}\n}" name <$> print body
 
 -- assignment
-print (L [ ID "set" , ID name , body ]) = printSubtree "{} = {}" name body
+print (L [ ID "set" , ID name , body ]) = printf2 "{} = {}" name <$> print body
 
 -- function call
 print (L ( ID f : args )) = funcCall f args
 
 -- operators
-print (L [ OP op , lhs , rhs]) = case (print lhs, print rhs) of
-    (Left e , _)          -> Left e
-    (_ , Left e)          -> Left e
-    (Right lt , Right rt) -> Right $ printf "{} {} {}" (lt, o, rt)
-        where
-            o = if op == "=" then "==" else op
+print (L [ OP op , lhs , rhs]) = do
+    lt <- print lhs
+    rt <- print rhs
+    let o = if op == "=" then "==" else op
+    return $ strictFormat "{} {} {}" (lt, o, rt)
 
 -- catch-all todo case
-print s = syntaxErr $ printf "not supported yet: {}" (F.Only s)
+print s = syntaxErr $ printf1 "not supported yet: {}" s
 
 
 -- Function call printer
 funcCall :: Text -> [Expression] -> Either SyntaxError Text
 funcCall name args = case partitionEithers $ fmap print args of
     (err : _ , _) -> Left err
-    ([] , txts)   -> Right $ printf "{}({})" (name, ointercalate ", " txts)
+    ([] , txts)   -> Right $ printf2 "{}({})" name (ointercalate ", " txts)
 
 
 -- Types --
@@ -76,11 +73,14 @@ newtype SyntaxError = SyntaxError Text deriving (Eq, Show)
 
 -- Utils --
 
-printSubtree :: F.Format -> Text -> Expression -> Either SyntaxError Text
-printSubtree fmt x y = mapBoth id (\s -> printf fmt (x, s)) (print y)
+strictFormat :: Params ps => Format -> ps -> Text
+strictFormat fmt = toStrict . format fmt
 
-printf :: F.Params ps => F.Format -> ps -> Text
-printf fmt ps = toStrict $ F.format fmt ps
+printf1 :: Buildable a => Format -> a -> Text
+printf1 fmt x = strictFormat fmt [x]
+
+printf2 :: Buildable a => Format -> a -> a -> Text
+printf2 fmt x y = strictFormat fmt (x, y)
 
 syntaxErr :: Text -> Either SyntaxError Text
 syntaxErr = Left . SyntaxError

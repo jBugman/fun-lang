@@ -1,3 +1,4 @@
+{-# ANN module "HLint: ignore" #-}
 import Data.Maybe
 import Distribution.PackageDescription
 import Distribution.Simple
@@ -9,6 +10,7 @@ import System.Directory
 import System.FilePath
 import System.Process
 
+
 main = defaultMainWithHooks simpleUserHooks
     { confHook = customConfHook
     , postConf = buildLibGo
@@ -18,10 +20,10 @@ buildLibGo :: Args -> ConfigFlags -> PackageDescription -> LocalBuildInfo -> IO 
 buildLibGo _ _ _ _ = do
     wd <- getCurrentDirectory
     let name         = "libfungo"
-        dynamicPath  = wd </> (name ++".dylib")
+        dynamicPath  = wd </> (name ++ ".dylib")
         buildDynamic = shell ("go build -buildmode=c-shared -o " ++ dynamicPath ++ " go/src/fmt.go")
         rmHeader     = shell ("rm " ++ name ++ ".h")
-    putStrLn $ "Compiling Go dynamic library to " ++ dynamicPath
+    putStrLn ("Compiling Go dynamic library to " ++ dynamicPath)
     readCreateProcess buildDynamic "" >>= putStr
     readCreateProcess rmHeader "" >>= putStr
 
@@ -34,7 +36,6 @@ addLibDirToTests :: TestSuite -> IO TestSuite
 addLibDirToTests suite = do
     withLibDirs <- addLibDirsToBuildInfo (testBuildInfo suite)
     return $ suite { testBuildInfo = withLibDirs }
-
 
 addLibDirToExecs :: Executable -> IO Executable
 addLibDirToExecs exe = do

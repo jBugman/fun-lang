@@ -12,27 +12,26 @@ import Fun (translate, unError)
 
 
 main :: IO ()
-main = do
-    let prefs = defaultPrefs { prefShowHelpOnEmpty = True }
-    let argParser = info (commands <**> helper) idm
-    action <- customExecParser prefs argParser
-    case action of
-        Translate opts -> doTrans opts
-        Run       opts -> doRun opts
+main = join $ customExecParser prefs argparse
+    where
+        argparse = info (commandDispatcher <**> helper) idm
+        prefs    = defaultPrefs { prefShowHelpOnEmpty = True }
 
 data Command
     = Translate TranslateOptions
     | Run       RunOptions
 
-commands :: Parser Command
-commands = subparser
+commandDispatcher :: Parser (IO ())
+commandDispatcher = subparser
     (  command "translate" (info
-        ( transCommand <**> helper )
+        ( translator <**> helper )
         ( progDesc "Translate Fun source file to Go (default)" ) )
     <> command "run"       (info
-        ( runCommand   <**> helper )
+        ( doRun <$> (runCommand <**> helper) )
         ( progDesc "'go run' translated on the fly Fun source file" ) )
-    ) <|> transCommand -- Default command
+    ) <|> translator -- Default command
+    where
+        translator = doTrans <$> transCommand
 
 
 -- Translate --
@@ -42,11 +41,10 @@ data TranslateOptions = TranslateOptions
     , filepath  :: FilePath
     }
 
-transCommand :: Parser Command
-transCommand = Translate <$> optParser where
-    optParser = TranslateOptions
-        <$> switch ( short 'f' <> help "Write output to file <filename.go>" )
-        <*> argument str (metavar "<filename.fun>")
+transCommand :: Parser TranslateOptions
+transCommand = TranslateOptions
+    <$> switch ( short 'f' <> help "Write output to file <filename.go>" )
+    <*> argument str (metavar "<filename.fun>")
 
 doTrans :: TranslateOptions -> IO ()
 doTrans opts = do
@@ -61,8 +59,8 @@ doTrans opts = do
 
 newtype RunOptions = RunOptions { filepath :: FilePath }
 
-runCommand :: Parser Command
-runCommand = Run <$> (RunOptions <$> argument str (metavar "<filename.fun>"))
+runCommand :: Parser RunOptions
+runCommand = RunOptions <$> argument str (metavar "<filename.fun>")
 
 doRun :: RunOptions -> IO ()
 doRun _ = putStrLn "test run" -- TODO: implement

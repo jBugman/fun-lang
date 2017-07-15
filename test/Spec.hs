@@ -12,8 +12,8 @@ import Test.Tasty.QuickCheck        (testProperty)
 import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
-import Fun.SExpression (pattern CL, pattern DL, pattern HL, pattern ID, pattern IL, pattern OP,
-                        pattern SL, pattern TP)
+import Fun.SExpression (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
+                        pattern OP, pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
 import Test.Examples   (examples)
 import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
@@ -75,6 +75,12 @@ unitsSpec = do
 
     it "newline char" $
       parse "'\\n'" `shouldParse` CL "\\n"
+
+    it "true" $
+      parse "true" `shouldParse` BL True
+
+    it "false" $
+      parse "false" `shouldParse` BL False
 
     it "int lit" $
       parse "42" `shouldParse` IL 42
@@ -173,6 +179,12 @@ unitsSpec = do
 
     it "const decl" $
       print (L [ ID "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
+
+    it "full var decl" $
+      print (L [ ID "var" , ID "b", TP "int", IL 1 ]) `shouldPrint` "var b int = 1"
+
+    it "infer bool var decl" $
+      print (L [ ID "var" , ID "d", BL True ]) `shouldPrint` "var d = true"
 
 
 funcSpec :: Spec

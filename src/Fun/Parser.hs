@@ -30,6 +30,7 @@ parseAtom = mkAtomParser
     , atom Lit   (Str . pack <$> parseStringLit)
     , atom Lit   (Chr . pack <$> parseCharLit)
     , atom Type  (pack <$> parseType)
+    , atom Lit   (Bl   <$> parseBool)
     , atom Ident (pack <$> parseIdent)
     , atom Lit   (Dbl  <$> parseFloat)
     , atom Lit   (Hex  <$> parseHexLit)
@@ -78,3 +79,8 @@ parseHexLit = try ((string "0x" <|> string "0X") *> hexNumber) <?> "hex literal"
 
 parseFloat :: Parser Double
 parseFloat = try parseHaskellFloat <?> "float"
+
+parseBool :: Parser Bool
+parseBool = do
+    b <- try (string "false") <|> string "true" <?> "bool"
+    return (b == "true")

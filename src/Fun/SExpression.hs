@@ -10,6 +10,7 @@ module Fun.SExpression
     , pattern IL
     , pattern HL
     , pattern DL
+    , pattern BL
     , pattern ID
     , pattern TP
     , pattern OP
@@ -37,6 +38,7 @@ data Literal
     | Int Integer
     | Hex Integer
     | Dbl Double
+    | Bl  Bool
     deriving (Eq, Ord, Show)
 
 pattern ID :: Text -> Expression
@@ -63,6 +65,9 @@ pattern HL x = WFSAtom (Lit (Hex x))
 pattern DL :: Double -> Expression
 pattern DL x = WFSAtom (Lit (Dbl x))
 
+pattern BL :: Bool -> Expression
+pattern BL x  = WFSAtom (Lit (Bl x))
+
 instance Ord Expression where
     compare (WFSList a) (WFSList b) = compare a b
     compare (WFSAtom a) (WFSAtom b) = compare a b
@@ -76,11 +81,13 @@ instance IsString Atom where
         | otherwise          = Ident (pack s)
 
 instance Buildable Literal where
-    build (Str t) = fromText t
-    build (Chr t) = fromText t
-    build (Int i) = fromText $ tshow i
-    build (Hex i) = fromText $ tshow i  -- TODO: proper printing
-    build (Dbl d) = fromText $ tshow d
+    build (Str t)    = fromText t
+    build (Chr t)    = fromText t
+    build (Int i)    = fromText $ tshow i
+    build (Hex i)    = fromText $ tshow i  -- TODO: proper printing
+    build (Dbl d)    = fromText $ tshow d
+    build (Bl True)  = "true"
+    build (Bl False) = "false"
 
 instance Buildable Expression where
     build (WFSAtom x) = case x of

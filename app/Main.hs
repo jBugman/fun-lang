@@ -3,14 +3,18 @@ module Main where
 import Paths_language_fun (version)
 
 import ClassyPrelude       hiding (writeFile)
+import Data.Text.IO        (hPutStr)
 import Data.Version        (showVersion)
 import Options.Applicative (Parser, argument, command, customExecParser, defaultPrefs, help, helper,
                             idm, info, infoOption, long, metavar, prefShowHelpOnEmpty, progDesc,
                             short, str, subparser, switch)
 import System.Exit         (die)
 import System.FilePath     (replaceExtension)
+import System.IO           (hFlush)
+import System.IO.Temp      (withSystemTempFile)
+import System.Process      (readProcess)
 
-import Fun (SyntaxError (..), translate, unError)
+import Fun (translate, unError)
 
 
 main :: IO ()
@@ -54,17 +58,18 @@ transCommand = TranslateOptions
     <*> argument str (metavar "<filename.fun>")
 
 doTrans :: TranslateOptions -> IO ()
-doTrans (TranslateOptions writeFile filePath) =
-    translateFile (die . unError) outputResult filePath
+doTrans (TranslateOptions toFile filePath) = translateFile outputResult filePath
     where
-        outputResult = if writeFile
+        outputResult = if toFile
             then writeFileUtf8 (replaceExtension filePath ".go")
             else putStrLn
 
-translateFile :: (SyntaxError -> IO ()) -> (Text -> IO ()) -> FilePath -> IO ()
-translateFile errPath successPath filePath = do
+translateFile :: (Text -> IO ()) -> FilePath -> IO ()
+translateFile successPath filePath = do
     source <- readFileUtf8 filePath
     either errPath successPath $ translate source
+    where
+        errPath = die . unError
 
 
 -- Run --
@@ -75,5 +80,14 @@ runCommand :: Parser RunOptions
 runCommand = RunOptions <$> argument str (metavar "<filename.fun>")
 
 doRun :: RunOptions -> IO ()
-doRun (RunOptions filePath) = putStrLn (pack filePath)
+doRun (RunOptions filePath) = translateFile gorunTempfile filePath where
+    gorunTempfile :: Text -> IO ()
+    gorunTempfile src = withSystemTempFile "funRun.go" (action src)
 
+    action :: Text -> FilePath -> Handle -> IO ()
+    action src path hdl = do
+        -- putStrLn (pack path)
+        hPutStr hdl src
+        hFlush hdl
+        output <- readProcess "go" ["run", path] []
+        putStr (pack output)

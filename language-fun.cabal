@@ -48,6 +48,8 @@ executable func
                       , language-fun
                       , filepath
                       , optparse-applicative
+                      , process
+                      , temporary
                       , text
   extra-libraries:      fungo
   default-extensions:   OverloadedStrings, NoImplicitPrelude

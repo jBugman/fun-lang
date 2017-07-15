@@ -90,16 +90,6 @@ instance Buildable Expression where
         (Lit lit) -> build lit
     build (WFSList x) = errorWithoutStackTrace $ unpack ("Can only print terminal nodes, but got " <> tshow x)
 
--- TODO: use s-cargot printer
--- instance Show Expression where
---     show (List xs) = unpack $ mconcat ["(", showContents xs, ")"]
---     show (Ident s) = unpack s
---     show (Type s)  = unpack s
---     show (Op s)    = unpack s
-
--- showContents :: [Expression] -> Text
--- showContents xs = ointercalate " " $ fmap tshow xs -- TODO: add line-fold on long lists and some keywords
-
 operators :: [String]
 operators =
     [ "="

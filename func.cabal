@@ -1,5 +1,5 @@
 name:                func
-version:             0.14.0.0-SNAPSHOT
+version:             0.14.1.0-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -22,8 +22,8 @@ library
                       , Fun.Go.Desugar
                       , Fun.Go.Printer
                       , Fun.Parser
+                      , Fun.Printer
                       , Fun.SExpression
-                    -- , Fun.Types
                       , Go.Fmt
   build-depends:        base >= 4.7 && < 5
                       , classy-prelude

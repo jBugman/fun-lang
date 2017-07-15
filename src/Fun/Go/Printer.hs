@@ -13,6 +13,7 @@ import Data.Text.Buildable          (Buildable)
 import Data.Text.Format             (Format, format)
 import Data.Text.Format.Params      (Params)
 
+import Fun.Printer     (singleLine)
 import Fun.SExpression (Atom (..), Expression, pattern ID, pattern OP, pattern SL)
 import Go.Fmt          (gofmt)
 
@@ -57,7 +58,7 @@ print (L [ OP op , lhs , rhs]) = do
     return $ strictFormat "{} {} {}" (lt, o, rt)
 
 -- catch-all todo case
-print s = syntaxErr $ printf1 "not supported yet: {}" s
+print s = syntaxErr $ "not supported yet: " <> singleLine s
 
 
 -- Function call printer

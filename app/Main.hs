@@ -1,10 +1,13 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 module Main where
 
+import Paths_language_fun (version)
+
 import ClassyPrelude       hiding (writeFile)
+import Data.Version        (showVersion)
 import Options.Applicative (Parser, argument, command, customExecParser, defaultPrefs, help, helper,
-                            idm, info, metavar, prefShowHelpOnEmpty, progDesc, short, str,
-                            subparser, switch)
+                            idm, info, infoOption, long, metavar, prefShowHelpOnEmpty, progDesc,
+                            short, str, subparser, switch)
 import System.Exit         (die)
 import System.FilePath     (replaceExtension)
 
@@ -14,8 +17,14 @@ import Fun (translate, unError)
 main :: IO ()
 main = join $ customExecParser prefs argparse
     where
-        argparse = info (commandDispatcher <**> helper) idm
+        argparse = info (commandDispatcher <**> versioner <**> helper) idm
         prefs    = defaultPrefs { prefShowHelpOnEmpty = True }
+
+versioner :: Parser (a -> a)
+versioner = infoOption
+    ("Fun compiler v" <> showVersion version)
+    (long "version" <> help "Show version")
+
 
 data Command
     = Translate TranslateOptions

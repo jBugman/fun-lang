@@ -8,7 +8,7 @@ import Test.Hspec                      (Expectation, HasCallStack, describe, hsp
 import Test.Hspec.Expectations         (shouldSatisfy)
 import Test.Hspec.Expectations.Contrib (isLeft)
 
-import Fun             (translate)
+import Fun             (SyntaxError, translate)
 import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
@@ -23,6 +23,9 @@ actual `shouldParse` expected = actual `shouldBe` Right expected
 
 shouldFailOn :: (HasCallStack) => (Text -> Either Text Expression) -> Text -> Expectation
 parser `shouldFailOn` input = parser input `shouldSatisfy` isLeft
+
+shouldPrint :: (HasCallStack) => Either SyntaxError Text -> Text -> Expectation
+actual `shouldPrint` expected = actual `shouldBe` Right expected
 
 
 main :: IO ()
@@ -151,29 +154,30 @@ main = hspec $ do
   describe "Fun.Go.Printer.print" $ do
 
     it "prints import" $
-      print (L [ ID "import" , SL "fmt" ]) `shouldBe`
-      Right "import \"fmt\""
+      print (L [ ID "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
 
     it "prints import with alias" $
-      print (L [ ID "import" , SL "very/long-package" , SL "pkg" ]) `shouldBe`
-      Right "import pkg \"very/long-package\""
+      print (L [ ID "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
+      "import pkg \"very/long-package\""
 
     it "prints simple func" $
-      print (L [ ID "func" , ID "setS" , L [ ID "set" , ID "s" , IL 2 ] ]) `shouldBe`
-      Right "func setS() {\ns = 2\n}"
+      print (L [ ID "func" , ID "setS" , L [ ID "set" , ID "s" , IL 2 ] ]) `shouldPrint`
+      "func setS() {\ns = 2\n}"
 
     it "prints lt op" $
-      print (L [ OP "<" , ID "n" , IL 10 ]) `shouldBe` Right "n < 10"
+      print (L [ OP "<" , ID "n" , IL 10 ]) `shouldPrint` "n < 10"
 
     it "prints eq op" $
-      print (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldBe` Right "foo == bar"
+      print (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
+
+    it "prints const decl" $
+      print (L [ ID "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
 
 
   describe "Fun.Go.Printer.printPretty" $ do
 
     it "prettyprints import" $
-      printPretty (L [ ID "import" , SL "fmt" ]) `shouldBe`
-      Right "import \"fmt\""
+      printPretty (L [ ID "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
 
     it "prettyprints import with alias" $ printPretty (L
       [ ID "import" , SL "very/long-package" , SL "pkg" ]) `shouldBe`
@@ -187,13 +191,13 @@ main = hspec $ do
       printPretty (L [ OP "<" , ID "n" , IL 10 ]) `shouldBe` Right "n < 10"
 
     it "prettyprints eq op" $
-      printPretty (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldBe` Right "foo == bar"
+      printPretty (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
 
 
   describe "Go.Fmt.gofmt" $ do
 
     it "formats valid code" $
-      gofmt "func  foo  (  ) { \n i++}" `shouldBe` Right "func foo() {\n\ti++\n}"
+      gofmt "func  foo  (  ) { \n i++}" `shouldBe` Right "func foo() {\n\ti++\n}"  -- TODO: shouldParse, change Left
 
     it "returns err on a broken code" $
       gofmt "func foo }( __" `shouldBe` Left "1:20: expected '(', found '}'"
@@ -230,6 +234,5 @@ main = hspec $ do
   describe "Fun.Main.translate" $
     it "works on example 01" $
       translate "(package main\n\n(func main (print \"hello world\")))\n"
-      `shouldBe` Right
+      `shouldPrint`
       "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello world\")\n}\n"
-

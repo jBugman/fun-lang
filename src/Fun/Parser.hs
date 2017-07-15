@@ -37,7 +37,10 @@ parseAtom = mkAtomParser
     ]
 
 parseIdent :: Parser String
-parseIdent = intercalate "." <$> sepBy1 parseIdent' (char '.')
+parseIdent = string "_" <|> parseSelector
+
+parseSelector :: Parser String
+parseSelector = intercalate "." <$> sepBy1 parseIdent' (char '.')
 
 parseIdent' :: Parser String
 parseIdent' = (:) <$> (lk <|> uk) <*> many

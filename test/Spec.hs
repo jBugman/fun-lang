@@ -79,6 +79,9 @@ main = hspec $ do
     it "parses ident" $
       parse "foo" `shouldParse` ID "foo"
 
+    it "parses placeholder ident" $
+      parse "_" `shouldParse` ID "_"
+
     it "ignores comments" $
       parse "; comment\nfoo" `shouldParse` ID "foo"
 

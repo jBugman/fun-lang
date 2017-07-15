@@ -4,7 +4,10 @@ module Main where
 
 import ClassyPrelude                hiding (print)
 import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
-import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
+import Test.Hspec                   (Spec, describe, it, shouldBe)
+import Test.Tasty                   (TestTree, defaultMain, testGroup)
+import Test.Tasty.Hspec             (testSpec)
+import Test.Tasty.QuickCheck        (testProperty)
 
 import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
@@ -17,26 +20,28 @@ import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
 import Test.Utils      (shouldFailOn, shouldParse, shouldPrint)
 
 
-
 main :: IO ()
-main = hspec $ do
-  describe "Unit"       unitsSpec
-  describe "Functional" funcSpec
-  describe "Examples"   examplesSpec
+main = do
+  hspUnit    <- testSpec "Unit"       unitsSpec
+  hspFunc    <- testSpec "Functional" funcSpec
+  hspExample <- testSpec "Examples"   examplesSpec
+  defaultMain $ testGroup "Tests"
+    [ hspUnit
+    , hspFunc
+    , testGroup "Properties" [ expressionFunctorProp ]
+    , hspExample
+    ]
+
+
+expressionFunctorProp :: TestTree
+expressionFunctorProp = testGroup "Expression Functor"
+  [ testProperty "identity" exprFunctorIdentity
+  , testProperty "composability" exprFunctorCompose
+  ]
 
 
 unitsSpec :: Spec
 unitsSpec = do
-
-  describe "Expression Functor" $ do
-    it "manual fmap" $
-      fmap tshow (L [ ID "foo" , Nil , IL 42 , L [ ID "barbar" ] ])
-      `shouldBe` L [ "Ident \"foo\"" , Nil , "Lit (Int 42)" , L [ "Ident \"barbar\"" ] ]
-
-    it "identity" exprFunctorIdentity
-
-    it "composability" exprFunctorCompose
-
 
   describe "Fun.Parser.parse" $ do
 
@@ -50,10 +55,10 @@ unitsSpec = do
       parse `shouldFailOn` ""
 
 
-    it "ignores comments 1" $
+    it "ignores comments A" $
       parse "; comment\nfoo" `shouldParse` ID "foo"
 
-    it "ignores comments 2" $
+    it "ignores comments B" $
       parse "; comment 1\n(foo bar)\n; comment 2" `shouldParse` L [ ID "foo", ID "bar" ]
 
 

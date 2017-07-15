@@ -15,7 +15,7 @@ import Data.Text.Format             (Format, format)
 import Data.Text.Format.Params      (Params)
 
 import Fun.Printer     (singleLine)
-import Fun.SExpression (Atom (..), Expression, pattern ID, pattern OP, pattern SL)
+import Fun.SExpression (Atom (..), Expression, pattern ID, pattern OP, pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
 
 
@@ -31,7 +31,10 @@ print (ID x) = Right x
 
 -- literal
 print (SL x)      = Right $ printf1 "\"{}\"" x
-print (A (Lit x)) = Right $ printf1 "{}"     x
+print (A (Lit x)) = Right $ printf1 "{}" x
+
+-- types
+print (TP x) = Right x
 
 -- package
 print (L ( ID "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of

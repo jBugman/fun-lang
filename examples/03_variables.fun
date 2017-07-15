@@ -11,7 +11,7 @@
   (var d true)
   (print d)
 
-  (var int e)
+  (var e :int)
   (print e)
 
   (const f (/ 22.1 2))

@@ -1,4 +1,3 @@
-{-# ANN module "HLint: ignore" #-}
 import Data.Maybe
 import Distribution.PackageDescription
 import Distribution.Simple

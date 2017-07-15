@@ -1,4 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 module Main where
 
 import Paths_language_fun (version)
@@ -11,7 +10,7 @@ import Options.Applicative (Parser, argument, command, customExecParser, default
 import System.Exit         (die)
 import System.FilePath     (replaceExtension)
 
-import Fun (translate, unError)
+import Fun (SyntaxError (..), translate, unError)
 
 
 main :: IO ()
@@ -45,10 +44,9 @@ commandDispatcher = subparser
 
 -- Translate --
 
-data TranslateOptions = TranslateOptions
-    { writeFile :: Bool
-    , filepath  :: FilePath
-    }
+type WriteFile = Bool
+
+data TranslateOptions = TranslateOptions WriteFile FilePath
 
 transCommand :: Parser TranslateOptions
 transCommand = TranslateOptions
@@ -56,20 +54,26 @@ transCommand = TranslateOptions
     <*> argument str (metavar "<filename.fun>")
 
 doTrans :: TranslateOptions -> IO ()
-doTrans opts = do
-    let fp = filepath (opts :: TranslateOptions)
-    source <- readFileUtf8 fp
-    let name = replaceExtension fp ".go"
-    let output = if writeFile opts then writeFileUtf8 name else putStrLn
-    either (die . unError) output $ translate source
+doTrans (TranslateOptions writeFile filePath) =
+    translateFile (die . unError) outputResult filePath
+    where
+        outputResult = if writeFile
+            then writeFileUtf8 (replaceExtension filePath ".go")
+            else putStrLn
+
+translateFile :: (SyntaxError -> IO ()) -> (Text -> IO ()) -> FilePath -> IO ()
+translateFile errPath successPath filePath = do
+    source <- readFileUtf8 filePath
+    either errPath successPath $ translate source
 
 
 -- Run --
 
-newtype RunOptions = RunOptions { filepath :: FilePath }
+newtype RunOptions = RunOptions FilePath
 
 runCommand :: Parser RunOptions
 runCommand = RunOptions <$> argument str (metavar "<filename.fun>")
 
 doRun :: RunOptions -> IO ()
-doRun _ = putStrLn "test run" -- TODO: implement
+doRun (RunOptions filePath) = putStrLn (pack filePath)
+

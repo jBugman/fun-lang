@@ -3,16 +3,17 @@ module Main where
 import Paths_language_fun (version)
 
 import ClassyPrelude       hiding (writeFile)
+import Data.Text           (replace)
 import Data.Text.IO        (hPutStr)
 import Data.Version        (showVersion)
 import Options.Applicative (Parser, argument, command, customExecParser, defaultPrefs, help, helper,
                             idm, info, infoOption, long, metavar, prefShowHelpOnEmpty, progDesc,
                             short, str, subparser, switch)
-import System.Exit         (die)
+import System.Exit         (ExitCode (..), die)
 import System.FilePath     (replaceExtension)
-import System.IO           (hFlush)
+import System.IO           (hFlush, stderr)
 import System.IO.Temp      (withSystemTempFile)
-import System.Process      (readProcess)
+import System.Process      (readProcessWithExitCode)
 
 import Fun (translate, unError)
 
@@ -86,8 +87,11 @@ doRun (RunOptions filePath) = translateFile gorunTempfile filePath where
 
     action :: Text -> FilePath -> Handle -> IO ()
     action src path hdl = do
-        -- putStrLn (pack path)
         hPutStr hdl src
         hFlush hdl
-        output <- readProcess "go" ["run", path] []
-        putStr (pack output)
+        (exitcode, output, errors) <- readProcessWithExitCode "go" ["run", path] []
+        case exitcode of
+            ExitSuccess   -> putStr (pack output)
+            ExitFailure _ -> hPutStr stderr $ replaceFileName errors
+        where
+            replaceFileName s = replace (pack path) "~tmp.go" (pack s)

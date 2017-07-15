@@ -1,25 +1,24 @@
 module Main where
 
 import ClassyPrelude
-import System.Exit     (die)
-import System.FilePath (replaceExtension)
+import Options.Applicative (argument, execParser, info, metavar, str)
+import System.Exit         (die)
+import System.FilePath     (replaceExtension)
 
 import Fun (SyntaxError (..), translate)
 
 
+newtype Options = Options
+    { filename  :: FilePath
+    }
+
 main :: IO ()
-main = do
-    args <- getArgs
-    case args of
-        [ filename ] -> trans (unpack filename)
-        _            -> die usage
+main = execParser opts >>= run where
+    opts = info parser mempty
+    parser = Options <$> argument str (metavar "<filename.fun>")
 
-
-usage :: String
-usage = intercalate "\n"
-    [ "Usage:"
-    , "<filename.fun> — Translate to Go"
-    ]
+run :: Options -> IO ()
+run opts = trans (filename opts)
 
 trans :: FilePath -> IO ()
 trans fp = do

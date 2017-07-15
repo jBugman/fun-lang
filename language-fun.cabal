@@ -66,6 +66,7 @@ test-suite fun-lang-test
   build-depends:        base
                       , classy-prelude
                       , language-fun
+                      , filepath
                       , hspec
                       , hspec-expectations
                       , QuickCheck

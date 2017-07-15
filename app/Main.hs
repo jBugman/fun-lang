@@ -70,7 +70,7 @@ translateFile successPath filePath = do
     source <- readFileUtf8 filePath
     either errPath successPath $ translate source
     where
-        errPath = die . unError
+        errPath = die . unpack . unError
 
 
 -- Run --

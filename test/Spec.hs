@@ -15,7 +15,7 @@ import Fun.Parser      (parse)
 import Fun.SExpression (pattern CL, pattern DL, pattern HL, pattern ID, pattern IL, pattern OP,
                         pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
-import Test.Examples   (examplesSpec)
+import Test.Examples   (examples)
 import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
 import Test.Utils      (shouldFailOn, shouldParse, shouldPrint)
 
@@ -24,12 +24,11 @@ main :: IO ()
 main = do
   hspUnit    <- testSpec "Unit"       unitsSpec
   hspFunc    <- testSpec "Functional" funcSpec
-  hspExample <- testSpec "Examples"   examplesSpec
   defaultMain $ testGroup "Tests"
     [ hspUnit
     , hspFunc
     , testGroup "Properties" [ expressionFunctorProp ]
-    , hspExample
+    , examples
     ]
 
 

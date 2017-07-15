@@ -86,8 +86,8 @@ funcCall name args = case partitionEithers (print <$> args) of
 
 newtype SyntaxError = SyntaxError Text deriving (Eq, Show)
 
-unError :: SyntaxError -> String
-unError (SyntaxError err) = unpack err
+unError :: SyntaxError -> Text
+unError (SyntaxError err) = err
 
 -- Utils --
 

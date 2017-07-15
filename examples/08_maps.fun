@@ -1,7 +1,7 @@
 (package main
 
 (func main (
-  (var m (make :map[string]int))
+  (var m (make (:map :string :int)))
 
   (set (val m "k1") 7)
   (set (val m "k2") 13)
@@ -19,5 +19,6 @@
   (set _ prs (val m "k2"))
   (print "prs:" prs)
 
-  (var n (lit :map[string]int [("foo" 1) ("bar" 2)]))
-  (print n))))
+  (var n (lit (:map :string :int) (("foo" 1) ("bar" 2)) ))
+  (print n)
+)))

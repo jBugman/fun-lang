@@ -1,4 +1,4 @@
-name:                func
+name:                language-fun
 version:             0.14.1.0-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
@@ -44,8 +44,8 @@ executable func
   main-is:              Main.hs
   ghc-options:         -Wall -threaded -rtsopts
   build-depends:        base
-                      , func
                       , classy-prelude
+                      , language-fun
                       , filepath
                       , text
   extra-libraries:      fungo
@@ -60,7 +60,7 @@ test-suite fun-lang-test
                       , Test.Properties
   build-depends:        base
                       , classy-prelude
-                      , func
+                      , language-fun
                       , hspec
                       , hspec-expectations
                       , QuickCheck

@@ -12,6 +12,8 @@ examples :: TestTree
 examples = testGroup "Examples"
     [ translateExample "01_hello_world"
     , translateExample "02_values"
+    , translateExample "03_variables"
+    , translateExample "04_for"
     ]
 
 
@@ -37,7 +39,7 @@ translated name = do
 cmpFunc :: Text -> Text -> IO (Maybe String)
 cmpFunc expected actual = pure $ if expected == actual
     then Nothing
-    else Just . unpack $ "Test output was different from golden file. It was: " <> actual
+    else Just . unpack $ "Test output was different from golden file: '" <> actual <> "'"
 
 updateFunc :: Text -> IO ()
 updateFunc _ = pure ()

@@ -1,4 +1,7 @@
-module Fun ( translate ) where
+module Fun
+    ( translate
+    , SyntaxError (..)
+) where
 
 import ClassyPrelude
 import Data.Either.Combinators (mapLeft)

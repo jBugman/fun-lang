@@ -51,8 +51,11 @@ print (L [ ID "set" , ID name , body ]) = printf2 "{} = {}" name <$> print body
 -- function call
 print (L ( ID f : args )) = funcCall f args
 
--- operators
-print (L [ OP op , lhs , rhs]) = do
+-- unary operators
+print (L [ OP op , x ]) = printf2 "{}{}" op <$> print x
+
+-- binary operators
+print (L [ OP op , lhs , rhs ]) = do
     lt <- print lhs
     rt <- print rhs
     let o = if op == "=" then "==" else op

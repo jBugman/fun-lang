@@ -8,5 +8,5 @@
 
   (print (&& true false))
   (print (|| true false))
-  (print (not true))
+  (print (! true))
 )))

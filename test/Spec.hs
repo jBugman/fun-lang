@@ -94,6 +94,12 @@ main = hspec $ do
     it "parses operator" $
       parse "+" `shouldParse` OP "+"
 
+    it "parses &&" $
+      parse "&&" `shouldParse` OP "&&"
+
+    it "parses operator" $
+      parse "&" `shouldParse` OP "&"
+
     it "fails on empty string" $
       parse `shouldFailOn` ""
 

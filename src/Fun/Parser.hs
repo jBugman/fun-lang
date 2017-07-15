@@ -54,7 +54,7 @@ parseType :: Parser String
 parseType = (:) <$> char ':' *> parseIdent <?> "type literal"
 
 parseOp :: Parser String
-parseOp = choice (fmap string operators) <?> "operator"
+parseOp = choice (try . string <$> operators) <?> "operator"
 
 parseStringLit :: Parser String
 parseStringLit = char q *> many (noneOf (singleton q)) <* char q <?> "string literal"

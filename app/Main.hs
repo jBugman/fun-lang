@@ -2,8 +2,9 @@
 module Main where
 
 import ClassyPrelude       hiding (writeFile)
-import Options.Applicative (Parser, argument, command, execParser, help, helper, info, metavar,
-                            short, str, subparser, switch)
+import Options.Applicative (Parser, argument, command, customExecParser, defaultPrefs, help, helper,
+                            idm, info, metavar, prefShowHelpOnEmpty, progDesc, short, str,
+                            subparser, switch)
 import System.Exit         (die)
 import System.FilePath     (replaceExtension)
 
@@ -12,11 +13,12 @@ import Fun (translate, unError)
 
 main :: IO ()
 main = do
-    let argParser = info (commands <**> helper) mempty
-    action <- execParser argParser
+    let prefs = defaultPrefs { prefShowHelpOnEmpty = True }
+    let argParser = info (commands <**> helper) idm
+    action <- customExecParser prefs argParser
     case action of
-        Translate opts -> trans opts
-        Run       _    -> putStrLn "test run"
+        Translate opts -> doTrans opts
+        Run       opts -> doRun opts
 
 data Command
     = Translate TranslateOptions
@@ -24,9 +26,13 @@ data Command
 
 commands :: Parser Command
 commands = subparser
-    (  command "translate" (info (Translate <$> transCommand <**> helper) mempty)
-    <> command "run"       (info (Run       <$> runCommand <**> helper) mempty)
-    ) <|> (Translate <$> transCommand) -- Default command
+    (  command "translate" (info
+        ( transCommand <**> helper )
+        ( progDesc "Translate Fun source file to Go (default)" ) )
+    <> command "run"       (info
+        ( runCommand   <**> helper )
+        ( progDesc "'go run' translated on the fly Fun source file" ) )
+    ) <|> transCommand -- Default command
 
 
 -- Translate --
@@ -36,13 +42,14 @@ data TranslateOptions = TranslateOptions
     , filepath  :: FilePath
     }
 
-transCommand :: Parser TranslateOptions
-transCommand = TranslateOptions
-    <$> switch ( short 'f' <> help "Write output to file <filename.go>" )
-    <*> argument str (metavar "<filename.fun>")
+transCommand :: Parser Command
+transCommand = Translate <$> optParser where
+    optParser = TranslateOptions
+        <$> switch ( short 'f' <> help "Write output to file <filename.go>" )
+        <*> argument str (metavar "<filename.fun>")
 
-trans :: TranslateOptions -> IO ()
-trans opts = do
+doTrans :: TranslateOptions -> IO ()
+doTrans opts = do
     let fp = filepath (opts :: TranslateOptions)
     source <- readFileUtf8 fp
     let name = replaceExtension fp ".go"
@@ -54,5 +61,8 @@ trans opts = do
 
 newtype RunOptions = RunOptions { filepath :: FilePath }
 
-runCommand :: Parser RunOptions
-runCommand = RunOptions <$> argument str (metavar "<filename.fun>")
+runCommand :: Parser Command
+runCommand = Run <$> (RunOptions <$> argument str (metavar "<filename.fun>"))
+
+doRun :: RunOptions -> IO ()
+doRun _ = putStrLn "test run" -- TODO: implement

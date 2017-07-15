@@ -1,13 +1,13 @@
 module Fun
     ( translate
-    , SyntaxError (..)
+    , module Fun.Go.Printer
 ) where
 
 import ClassyPrelude
 import Data.Either.Combinators (mapLeft)
 
 import Fun.Go.Desugar (desugar)
-import Fun.Go.Printer (SyntaxError (..), printPretty)
+import Fun.Go.Printer (SyntaxError (..), printPretty, unError)
 import Fun.Parser     (parse)
 
 

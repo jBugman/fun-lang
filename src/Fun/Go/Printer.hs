@@ -1,6 +1,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 module Fun.Go.Printer
     ( SyntaxError(..)
+    , unError
     , printPretty
     , print
 ) where
@@ -71,6 +72,9 @@ funcCall name args = case partitionEithers $ fmap print args of
 -- Types --
 
 newtype SyntaxError = SyntaxError Text deriving (Eq, Show)
+
+unError :: SyntaxError -> String
+unError (SyntaxError err) = unpack err
 
 -- Utils --
 

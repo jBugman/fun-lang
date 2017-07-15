@@ -71,7 +71,7 @@ parseCharLit = do
             return [slash, c]
 
 parseHexLit :: Parser Integer
-parseHexLit = (string "0x" <|> string "0X") *> hexNumber <?> "hex literal"
+parseHexLit = try ((string "0x" <|> string "0X") *> hexNumber) <?> "hex literal"
 
 parseFloat :: Parser Double
 parseFloat = try parseHaskellFloat <?> "float"

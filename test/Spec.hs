@@ -61,6 +61,9 @@ main = hspec $ do
     it "parses int lit" $
       parse "42" `shouldParse` IL 42
 
+    it "parses zero" $
+      parse "0" `shouldParse` IL 0
+
     it "parses double lit" $
       parse "42.0" `shouldParse` DL 42.0
 

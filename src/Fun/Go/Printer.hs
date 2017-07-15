@@ -34,7 +34,7 @@ print (SL x)      = Right $ printf1 "\"{}\"" x
 print (A (Lit x)) = Right $ printf1 "{}"     x
 
 -- package
-print (L ( ID "package" : ID name : topLevels )) = case partitionEithers $ fmap print topLevels of
+print (L ( ID "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
     (err : _ , _) -> Left err
     ([] , txts)   -> Right $ printf2 "package {}\n\n{}" name (ointercalate "\n\n" txts)
 
@@ -58,13 +58,20 @@ print (L [ OP op , lhs , rhs]) = do
     let o = if op == "=" then "==" else op
     return $ strictFormat "{} {} {}" (lt, o, rt)
 
+-- expression list, recursive
+print (L [ L h ] ) = print (L h)
+print (L ( L h : rest )) = do
+    ph    <- print (L h)
+    prest <- print (L rest)
+    return $ ph <> "\n" <> prest
+
 -- catch-all todo case
 print s = syntaxErr $ "not supported yet: " <> singleLine s
 
 
 -- Function call printer
 funcCall :: Text -> [Expression] -> Either SyntaxError Text
-funcCall name args = case partitionEithers $ fmap print args of
+funcCall name args = case partitionEithers (print <$> args) of
     (err : _ , _) -> Left err
     ([] , txts)   -> Right $ printf2 "{}({})" name (ointercalate ", " txts)
 

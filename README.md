@@ -11,13 +11,13 @@ Also, there may be an ability to use raw inline Go code for more complex cases.
 Transpiling is mostly literal, but there are some differences from Go:
 
 * No arrays, only slices
-* No `:=`, only `var` everythere
+* No `:=`, only `var` everywhere
 * No named return values
 * No `new`
 * No `goto`
 * No raw string literals (yet?)
 * No declaring in if statement (yet?)
-* Can't declare, but can call function with variadic parameters (yet?)
+* Can't declare but can call a function with variadic parameters (yet?)
 
 
 ### Learn Fun in Y minutes (translated from Go)

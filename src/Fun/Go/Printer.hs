@@ -62,6 +62,15 @@ print (L [ KW "import" , SL path , SL alias ]) = Right $ printf2 "import {} \"{}
 
 -- func
 print (L [ KW "func" , ID name , body ]) = printf2 "func {}() {\n{}\n}" name <$> print body
+print (L [ KW "func" , ID name , args, body ]) = do
+    tbody <- print body
+    targs <- print args
+    Right $ printf3 "func {}({}) {\n{}\n}" name targs tbody
+print (L [ KW "func" , ID name , args, results, body ]) = do
+    tbody    <- print body
+    targs    <- print args
+    tresults <- print results
+    Right $ strictFormat "func {}({}) {} {\n{}\n}" (name, targs, tresults, tbody)
 
 -- assignment
 print (L [ KW "set" , ID name , body ]) = printf2 "{} = {}" name <$> print body

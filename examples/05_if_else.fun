@@ -12,5 +12,7 @@
     (print num "is negative")
     (if (< num 10)
       (print num "has 1 digit")
-      (print num "has multiple digits") ))
+      (print num "has multiple digits")
+    )
+  )
 )))

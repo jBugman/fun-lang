@@ -19,6 +19,6 @@
   (set _ prs (val m "k2"))
   (print "prs:" prs)
 
-  (var n (lit (:map :string :int) (("foo" 1) ("bar" 2)) ))
+  (var n (:map :string :int) (("foo" 1) ("bar" 2)) )
   (print n)
 )))

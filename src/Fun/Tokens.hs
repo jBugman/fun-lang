@@ -29,4 +29,5 @@ keywords =
     , "set"
     , "var"
     , "const"
+    , "slice"
     ]

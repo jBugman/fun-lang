@@ -1,5 +1,5 @@
 name:                language-fun
-version:             0.15.6.0-SNAPSHOT
+version:             0.15.6.1-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -75,8 +75,6 @@ test-suite fun-lang-test
                       , s-cargot
                       , tasty
                       , tasty-golden
-                      , tasty-hspec
-                      , tasty-quickcheck
                       , text
   extra-libraries:      fungo
   ghc-options:         -Wall -threaded -rtsopts

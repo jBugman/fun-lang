@@ -26,6 +26,7 @@ keywords = goKeywords <>
     , "set"
     , "slice"
     , "any"
+    , "val"
     ]
 
 goKeywords :: [String]

@@ -46,6 +46,10 @@ print (L [ KW "const" , ID name , TP t , e ]) = printf3 "const {} {} = {}" name 
 print (L [ KW "var" , ID name , TP t ])     = Right $ printf2 "var {} {}" name t
 print (L [ KW "var" , ID name , e ])        = printf2 "var {} = {}" name <$> print e
 print (L [ KW "var" , ID name , TP t , e ]) = printf3 "var {} {} = {}" name t <$> print e
+print (L [ KW "var" , ID name , ts , e ])   = do
+    te  <- print e
+    tts <- print ts
+    Right $ printf3 "var {} {} = {}" name tts te
 
 -- package
 print (L ( KW "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
@@ -61,6 +65,13 @@ print (L [ KW "func" , ID name , body ]) = printf2 "func {}() {\n{}\n}" name <$>
 
 -- assignment
 print (L [ KW "set" , ID name , body ]) = printf2 "{} = {}" name <$> print body
+print (L [ KW "set" , xs@(L ( KW "val" : _ )) , body ]) = do
+    accesor <- print xs
+    tbody   <- print body
+    Right $ printf2 "{} = {}" accesor tbody
+
+-- indexed access
+print (L [ KW "val" , ID name , idx ]) = printf2 "{}[{}]" name <$> print idx
 
 -- function call
 print (L ( ID f : args )) = funcCall f args

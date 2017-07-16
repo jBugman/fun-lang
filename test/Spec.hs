@@ -172,6 +172,9 @@ unitTests = do
         , L [ KW "func" , ID "main"
             , L [ KW "print" , SL "hello world" ] ]]
 
+    it "var decl from slice literal" $
+      parse "(var t (:slice :string) (\"g\" \"h\" \"c\"))" `shouldParse`
+      L [ KW "var" , ID "t" , L [ TP "slice" , TP "string" ] , L [ SL "g" , SL "h" , SL "c" ] ]
 
   describe "Fun.Go.Printer.print" $ do
 

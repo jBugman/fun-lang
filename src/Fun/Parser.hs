@@ -91,5 +91,5 @@ parseFloat = try parseHaskellFloat <?> "float"
 
 parseBool :: Parser Bool
 parseBool = do
-    b <- try (string "false") <|> string "true" <?> "bool"
+    b <- try (string "false" <|> string "true") <?> "bool"
     return (b == "true")

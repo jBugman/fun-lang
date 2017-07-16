@@ -15,11 +15,12 @@ import Text.Parsec                    (char, choice, many, noneOf, oneOf, satisf
 import Text.Parsec.Char               (string)
 import Text.Parsec.Text               (Parser)
 
+import Fun.Errors      (Error (SyntaxError))
 import Fun.SExpression (Atom (..), Expression, Literal (..), operators)
 
 
-parse :: Text -> Either Text Expression
-parse = mapLeft pack <$> decodeOne parser
+parse :: Text -> Either Error Expression
+parse = mapLeft (SyntaxError . pack) <$> decodeOne parser
 
 parser :: SExprParser Atom Expression
 parser = withLispComments $ asWellFormed parseAtom

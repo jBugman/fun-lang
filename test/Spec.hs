@@ -9,6 +9,7 @@ import Test.Tasty                   (TestTree, defaultMain, testGroup)
 import Test.Tasty.Hspec             (testSpec)
 import Test.Tasty.QuickCheck        (testProperty)
 
+import Fun.Errors      (Error (..))
 import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
@@ -216,7 +217,7 @@ funcSpec = do
       gofmt "func  foo  (  ) { \n i++}" `shouldBe` Right "func foo() {\n\ti++\n}"  -- TODO: shouldParse, change Left
 
     it "returns err on a broken code" $
-      gofmt "func foo }( __" `shouldBe` Left "1:20: expected '(', found '}'"
+      gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")
 
 
   describe "Fun.Go.Desugar.desugar" $ do

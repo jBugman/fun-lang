@@ -1,15 +1,12 @@
-module Fun
-    ( translate
-    , module Fun.Go.Printer
-) where
+module Fun ( translate ) where
 
 import ClassyPrelude
-import Data.Either.Combinators (mapLeft)
 
+import Fun.Errors     (Error (..))
 import Fun.Go.Desugar (desugar)
-import Fun.Go.Printer (SyntaxError (..), printPretty, unError)
+import Fun.Go.Printer (printPretty)
 import Fun.Parser     (parse)
 
 
-translate :: Text -> Either SyntaxError Text
-translate txt = mapLeft SyntaxError (parse txt) >>= printPretty . desugar
+translate :: Text -> Either Error Text
+translate txt = parse txt >>= printPretty . desugar

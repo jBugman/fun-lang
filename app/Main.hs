@@ -15,7 +15,8 @@ import System.IO           (hFlush, stderr)
 import System.IO.Temp      (withSystemTempFile)
 import System.Process      (readProcessWithExitCode)
 
-import Fun (translate, unError)
+import Fun        (translate)
+import Fun.Errors (unError)
 
 
 main :: IO ()

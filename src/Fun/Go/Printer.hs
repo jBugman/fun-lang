@@ -1,30 +1,28 @@
 {-# LANGUAGE PatternSynonyms #-}
 module Fun.Go.Printer
-    ( SyntaxError(..)
-    , unError
-    , printPretty
+    ( printPretty
     , print
 ) where
 
 import ClassyPrelude                hiding (print)
 import Data.Either                  (partitionEithers)
-import Data.Either.Combinators      (mapLeft)
 import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
 import Data.Text.Buildable          (Buildable)
 import Data.Text.Format             (Format, format)
 import Data.Text.Format.Params      (Params)
 
+import Fun.Errors      (Error (..))
 import Fun.Printer     (singleLine)
 import Fun.SExpression (Atom (..), Expression, pattern ID, pattern OP, pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
 
 
-printPretty :: Expression -> Either SyntaxError Text
-printPretty e = print e >>= (mapLeft SyntaxError . gofmt)
+printPretty :: Expression -> Either Error Text
+printPretty e = print e >>= gofmt
 
-print :: Expression -> Either SyntaxError Text
+print :: Expression -> Either Error Text
 -- empty
-print Nil = syntaxErr "empty expression"
+print Nil = Left . TranslationError $ "empty expression"
 
 -- ident
 print (ID x) = Right x
@@ -72,22 +70,15 @@ print (L ( L h : rest )) = do
     return $ ph <> "\n" <> prest
 
 -- catch-all todo case
-print s = syntaxErr $ "not supported yet: " <> singleLine s
+print s = Left . TranslationError $ "not supported yet: " <> singleLine s
 
 
 -- Function call printer
-funcCall :: Text -> [Expression] -> Either SyntaxError Text
+funcCall :: Text -> [Expression] -> Either Error Text
 funcCall name args = case partitionEithers (print <$> args) of
     (err : _ , _) -> Left err
     ([] , txts)   -> Right $ printf2 "{}({})" name (ointercalate ", " txts)
 
-
--- Types --
-
-newtype SyntaxError = SyntaxError Text deriving (Eq, Show)
-
-unError :: SyntaxError -> Text
-unError (SyntaxError err) = err
 
 -- Utils --
 
@@ -99,6 +90,3 @@ printf1 fmt x = strictFormat fmt [x]
 
 printf2 :: Buildable a => Format -> a -> a -> Text
 printf2 fmt x y = strictFormat fmt (x, y)
-
-syntaxErr :: Text -> Either SyntaxError Text
-syntaxErr = Left . SyntaxError

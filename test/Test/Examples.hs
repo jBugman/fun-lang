@@ -5,7 +5,8 @@ import System.FilePath            ((<.>), (</>))
 import Test.Tasty                 (TestName, TestTree, testGroup)
 import Test.Tasty.Golden.Advanced (goldenTest)
 
-import Fun (translate, unError)
+import Fun        (translate)
+import Fun.Errors (unError)
 
 
 examples :: TestTree

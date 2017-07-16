@@ -230,7 +230,7 @@ funcSpec = do
     it "does nothing when there is nothing to do" $
       desugar (L [ ID "foo" , ID "bar" ]) `shouldBe` L [ ID "foo" , ID "bar" ]
 
-    it "desugars print" $
+    it "print" $
       desugar (L
         [ KW "package" , ID "main" , L
         [ KW "func" , ID "main" , L
@@ -241,14 +241,27 @@ funcSpec = do
         [ KW "func" , ID "main" , L
           [ ID "fmt.Println" , SL "hello world"] ]]
 
-    it "desugars print with existing import" $
+    it "print with existing import" $
       desugar (L
         [ KW "package" , ID "main" , L
         [ KW "import" , SL "fmt" ] , L
         [ KW "func" , ID "main" , L
-          [ ID "print" , SL "hello world"] ]])
+          [ KW "print" , SL "hello world"] ]])
       `shouldBe` L
         [ KW "package" , ID "main" , L
         [ KW "import" , SL "fmt" ] , L
         [ KW "func" , ID "main" , L
           [ ID "fmt.Println" , SL "hello world"] ]]
+
+    it "deeper nested print" $
+      desugar (L
+        [ KW "package" , ID "main" , L
+        [ KW "func" , ID "main" , L
+          [ KW "for" , L
+            [ KW "print" , SL "hello world"] ]]])
+      `shouldBe` L
+        [ KW "package", ID "main" , L
+        [ KW "import" , SL "fmt" ] , L
+        [ KW "func" , ID "main" , L
+          [ KW "for" , L
+            [ ID "fmt.Println" , SL "hello world"] ]]]

@@ -28,9 +28,9 @@
   (print "dcl:" t)
 
   (var twoD (make (:slice (:slice :int)) 3))
-  (for (i 0 3) (
+  (for i 0 3 (
     (var innerLen (+ i 1))
     (set (val twoD i) (make (:slice :int) innerLen))
-    (for (j 0 innerLen)
+    (for j 0 innerLen
       (set (val (val twoD i) j) (+ i j))  )))  ; two dimensional-slice access could be better
 )))

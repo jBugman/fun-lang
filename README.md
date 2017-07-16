@@ -165,9 +165,9 @@ Transpiling is mostly literal, but there are some differences from Go:
   )
 
   ; Variables declared in for and if are local to their scope.
-  (for (var x 0) (< x 3) (inc x) (  ; inc == ++
+  (for x 0 3
     (print "iteration" x)
-  ))
+  )
   ; x == 42 here.
 
   ; For is the only loop statement in Go, but it has alternate forms.
@@ -179,14 +179,14 @@ Transpiling is mostly literal, but there are some differences from Go:
   ; You can use range to iterate over a slice, a string, a map, or a channel.
   ; range returns one (channel) or two values (array, slice, string and map).
   (var mp (:map :string :int) (("one" 1) ("two" 2) ("three" 3)))
-  (for (var key value (range mp)) (
+  (for (range key value mp) (
     ; for each pair in the map, print key and value
     (fmt.Printf "key=%s, value=%d\n" key value)
   ))
   ; If you only need the value, use the underscore as the key
-  (for (var _ name (range ((:slice :string) ("Bob" "Bill" "Joe")))) (
+  (for (range _ name ((:slice :string) ("Bob" "Bill" "Joe")) )
     (fmt.Printf "Hello, %s\n" name)
-  ))
+  )
 
   ; You can declare and assign variable in an if statement, then test.
   ; But it not supported yet.

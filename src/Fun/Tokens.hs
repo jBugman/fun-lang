@@ -25,6 +25,7 @@ keywords = goKeywords <>
     , "printf"
     , "set"
     , "slice"
+    , "any"
     ]
 
 goKeywords :: [String]

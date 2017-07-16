@@ -33,7 +33,10 @@ print (SL x)      = Right $ printf1 "\"{}\"" x
 print (A (Lit x)) = Right $ printf1 "{}" x
 
 -- types
-print (TP x) = Right x
+print (TP "any") = Right "interface{}"
+print (TP x)     = Right x
+print (L [ TP "slice" , TP x ])        = Right $ printf1 "[]{}" x
+print (L [ TP "map"   , TP k , TP v ]) = Right $ printf2 "map[{}]{}" k v
 
 -- const
 print (L [ KW "const" , ID name , e ])        = printf2 "const {} = {}" name <$> print e

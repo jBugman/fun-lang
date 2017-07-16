@@ -35,6 +35,15 @@ print (A (Lit x)) = Right $ printf1 "{}" x
 -- types
 print (TP x) = Right x
 
+-- const
+print (L [ KW "const" , ID name , e ])        = printf2 "const {} = {}" name <$> print e
+print (L [ KW "const" , ID name , TP t , e ]) = printf3 "const {} {} = {}" name t <$> print e
+
+-- var
+print (L [ KW "var" , ID name , TP t ])     = Right $ printf2 "var {} {}" name t
+print (L [ KW "var" , ID name , e ])        = printf2 "var {} = {}" name <$> print e
+print (L [ KW "var" , ID name , TP t , e ]) = printf3 "var {} {} = {}" name t <$> print e
+
 -- package
 print (L ( KW "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
     (err : _ , _) -> Left err
@@ -61,7 +70,7 @@ print (L [ OP op , lhs , rhs ]) = do
     lt <- print lhs
     rt <- print rhs
     let o = if op == "=" then "==" else op
-    return $ strictFormat "{} {} {}" (lt, o, rt)
+    return $ printf3 "{} {} {}" lt o rt
 
 -- expression list, recursive
 print (L [ L h ] ) = print (L h)
@@ -91,3 +100,6 @@ printf1 fmt x = strictFormat fmt [x]
 
 printf2 :: Buildable a => Format -> a -> a -> Text
 printf2 fmt x y = strictFormat fmt (x, y)
+
+printf3 :: Buildable a => Format -> a -> a -> a -> Text
+printf3 fmt x y z = strictFormat fmt (x, y, z)

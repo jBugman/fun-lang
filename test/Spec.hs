@@ -140,7 +140,7 @@ unitTests = do
 
     it "func call" $
       parse "(printf \"%+v\n\" v)" `shouldParse`
-      L [ ID "printf", SL "%+v\n", ID "v" ]
+      L [ KW "printf", SL "%+v\n", ID "v" ]
 
     it "selector + unit" $
       parse "(fmt.Println ())" `shouldParse` L [ ID "fmt.Println", Nil ]

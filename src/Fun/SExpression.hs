@@ -24,6 +24,8 @@ import Data.Text.Buildable          (Buildable, build)
 import Data.Text.Lazy.Builder       (fromText)
 import GHC.Err                      (errorWithoutStackTrace)
 
+import Fun.Tokens (keywords, operators)
+
 type Expression = WellFormedSExpr Atom
 
 data Atom
@@ -103,27 +105,3 @@ instance Buildable Expression where
         (Op s)      -> fromText s
         (Lit lit)   -> build lit
     build (WFSList x) = errorWithoutStackTrace $ unpack ("Can only print terminal nodes, but got " <> tshow x)
-
-operators :: [String]
-operators =
-    [ "="
-    , "+"
-    , "-"
-    , "*"
-    , "/"
-    , "<"
-    , ">"
-    , "!"
-    , "%"
-    , "&&"
-    , "||"
-    , "&"
-    ]
-
-keywords :: [String]
-keywords =
-    [ "func"
-    , "package"
-    , "import"
-    , "for"
-    ]

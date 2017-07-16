@@ -16,7 +16,8 @@ import Text.Parsec.Char               (string)
 import Text.Parsec.Text               (Parser)
 
 import Fun.Errors      (Error (SyntaxError))
-import Fun.SExpression (Atom (..), Expression, Literal (..), operators)
+import Fun.SExpression (Atom (..), Expression, Literal (..))
+import Fun.Tokens      (keywords, operators)
 
 
 parse :: Text -> Either Error Expression
@@ -27,16 +28,23 @@ parser = withLispComments $ asWellFormed parseAtom
 
 parseAtom :: SExprParser Atom (SExpr Atom)
 parseAtom = mkAtomParser
-    [ atom Op    (pack <$> parseOp)
-    , atom Lit   (Str . pack <$> parseStringLit)
-    , atom Lit   (Chr . pack <$> parseCharLit)
-    , atom Type  (pack <$> parseType)
-    , atom Lit   (Bl   <$> parseBool)
-    , atom Ident (pack <$> parseIdent)
-    , atom Lit   (Dbl  <$> parseFloat)
-    , atom Lit   (Hex  <$> parseHexLit)
-    , atom Lit   (Int  <$> signedDecNumber)
+    [ atom Op      (pack <$> parseOp)
+    , atom Lit     (Str . pack <$> parseStringLit)
+    , atom Lit     (Chr . pack <$> parseCharLit)
+    , atom Type    (pack <$> parseType)
+    , atom Lit     (Bl   <$> parseBool)
+    , identOrKeyword
+    , atom Lit     (Dbl  <$> parseFloat)
+    , atom Lit     (Hex  <$> parseHexLit)
+    , atom Lit     (Int  <$> signedDecNumber)
     ]
+
+identOrKeyword :: Parser Atom
+identOrKeyword = do
+    ident <- parseIdent
+    if ident `elem` keywords
+    then return . Keyword . pack $ ident
+    else return . Ident   . pack $ ident
 
 parseIdent :: Parser String
 parseIdent = string "_" <|> parseSelector

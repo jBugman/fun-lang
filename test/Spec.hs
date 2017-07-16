@@ -14,7 +14,7 @@ import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
 import Fun.SExpression (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
-                        pattern OP, pattern SL, pattern TP)
+                        pattern KW, pattern OP, pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
 import Test.Examples   (examples)
 import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
@@ -125,6 +125,12 @@ unitsSpec = do
     it "op hex int" $
       parse "(= 0xff 255)" `shouldParse` L [ OP "=" , HL 255 , IL 255 ]
 
+    it "keyword" $
+      parse "for" `shouldParse` KW "for"
+
+    it "not a keyword" $
+      parse "forall" `shouldParse` ID "forall"
+
     it "func call" $
       parse "(printf \"%+v\n\" v)" `shouldParse`
       L [ ID "printf", SL "%+v\n", ID "v" ]
@@ -142,7 +148,7 @@ unitsSpec = do
       parse "(< foo 10)" `shouldParse` L [ OP "<" , ID "foo" , IL 10 ]
 
     it "import" $
-      parse "(import \"foo\")" `shouldParse` L [ ID "import" , SL "foo" ]
+      parse "(import \"foo\")" `shouldParse` L [ KW "import" , SL "foo" ]
 
     it "multiline s-exp" $
       parse "(+ foo bar\n    :int)" `shouldParse`
@@ -154,22 +160,22 @@ unitsSpec = do
 
     it "HelloWorld" $
       parse "(package main\n\n  (func main (print \"hello world\")))" `shouldParse`
-      L [ ID "package" , ID "main"
-        , L [ ID "func" , ID "main"
-            , L [ ID "print" , SL "hello world" ] ]]
+      L [ KW "package" , ID "main"
+        , L [ KW "func" , ID "main"
+            , L [ KW "print" , SL "hello world" ] ]]
 
 
   describe "Fun.Go.Printer.print" $ do
 
     it "import" $
-      print (L [ ID "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
+      print (L [ KW "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
 
     it "import with alias" $
-      print (L [ ID "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
+      print (L [ KW "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
       "import pkg \"very/long-package\""
 
     it "simple func" $
-      print (L [ ID "func" , ID "setS" , L [ ID "set" , ID "s" , IL 2 ] ]) `shouldPrint`
+      print (L [ KW "func" , ID "setS" , L [ KW "set" , ID "s" , IL 2 ] ]) `shouldPrint`
       "func setS() {\ns = 2\n}"
 
     it "lt op" $
@@ -179,13 +185,13 @@ unitsSpec = do
       print (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
 
     it "const decl" $
-      print (L [ ID "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
+      print (L [ KW "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
 
     it "full var decl" $
-      print (L [ ID "var" , ID "b", TP "int", IL 1 ]) `shouldPrint` "var b int = 1"
+      print (L [ KW "var" , ID "b", TP "int", IL 1 ]) `shouldPrint` "var b int = 1"
 
     it "infer bool var decl" $
-      print (L [ ID "var" , ID "d", BL True ]) `shouldPrint` "var d = true"
+      print (L [ KW "var" , ID "d", BL True ]) `shouldPrint` "var d = true"
 
 
 funcSpec :: Spec
@@ -194,14 +200,14 @@ funcSpec = do
   describe "Fun.Go.Printer.printPretty" $ do
 
     it "import" $
-      printPretty (L [ ID "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
+      printPretty (L [ KW "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
 
     it "import with alias" $ printPretty ( L
-      [ ID "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
+      [ KW "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
       "import pkg \"very/long-package\""
 
     it "simple func" $ printPretty ( L
-      [ ID "func" , ID "setS" , L [ ID "set", ID "s", IL 2 ] ]) `shouldPrint`
+      [ KW "func" , ID "setS" , L [ KW "set", ID "s", IL 2 ] ]) `shouldPrint`
       "func setS() {\n\ts = 2\n}"
 
     it "lt op" $
@@ -226,23 +232,23 @@ funcSpec = do
 
     it "desugars print" $
       desugar (L
-        [ ID "package" , ID "main" , L
-        [ ID "func" , ID "main" , L
-          [ ID "print" , SL "hello world"] ]])
+        [ KW "package" , ID "main" , L
+        [ KW "func" , ID "main" , L
+          [ KW "print" , SL "hello world"] ]])
       `shouldBe` L
-        [ ID "package", ID "main" , L
-        [ ID "import" , SL "fmt" ] , L
-        [ ID "func" , ID "main" , L
+        [ KW "package", ID "main" , L
+        [ KW "import" , SL "fmt" ] , L
+        [ KW "func" , ID "main" , L
           [ ID "fmt.Println" , SL "hello world"] ]]
 
     it "desugars print with existing import" $
       desugar (L
-        [ ID "package" , ID "main" , L
-        [ ID "import" , SL "fmt" ] , L
-        [ ID "func" , ID "main" , L
+        [ KW "package" , ID "main" , L
+        [ KW "import" , SL "fmt" ] , L
+        [ KW "func" , ID "main" , L
           [ ID "print" , SL "hello world"] ]])
       `shouldBe` L
-        [ ID "package" , ID "main" , L
-        [ ID "import" , SL "fmt" ] , L
-        [ ID "func" , ID "main" , L
+        [ KW "package" , ID "main" , L
+        [ KW "import" , SL "fmt" ] , L
+        [ KW "func" , ID "main" , L
           [ ID "fmt.Println" , SL "hello world"] ]]

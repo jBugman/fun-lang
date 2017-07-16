@@ -26,6 +26,12 @@ genType = frequency
     [ (1, return (Type ":string"))
     , (1, return (Type ":int")) ]
 
+genKW :: Gen Atom
+genKW = frequency
+    [ (1, return (Keyword "package"))
+    , (1, return (Keyword "if"))
+    , (1, return (Keyword "var")) ]
+
 genOp :: Gen Atom
 genOp = return (Op "+")
 
@@ -33,6 +39,7 @@ genAtom :: Gen Atom
 genAtom = frequency
     [ (3, genIdent)
     , (2, genType)
+    , (2, genKW)
     , (1, genOp) ]
 
 instance Arbitrary Atom where

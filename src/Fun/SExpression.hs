@@ -23,6 +23,7 @@ import Data.SCargot.Repr.WellFormed (WellFormedSExpr (..))
 import Data.Text.Buildable          (Buildable, build)
 import Data.Text.Lazy.Builder       (fromText)
 import GHC.Err                      (errorWithoutStackTrace)
+import Numeric                      (showHex)
 
 import Fun.Tokens (keywords, operators)
 
@@ -43,7 +44,7 @@ data Literal
     | Hex Integer
     | Dbl Double
     | Bl  Bool
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
 
 pattern ID :: Text -> Expression
 pattern ID x = WFSAtom (Ident x)
@@ -88,14 +89,17 @@ instance IsString Atom where
         | ":" `isPrefixOf` s = Type    (pack s)
         | otherwise          = Ident   (pack s)
 
+instance Show Literal where
+    show (Str t)    = unpack $ "\"" <> t <> "\""
+    show (Chr t)    = unpack $ "'" <> t <> "'"
+    show (Int i)    = show i
+    show (Hex h)    = showHex h ""
+    show (Dbl d)    = show d
+    show (Bl True)  = "true"
+    show (Bl False) = "false"
+
 instance Buildable Literal where
-    build (Str t)    = fromText t
-    build (Chr t)    = fromText t
-    build (Int i)    = fromText $ tshow i
-    build (Hex i)    = fromText $ tshow i  -- TODO: proper printing
-    build (Dbl d)    = fromText $ tshow d
-    build (Bl True)  = "true"
-    build (Bl False) = "false"
+    build = fromText . tshow
 
 instance Buildable Expression where
     build (WFSAtom x) = case x of

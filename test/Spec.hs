@@ -40,6 +40,11 @@ examples = describe "Examples" $ do
   translationExample "02_values"
   translationExample "03_variables"
   translationExample "04_for"
+  translationExample "05_if_else"
+  -- translationExample "06_switch"  -- TODO: fix nested function call spec
+  translationExample "07_slices"
+  translationExample "08_maps"
+  translationExample "09_range"
 
 
 unitTests :: Spec
@@ -222,7 +227,7 @@ functionalTests = do
   describe "Go.Fmt.gofmt" $ do
 
     it "formats valid code" $
-      gofmt "func  foo  (  ) { \n i++}" `shouldBe` Right "func foo() {\n\ti++\n}"  -- TODO: shouldParse, change Left
+      gofmt "func  foo  (  ) { \n i++}" `shouldPrint` "func foo() {\n\ti++\n}"
 
     it "returns err on a broken code" $
       gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")

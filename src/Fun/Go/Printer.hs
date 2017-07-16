@@ -43,13 +43,14 @@ print (L [ KW "const" , ID name , e ])        = printf2 "const {} = {}" name <$>
 print (L [ KW "const" , ID name , TP t , e ]) = printf3 "const {} {} = {}" name t <$> print e
 
 -- var
-print (L [ KW "var" , ID name , TP t ])     = Right $ printf2 "var {} {}" name t
-print (L [ KW "var" , ID name , e ])        = printf2 "var {} = {}" name <$> print e
-print (L [ KW "var" , ID name , TP t , e ]) = printf3 "var {} {} = {}" name t <$> print e
-print (L [ KW "var" , ID name , ts , e ])   = do
-    te  <- print e
+print (L [ KW "var" , ID n , TP t ])             = Right $ printf2 "var {} {}" n t
+print (L [ KW "var" , ID n , ct@(L(TP _ : _)) ]) = printf2 "var {} {}" n <$> print ct
+print (L [ KW "var" , ID n , TP t , e ])         = printf3 "var {} {} = {}" n t <$> print e
+print (L [ KW "var" , ID n , ts , L xs ])        = do
     tts <- print ts
-    Right $ printf3 "var {} {} = {}" name tts te
+    txs <- printList xs
+    Right $ printf3 "var {} = {}{{}}" n tts txs
+print (L [ KW "var" , ID n , e ]) = printf2 "var {} = {}" n <$> print e
 
 -- package
 print (L ( KW "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
@@ -61,16 +62,21 @@ print (L [ KW "import" , SL path ])            = Right $ printf1 "import \"{}\""
 print (L [ KW "import" , SL path , SL alias ]) = Right $ printf2 "import {} \"{}\"" alias path
 
 -- func
-print (L [ KW "func" , ID name , body ]) = printf2 "func {}() {\n{}\n}" name <$> print body
-print (L [ KW "func" , ID name , args, body ]) = do
+print (L [ KW "func" , ID n , body ]) = printf2 "func {}() {\n{}\n}" n <$> print body
+print (L [ KW "func" , ID n , L args, body ]) = do
     tbody <- print body
-    targs <- print args
-    Right $ printf3 "func {}({}) {\n{}\n}" name targs tbody
-print (L [ KW "func" , ID name , args, results, body ]) = do
+    targs <- printList args
+    Right $ printf3 "func {}({}) {\n{}\n}" n targs tbody
+print (L [ KW "func" , ID n , L args, TP t, body ]) = do
     tbody    <- print body
-    targs    <- print args
-    tresults <- print results
-    Right $ strictFormat "func {}({}) {} {\n{}\n}" (name, targs, tresults, tbody)
+    targs    <- printList args
+    tresults <- print (TP t)
+    Right $ strictFormat "func {}({}) {} {\n{}\n}" (n, targs, tresults, tbody)
+print (L [ KW "func" , ID n , L args, L results, body ]) = do
+    tbody    <- print body
+    targs    <- printList args
+    tresults <- printList results
+    Right $ strictFormat "func {}({}) ({}) {\n{}\n}" (n, targs, tresults, tbody)
 
 -- assignment
 print (L [ KW "set" , ID name , body ]) = printf2 "{} = {}" name <$> print body
@@ -112,6 +118,9 @@ funcCall name args = case partitionEithers (print <$> args) of
     (err : _ , _) -> Left err
     ([] , txts)   -> Right $ printf2 "{}({})" name (ointercalate ", " txts)
 
+-- Printing list of something
+printList :: [Expression] -> Either Error Text
+printList xs = intercalate ", " <$> mapM print xs
 
 -- Utils --
 

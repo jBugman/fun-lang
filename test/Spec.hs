@@ -199,10 +199,27 @@ unitTests = do
       print (L [ KW "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
 
     it "full var decl" $
-      print (L [ KW "var" , ID "b", TP "int", IL 1 ]) `shouldPrint` "var b int = 1"
+      print (L [ KW "var" , ID "b" , TP "int" , IL 1 ]) `shouldPrint` "var b int = 1"
 
-    it "infer bool var decl" $
-      print (L [ KW "var" , ID "d", BL True ]) `shouldPrint` "var d = true"
+    it "infer type var" $
+      print (L [ KW "var" , ID "d" , BL True ]) `shouldPrint` "var d = true"
+
+    it "zero value var" $
+      print (L [ KW "var" , ID "x" , TP "int" ]) `shouldPrint` "var x int"
+
+    it "zero value var with composite type" $
+      print (L [ KW "var" , ID "x" , L [ TP "slice" , TP "string" ] ]) `shouldPrint` "var x []string"
+
+    it "var with slice literal initializer" $
+      print (L [ KW "var" , ID "nums" , L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2, IL 3 ] ])
+      `shouldPrint`
+      "var nums = []int{1, 2, 3}"
+
+    it "var with map literal initializer" $
+      print (L [ KW "var" , ID "m"
+      , L [ TP "map" , TP "string" , TP "bool" ]
+      , L [ L [ SL "foo", BL True ] , L [ SL "bar" , BL False ] ] ]) `shouldPrint`
+      "var m = map[string]bool{\"foo\": true, \"bar\": false}"
 
 
 functionalTests :: Spec

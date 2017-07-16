@@ -45,6 +45,7 @@ examples = describe "Examples" $ do
   translationExample "07_slices"
   translationExample "08_maps"
   translationExample "09_range"
+  translationExample "10_functions"
 
 
 unitTests :: Spec

@@ -13,7 +13,8 @@ import Data.Text.Format.Params      (Params)
 
 import Fun.Errors      (Error (..))
 import Fun.Printer     (singleLine)
-import Fun.SExpression (Atom (..), Expression, pattern ID, pattern OP, pattern SL, pattern TP)
+import Fun.SExpression (Atom (..), Expression, pattern ID, pattern KW, pattern OP, pattern SL,
+                        pattern TP)
 import Go.Fmt          (gofmt)
 
 
@@ -35,19 +36,19 @@ print (A (Lit x)) = Right $ printf1 "{}" x
 print (TP x) = Right x
 
 -- package
-print (L ( ID "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
+print (L ( KW "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
     (err : _ , _) -> Left err
     ([] , txts)   -> Right $ printf2 "package {}\n\n{}" name (ointercalate "\n\n" txts)
 
 -- import
-print (L [ ID "import" , SL path ])            = Right $ printf1 "import \"{}\"" path
-print (L [ ID "import" , SL path , SL alias ]) = Right $ printf2 "import {} \"{}\"" alias path
+print (L [ KW "import" , SL path ])            = Right $ printf1 "import \"{}\"" path
+print (L [ KW "import" , SL path , SL alias ]) = Right $ printf2 "import {} \"{}\"" alias path
 
 -- func
-print (L [ ID "func" , ID name , body ]) = printf2 "func {}() {\n{}\n}" name <$> print body
+print (L [ KW "func" , ID name , body ]) = printf2 "func {}() {\n{}\n}" name <$> print body
 
 -- assignment
-print (L [ ID "set" , ID name , body ]) = printf2 "{} = {}" name <$> print body
+print (L [ KW "set" , ID name , body ]) = printf2 "{} = {}" name <$> print body
 
 -- function call
 print (L ( ID f : args )) = funcCall f args
@@ -70,7 +71,7 @@ print (L ( L h : rest )) = do
     return $ ph <> "\n" <> prest
 
 -- catch-all todo case
-print s = Left . TranslationError $ "not supported yet: " <> singleLine s
+print s = Left . TranslationError $ "not supported yet " <> singleLine s
 
 
 -- Function call printer

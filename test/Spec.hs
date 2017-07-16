@@ -13,23 +13,18 @@ import Fun.Parser      (parse)
 import Fun.SExpression (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
                         pattern KW, pattern OP, pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
-import Test.Examples   (examples)
 import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
-import Test.Utils      (shouldFailOn, shouldParse, shouldPrint)
+import Test.Utils      (shouldFailOn, shouldParse, shouldPrint, translationExample)
 
 
 main :: IO ()
-main = hspec everything
-
-everything :: Spec
-everything = describe "Everything" $ do
-  tests
+main = hspec $ describe "Everything" $ do
+  describe "Tests" $ do
+    unitTests
+    functionalTests
   properties
+  examples
 
-tests :: Spec
-tests = describe "Tests" $ do
-  unitsSpec
-  funcSpec
 
 properties :: Spec
 properties = describe "Properties" $
@@ -39,8 +34,16 @@ properties = describe "Properties" $
     it "composability" exprFunctorCompose
 
 
-unitsSpec :: Spec
-unitsSpec = do
+examples :: Spec
+examples = describe "Examples" $ do
+  translationExample "01_hello_world"
+  translationExample "02_values"
+  translationExample "03_variables"
+  translationExample "04_for"
+
+
+unitTests :: Spec
+unitTests = do
 
   describe "Fun.Parser.parse" $ do
 
@@ -193,8 +196,8 @@ unitsSpec = do
       print (L [ KW "var" , ID "d", BL True ]) `shouldPrint` "var d = true"
 
 
-funcSpec :: Spec
-funcSpec = do
+functionalTests :: Spec
+functionalTests = do
 
   describe "Fun.Go.Printer.printPretty" $ do
 

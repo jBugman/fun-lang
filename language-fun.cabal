@@ -61,8 +61,7 @@ test-suite fun-lang-test
   type:                 exitcode-stdio-1.0
   hs-source-dirs:       test
   main-is:              Spec.hs
-  other-modules:        Test.Examples
-                      , Test.Instances
+  other-modules:        Test.Instances
                       , Test.Properties
                       , Test.Utils
   build-depends:        base
@@ -73,8 +72,6 @@ test-suite fun-lang-test
                       , hspec-expectations
                       , QuickCheck
                       , s-cargot
-                      , tasty
-                      , tasty-golden
                       , text
   extra-libraries:      fungo
   ghc-options:         -Wall -threaded -rtsopts

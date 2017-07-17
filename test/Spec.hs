@@ -256,6 +256,17 @@ unitTests = do
       print (L [ KW "range" , ID "k" , ID "v" , ID "users" ]) `shouldPrint`
       "k, v := range users"
 
+    it "slice from" $
+      print (L [ KW "slice" , ID "xs" , IL 1 , ID "_" ]) `shouldPrint` "xs[1:]"
+
+    it "slice to" $
+      print (L [ KW "slice" , ID "xs" , ID "_" , IL 4 ]) `shouldPrint` "xs[:4]"
+
+    it "slice from-to" $
+      print (L [ KW "slice" , ID "indexes" , ID "i" , L [ OP "+" , ID "j" , IL 1 ] ])
+      `shouldPrint` "indexes[i:j + 1]"
+
+
   describe "Fun.Printer.singleLine" $ do
 
     it "==" $

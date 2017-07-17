@@ -108,6 +108,16 @@ print (L [ KW "set" , tar@(L ( KW "val" : _ )) , ex ])
 -- indexed access
 print (L [ KW "val" , ID name , idx ]) = printf2 "{}[{}]" name <$> print idx
 
+-- slicing
+print (L [ KW "slice" , ID name , ID "_" , to ])
+    = printf2 "{}[:{}]" name <$> print to
+
+print (L [ KW "slice" , ID name , from , ID "_" ])
+    = printf2 "{}[{}:]" name <$> print from
+
+print (L [ KW "slice" , ID name , from , to ])
+    = printf3 "{}[{}:{}]" name <$> print from <*> print to
+
 -- if-then-else
 print (L [ KW "if" , cond , thenBr , elseBr@(L ( KW "if" : _ )) ]) -- elseif
     = printf3 "if {} {\n{}\n} else {}" <$> print cond <*> print thenBr <*> print elseBr

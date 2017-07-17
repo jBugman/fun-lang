@@ -16,8 +16,8 @@
   (delete m "k2")
   (print "map:" m)
 
-  (set _ prs (val m "k2"))
-  (print "prs:" prs)
+  (var _ present (val m "k2"))
+  (print "prs:" present)
 
   (var n (:map :string :int) (("foo" 1) ("bar" 2)) )
   (print n)

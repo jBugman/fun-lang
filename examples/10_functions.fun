@@ -13,7 +13,7 @@
 (func main () (
   (var res (plus 1 2))
   (print "1+2 =" res)
-  (fmt.Print "1+2+3 =" res)
+  (fmt.Print "1+2+3 =")
   (plusPlus 1 2 3)
 ))
 )

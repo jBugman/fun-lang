@@ -138,6 +138,15 @@ print (L (OP op : xs )) = intercalate (" " <> op <> " ") <$> mapM print xs
 print (L [ L h ] ) = print (L h)
 print (L ( L h : rest )) = printf2 "{}\n{}" <$> print (L h) <*> print (L rest)
 
+-- builtins
+print (L ( KW "return" : xs ) ) = printf1 "return {}" <$> printList xs
+
+print (L [ KW "range" , ID x , xs ])
+    = printf2 "{} := range {}" x <$> print xs
+
+print (L [ KW "range" , ID x , ID y, xs ])
+    = printf3 "{}, {} := range {}" x y <$> print xs
+
 -- Keyword-function (continue e.t.c.)
 print (L [ KW x ]) = Right x
 

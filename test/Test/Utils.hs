@@ -31,7 +31,7 @@ actual `shouldPrint` expected = actual `shouldBe` Right expected
 translationExample :: (HasCallStack) => Text -> Spec
 translationExample name = describe (unpack name) $ do
     (expected, actual) <- runIO (translateExample name)
-    it "works" $ expected `shouldBe` actual
+    it "works" $ actual `shouldBe` expected
 
 
 -- Tools --

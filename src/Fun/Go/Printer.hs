@@ -52,6 +52,13 @@ print (L [ KW "var" , ID n , ts , L xs ])        = do
     Right $ printf3 "var {} = {}{{}}" n tts txs
 print (L [ KW "var" , ID n , e ]) = printf2 "var {} = {}" n <$> print e
 
+-- FIXME: literal pair (used in maps)
+print (L [ lit@(A (Lit _)) , ex ]) = printf2 "{}: {}" <$> print lit <*> print ex
+-- do
+--     tlit <- print lit
+--     tex  <- print ex
+--     Right $ printf2 "{}: {}" tlit tex
+
 -- package
 print (L ( KW "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
     (err : _ , _) -> Left err

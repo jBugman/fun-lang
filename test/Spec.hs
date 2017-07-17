@@ -338,30 +338,54 @@ functionalTests = do
         [ KW "func" , ID "main" , L
           [ ID "fmt.Println" , SL "hello world"] ]]
 
+    it "printf" $
+      desugar (L
+        [ KW "package" , ID "main" , L
+        [ KW "func" , ID "main" , L
+          [ KW "printf" , SL "<%s>\\n" , SL "hello world" ] ]])
+      `shouldBe` L
+        [ KW "package", ID "main" , L
+        [ KW "import" , SL "fmt" ] , L
+        [ KW "func" , ID "main" , L
+          [ ID "fmt.Printf" , SL "<%s>\\n", SL "hello world" ] ]]
+
     it "print with existing import" $
       desugar (L
         [ KW "package" , ID "main" , L
         [ KW "import" , SL "fmt" ] , L
         [ KW "func" , ID "main" , L
-          [ KW "print" , SL "hello world"] ]])
+          [ KW "print" , SL "hello world" ] ]])
       `shouldBe` L
         [ KW "package" , ID "main" , L
         [ KW "import" , SL "fmt" ] , L
         [ KW "func" , ID "main" , L
-          [ ID "fmt.Println" , SL "hello world"] ]]
+          [ ID "fmt.Println" , SL "hello world" ] ]]
 
     it "deeper nested print" $
       desugar (L
         [ KW "package" , ID "main" , L
         [ KW "func" , ID "main" , L
           [ KW "for" , L
-            [ KW "print" , SL "hello world"] ]]])
+            [ KW "print" , SL "hello world" ] ]]])
       `shouldBe` L
         [ KW "package", ID "main" , L
         [ KW "import" , SL "fmt" ] , L
         [ KW "func" , ID "main" , L
           [ KW "for" , L
-            [ ID "fmt.Println" , SL "hello world"] ]]]
+            [ ID "fmt.Println" , SL "hello world" ] ]]]
+
+    it "print and printf" $
+      desugar (L
+        [ KW "package" , ID "main" , L
+        [ KW "func" , ID "main" , L
+          [ L [ KW "print" , SL "<first>" ]
+          , L [ KW "printf" , SL "<%s>\\n" , SL "second" ] ]]])
+      `shouldBe` L
+        [ KW "package", ID "main" , L
+        [ KW "import" , SL "fmt" ] , L
+        [ KW "func" , ID "main" , L
+          [ L [ ID "fmt.Println" , SL "<first>" ]
+          , L [ ID "fmt.Printf" , SL "<%s>\\n", SL "second" ] ]]]
 
 
 dummyTests :: Spec

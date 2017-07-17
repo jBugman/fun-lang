@@ -9,9 +9,11 @@ import Fun.SExpression (Expression, pattern ID, pattern KW, pattern SL)
 
 
 desugar :: Expression -> Expression
-desugar (L (KW "package" : ID name : topLevels)) = L $ [ KW "package", ID name ] <> imports <> decls
+desugar (L (KW "package" : ID name : topLevels)) = L $ [ KW "package", ID name ] <> imports'' <> decls''
     where
-        (imports, decls) = swapPrint $ span isImport topLevels
+        (imports'', decls'') = swapPrintf (imports', decls')
+        (imports', decls')   = swapPrint (imports, decls)
+        (imports, decls)     = span isImport topLevels
 
 desugar e = e
 
@@ -30,6 +32,17 @@ swapPrint (imports, decls) = mapAccumR go imports decls
         go imps (KW "print") = (addFmt imps, ID "fmt.Println")
         go imps (L xs)       = L <$> mapAccumR go imps xs
         go imps ex           = (imps, ex)
+
+        addFmt :: [Expression] -> [Expression]
+        addFmt xs = ordNub $ importFmt : xs
+
+swapPrintf :: ([Expression], [Expression]) -> ([Expression], [Expression])
+swapPrintf (imports, decls) = mapAccumR go imports decls
+    where
+        go :: [Expression] -> Expression -> ([Expression], Expression)
+        go imps (KW "printf") = (addFmt imps, ID "fmt.Printf")
+        go imps (L xs)        = L <$> mapAccumR go imps xs
+        go imps ex            = (imps, ex)
 
         addFmt :: [Expression] -> [Expression]
         addFmt xs = ordNub $ importFmt : xs

@@ -6,7 +6,9 @@ import ClassyPrelude
 operators :: [String]
 operators =
     [ "="
+    , "++"
     , "+"
+    , "--"
     , "-"
     , "*"
     , "/"

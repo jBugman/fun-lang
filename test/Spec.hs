@@ -118,8 +118,11 @@ unitTests = do
     it "type lit" $
       parse ":int" `shouldParse` TP "int"
 
-    it "operator" $
+    it "+" $
       parse "+" `shouldParse` OP "+"
+
+    it "++" $
+      parse "++" `shouldParse` OP "++"
 
     it "&&" $
       parse "&&" `shouldParse` OP "&&"
@@ -176,6 +179,7 @@ unitTests = do
       parse "(var t (:slice :string) (\"g\" \"h\" \"c\"))" `shouldParse`
       L [ KW "var" , ID "t" , L [ TP "slice" , TP "string" ] , L [ SL "g" , SL "h" , SL "c" ] ]
 
+
   describe "Fun.Go.Printer.print" $ do
 
     it "import" $
@@ -189,11 +193,14 @@ unitTests = do
       print (L [ KW "func" , ID "setS" , L [ KW "set" , ID "s" , IL 2 ] ]) `shouldPrint`
       "func setS() {\ns = 2\n}"
 
-    it "lt op" $
+    it "<" $
       print (L [ OP "<" , ID "n" , IL 10 ]) `shouldPrint` "n < 10"
 
-    it "eq op" $
+    it "==" $
       print (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
+
+    it "--" $
+      print (L [ OP "--" , ID "j" ]) `shouldPrint` "j--"
 
     it "const decl" $
       print (L [ KW "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
@@ -243,6 +250,27 @@ functionalTests = do
 
     it "eq op" $
       printPretty (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
+
+    it "forever for loop" $
+      printPretty (L [ KW "for" , L [ ID "fmt.Println" , SL "fizz" ] ]) `shouldPrint`
+      "for {\n\tfmt.Println(\"fizz\")\n}"
+
+    it "standard for loop" $
+      printPretty (L [ KW "for" , ID "i" , IL 0 , IL 10 , L [ ID "fmt.Println" , SL "bazz" ] ])
+      `shouldPrint`
+      "for i := 0; i < 10; i++ {\n\tfmt.Println(\"bazz\")\n}"
+
+    it "only condition for loop" $
+      printPretty (L [ KW "for" , L [ OP "<" , ID "n" , IL 42 ] , L [ ID "fmt.Print" , SL "?" ] ])
+      `shouldPrint`
+      "for n < 42 {\n\tfmt.Print(\"?\")\n}"
+
+    it "custom for loop" $
+      printPretty (L [ KW "for" , ID "x" , ID "k" , BL True
+      , L [ KW "set" , ID "x" , L [ OP "+", ID "x", ID "foo.N" ] ]
+      , L [ KW "break" ] ])
+      `shouldPrint`
+      "for x := k; true; x = x + foo.N {\n\tbreak\n}"
 
 
   describe "Go.Fmt.gofmt" $ do

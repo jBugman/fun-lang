@@ -108,11 +108,26 @@ print (L [ KW "set" , tar@(L ( KW "val" : _ )) , ex ])
 -- indexed access
 print (L [ KW "val" , ID name , idx ]) = printf2 "{}[{}]" name <$> print idx
 
+-- for loop
+print (L [ KW "for" , body ])
+    = printf1 "for {\n{}\n}" <$> print body
+
+print (L [ KW "for" , cond , body ])
+    = printf2 "for {} {\n{}\n}" <$> print cond <*> print body
+
+print (L [ KW "for" , ID i , from , cond , iter , body ])
+    = printFor i from cond iter body
+
+print (L [ KW "for" , ID i , from , to , body ])
+    = printFor i from (L [ OP "<" , ID i , to ]) (L [ OP "++" , ID i]) body
+
 -- function call
 print (L ( ID f : args )) = printf2 "{}({})" f <$> printList args
 
 -- unary operators
-print (L [ OP op , x ]) = printf2 "{}{}" op <$> print x
+print (L [ OP "++" , x ]) = printf1 "{}++" <$> print x
+print (L [ OP "--" , x ]) = printf1 "{}--" <$> print x
+print (L [ OP op , x ])   = printf2 "{}{}" op <$> print x
 
 -- binary operators
 print (L [ OP "=" , lhs , rhs ]) = printf2 "{} == {}" <$> print lhs <*> print rhs
@@ -123,12 +138,23 @@ print (L (OP op : xs )) = intercalate (" " <> op <> " ") <$> mapM print xs
 print (L [ L h ] ) = print (L h)
 print (L ( L h : rest )) = printf2 "{}\n{}" <$> print (L h) <*> print (L rest)
 
+-- Keyword-function (continue e.t.c.)
+print (L [ KW x ]) = Right x
+
 -- FIXME: catch-all case
 print s = Left . TranslationError $ "not supported yet " <> singleLine s
 
 
 
 -- Utils --
+
+printFor :: Text -> Expression -> Expression -> Expression -> Expression -> Either Error Text
+printFor i from cond iter body = do
+    tfrom <- print from
+    tcond <- print cond
+    titer <- print iter
+    tbody <- print body
+    Right $ strictFormat "for {} := {}; {}; {} {\n{}\n}" (i, tfrom, tcond, titer, tbody)
 
 printList :: [Expression] -> Either Error Text
 printList xs = intercalate ", " <$> mapM print xs

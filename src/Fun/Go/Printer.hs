@@ -53,6 +53,9 @@ print (L [ KW "const" , ID name , TP t , e ])
 print (L [ KW "var" , ID n , TP t ])
     = Right $ printf2 "var {} {}" n t
 
+print (L [ KW "var" , ID "_" , ID n , acc@(L ( KW "val" : _)) ])
+    = printf2 "var _, {} = {}" n <$> print acc
+
 print (L [ KW "var" , ID n , ct@(L(TP _ : _)) ])
     = printf2 "var {} {}" n <$> print ct
 
@@ -93,11 +96,14 @@ print (L [ KW "func" , ID n , L args, L results, body ])
     = printf4 "func {}({}) ({}) {\n{}\n}" n <$> printList args <*> printList results <*> print body
 
 -- assignment
-print (L [ KW "set" , ID name , body ])
-    = printf2 "{} = {}" name <$> print body
+print (L [ KW "set" , ID name , xs ])
+    = printf2 "{} = {}" name <$> print xs
 
-print (L [ KW "set" , tar@(L ( KW "val" : _ )) , body ])
-    = printf2 "{} = {}" <$> print tar <*> print body
+print (L [ KW "set" , ID "_", ID name , xs ])
+    = printf2 "_, {} = {}" name <$> print xs
+
+print (L [ KW "set" , tar@(L ( KW "val" : _ )) , ex ])
+    = printf2 "{} = {}" <$> print tar <*> print ex
 
 -- indexed access
 print (L [ KW "val" , ID name , idx ]) = printf2 "{}[{}]" name <$> print idx

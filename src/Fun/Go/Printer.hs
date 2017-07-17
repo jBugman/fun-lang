@@ -109,11 +109,9 @@ print (L ( ID f : args )) = printf2 "{}({})" f <$> printList args
 print (L [ OP op , x ]) = printf2 "{}{}" op <$> print x
 
 -- binary operators
-print (L [ OP op , lhs , rhs ])
-    = printf3 "{} {} {}" <$> print lhs <*> pure o <*> print rhs
-    where
-        o = if op == "=" then "==" else op
+print (L [ OP "=" , lhs , rhs ]) = printf2 "{} == {}" <$> print lhs <*> print rhs
 
+print (L (OP op : xs )) = intercalate (" " <> op <> " ") <$> mapM print xs
 
 -- expression list, recursive
 print (L [ L h ] ) = print (L h)

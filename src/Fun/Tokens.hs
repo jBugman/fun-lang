@@ -1,4 +1,7 @@
-module Fun.Tokens where
+module Fun.Tokens
+    ( operators
+    , keywords
+) where
 
 import ClassyPrelude
 

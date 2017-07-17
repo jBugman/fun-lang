@@ -3,7 +3,7 @@
 module Main where
 
 import ClassyPrelude                hiding (print)
-import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
+import Data.SCargot.Repr.WellFormed (pattern L, pattern Nil)
 import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
 
 import Fun.Errors      (Error (..))
@@ -13,7 +13,6 @@ import Fun.Parser      (parse)
 import Fun.SExpression (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
                         pattern KW, pattern OP, pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
-import Test.Properties (exprFunctorCompose, exprFunctorIdentity)
 import Test.Utils      (shouldFailOn, shouldParse, shouldPrint, translationExample)
 
 
@@ -22,16 +21,7 @@ main = hspec $ describe "Everything" $ do
   describe "Tests" $ do
     unitTests
     functionalTests
-  properties
   examples
-
-
-properties :: Spec
-properties = describe "Properties" $
-
-  describe "Expression Functor" $ do
-    it "identity"      exprFunctorIdentity
-    it "composability" exprFunctorCompose
 
 
 examples :: Spec
@@ -113,7 +103,7 @@ unitTests = do
       parse "_" `shouldParse` ID "_"
 
     it "Go selector" $
-      parse "fmt.Println" `shouldParse` A "fmt.Println"
+      parse "fmt.Println" `shouldParse` ID "fmt.Println"
 
     it "type lit" $
       parse ":int" `shouldParse` TP "int"

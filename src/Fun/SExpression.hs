@@ -1,6 +1,8 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE PatternSynonyms   #-}
-{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE FlexibleInstances  #-}
+{-# LANGUAGE PatternSynonyms    #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies       #-}
 module Fun.SExpression
     ( Expression
     , Atom (..)
@@ -15,19 +17,19 @@ module Fun.SExpression
     , pattern TP
     , pattern OP
     , pattern KW
-    , operators
 ) where
 
 import ClassyPrelude
 import Data.SCargot.Repr.WellFormed (WellFormedSExpr (..))
 import Data.Text.Buildable          (Buildable, build)
 import Data.Text.Lazy.Builder       (fromText)
-import GHC.Err                      (errorWithoutStackTrace)
-import Numeric                      (showHex)
+-- import GHC.Err                      (errorWithoutStackTrace)
+import Numeric (showHex)
 
-import Fun.Tokens (keywords, operators)
 
 type Expression = WellFormedSExpr Atom
+
+deriving instance Generic Expression
 
 data Atom
     = Ident   Text
@@ -82,13 +84,6 @@ instance Ord Expression where
     compare (WFSList _) (WFSAtom _) = GT
     compare (WFSAtom _) (WFSList _) = LT
 
-instance IsString Atom where
-    fromString s
-        | s `elem` operators = Op      (pack s)
-        | s `elem` keywords  = Keyword (pack s)
-        | ":" `isPrefixOf` s = Type    (pack s)
-        | otherwise          = Ident   (pack s)
-
 instance Show Literal where
     show (Str t)    = unpack $ "\"" <> t <> "\""
     show (Chr t)    = unpack $ "'"  <> t <> "'"
@@ -100,12 +95,3 @@ instance Show Literal where
 
 instance Buildable Literal where
     build = fromText . tshow
-
-instance Buildable Expression where
-    build (WFSAtom x) = case x of
-        (Ident s)   -> fromText s
-        (Keyword s) -> fromText s
-        (Type s)    -> fromText s
-        (Op s)      -> fromText s
-        (Lit lit)   -> build lit
-    build (WFSList x) = errorWithoutStackTrace $ unpack ("Can only print terminal nodes, but got " <> tshow x)

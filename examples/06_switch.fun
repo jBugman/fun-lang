@@ -24,7 +24,7 @@
   )
 
   ; anonimous function
-  (var whatAmI (func (i :interface{}) (
+  (var whatAmI (func (i :any) (
     (switch (type t i)
       (case :bool (fmt.Println "I'm a bool"))
       (case :int (fmt.Println "I'm an int"))

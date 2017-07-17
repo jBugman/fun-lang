@@ -11,6 +11,7 @@ import Fun.Errors      (Error (..), unError)
 import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
+import Fun.Printer     (singleLine)
 import Fun.SExpression (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
                         pattern KW, pattern OP, pattern SL, pattern TP)
 import Go.Fmt          (gofmt)
@@ -178,6 +179,9 @@ unitTests = do
 
   describe "Fun.Go.Printer.print" $ do
 
+    it "fail on standalone Nil" $
+      mapLeft unError (print Nil) `shouldBe` Left "translation error: empty expression"
+
     it "import" $
       print (L [ KW "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
 
@@ -201,8 +205,20 @@ unitTests = do
     it "hex == char" $
       print (L [ OP "=" , HL 1 , CL "a" ]) `shouldPrint` "0x1 == 'a'"
 
+    it "double" $
+      print (DL 9.99) `shouldPrint` "9.99"
+
+    it "string" $
+      print (SL "fizzbuzz") `shouldPrint` "\"fizzbuzz\""
+
+    it "'any' type" $
+      print (TP "any") `shouldPrint` "interface{}"
+
     it "const decl" $
       print (L [ KW "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
+
+    it "full const decl" $
+      print (L [ KW "const" , ID "a" , TP "State" , HL 10 ]) `shouldPrint` "const a State = 0xa"
 
     it "full var decl" $
       print (L [ KW "var" , ID "b" , TP "int" , IL 1 ]) `shouldPrint` "var b int = 1"
@@ -226,6 +242,29 @@ unitTests = do
       , L [ TP "map" , TP "string" , TP "bool" ]
       , L [ L [ SL "foo", BL True ] , L [ SL "bar" , BL False ] ] ]) `shouldPrint`
       "var m = map[string]bool{\"foo\": true, \"bar\": false}"
+
+    it "map lookup" $
+      print (L [ KW "set" , ID "_" , ID "ok" , L [ KW "val" , ID "m" , SL "Bob" ] ])
+      `shouldPrint`
+      "_, ok = m[\"Bob\"]"
+
+    it "short range" $
+      print (L [ KW "range" , ID "x" , ID "chanX" ]) `shouldPrint`
+      "x := range chanX"
+
+    it "full range" $
+      print (L [ KW "range" , ID "k" , ID "v" , ID "users" ]) `shouldPrint`
+      "k, v := range users"
+
+  describe "Fun.Printer.singleLine" $ do
+
+    it "==" $
+      singleLine (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldBe`
+      "(= foo bar)"
+
+    it "var" $
+      singleLine (L [ KW "var" , ID "foo" , TP "int" , IL 42 ]) `shouldBe`
+      "(var foo :int 42)"
 
 
 functionalTests :: Spec
@@ -267,9 +306,9 @@ functionalTests = do
       "for {\n\tfmt.Println(\"fizz\")\n}"
 
     it "standard for loop" $
-      printPretty (L [ KW "for" , ID "i" , IL 0 , IL 10 , L [ ID "fmt.Println" , SL "bazz" ] ])
+      printPretty (L [ KW "for" , ID "i" , IL 0 , IL 10 , L [ ID "fmt.Println" , SL "buzz" ] ])
       `shouldPrint`
-      "for i := 0; i < 10; i++ {\n\tfmt.Println(\"bazz\")\n}"
+      "for i := 0; i < 10; i++ {\n\tfmt.Println(\"buzz\")\n}"
 
     it "only condition for loop" $
       printPretty (L [ KW "for" , L [ OP "<" , ID "n" , IL 42 ] , L [ ID "fmt.Print" , SL "?" ] ])

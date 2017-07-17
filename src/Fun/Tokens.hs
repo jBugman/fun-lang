@@ -30,7 +30,6 @@ keywords = goKeywords <>
     , "printf"
     , "set"
     , "slice"
-    , "any"
     , "val"
     ]
 

@@ -108,6 +108,16 @@ print (L [ KW "set" , tar@(L ( KW "val" : _ )) , ex ])
 -- indexed access
 print (L [ KW "val" , ID name , idx ]) = printf2 "{}[{}]" name <$> print idx
 
+-- if-then-else
+print (L [ KW "if" , cond , thenBr , elseBr@(L ( KW "if" : _ )) ]) -- elseif
+    = printf3 "if {} {\n{}\n} else {}" <$> print cond <*> print thenBr <*> print elseBr
+
+print (L [ KW "if" , cond , thenBr , elseBr ])
+    = printf3 "if {} {\n{}\n} else {\n{}\n}" <$> print cond <*> print thenBr <*> print elseBr
+
+print (L [ KW "if" , cond , thenBr ])
+    = printf2 "if {} {\n{}\n}" <$> print cond <*> print thenBr
+
 -- for loop
 print (L [ KW "for" , body ])
     = printf1 "for {\n{}\n}" <$> print body

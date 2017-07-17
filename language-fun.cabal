@@ -1,5 +1,5 @@
 name:                language-fun
-version:             0.15.10.1-SNAPSHOT
+version:             0.15.10.2-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -66,6 +66,7 @@ test-suite fun-lang-test
   build-depends:        base
                       , classy-prelude
                       , language-fun
+                      , either
                       , filepath
                       , hspec
                       , hspec-expectations

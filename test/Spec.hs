@@ -3,10 +3,11 @@
 module Main where
 
 import ClassyPrelude                hiding (print)
+import Data.Either.Combinators      (mapLeft)
 import Data.SCargot.Repr.WellFormed (pattern L, pattern Nil)
 import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
 
-import Fun.Errors      (Error (..))
+import Fun.Errors      (Error (..), unError)
 import Fun.Go.Desugar  (desugar)
 import Fun.Go.Printer  (print, printPretty)
 import Fun.Parser      (parse)
@@ -19,6 +20,7 @@ import Test.Utils      (shouldFailOn, shouldParse, shouldPrint, translationExamp
 main :: IO ()
 main = hspec $ describe "Everything" $ do
   describe "Tests" $ do
+    dummyTests
     unitTests
     functionalTests
   examples
@@ -51,6 +53,10 @@ unitTests = do
 
     it "fails on empty string" $
       parse `shouldFailOn` ""
+
+    it "fails on garbage imput" $
+      mapLeft unError (parse "_BANG!!") `shouldBe`
+      Left "syntax error: (line 1, column 2):\nunexpected 'B'\nexpecting space, comment or end of input"
 
 
     it "ignores comments A" $
@@ -192,6 +198,9 @@ unitTests = do
     it "--" $
       print (L [ OP "--" , ID "j" ]) `shouldPrint` "j--"
 
+    it "hex == char" $
+      print (L [ OP "=" , HL 1 , CL "a" ]) `shouldPrint` "0x1 == 'a'"
+
     it "const decl" $
       print (L [ KW "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
 
@@ -229,6 +238,9 @@ functionalTests = do
 
     it "returns err on a broken code" $
       gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")
+
+    it "unError GoError" $
+      mapLeft unError (gofmt "func foo }( __") `shouldBe` Left "Go error: 1:20: expected '(', found '}'"
 
 
   describe "Fun.Go.Printer.printPretty" $ do
@@ -311,3 +323,13 @@ functionalTests = do
         [ KW "func" , ID "main" , L
           [ KW "for" , L
             [ ID "fmt.Println" , SL "hello world"] ]]]
+
+
+dummyTests :: Spec
+dummyTests = describe "MOAR coverage!" $ do
+
+  it "compare L A" $
+    compare (L [ID "foo"]) (ID "bar") `shouldBe` GT
+
+  it "compare A L" $
+    compare (ID "foo") (L [ID "bar"]) `shouldBe` LT

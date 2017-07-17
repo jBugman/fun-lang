@@ -232,6 +232,15 @@ unitTests = do
 functionalTests :: Spec
 functionalTests = do
 
+  describe "Go.Fmt.gofmt" $ do
+
+    it "formats valid code" $
+      gofmt "func  foo  (  ) { \n i++}" `shouldPrint` "func foo() {\n\ti++\n}"
+
+    it "returns err on a broken code" $
+      gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")
+
+
   describe "Fun.Go.Printer.printPretty" $ do
 
     it "import" $
@@ -271,15 +280,6 @@ functionalTests = do
       , L [ KW "break" ] ])
       `shouldPrint`
       "for x := k; true; x = x + foo.N {\n\tbreak\n}"
-
-
-  describe "Go.Fmt.gofmt" $ do
-
-    it "formats valid code" $
-      gofmt "func  foo  (  ) { \n i++}" `shouldPrint` "func foo() {\n\ti++\n}"
-
-    it "returns err on a broken code" $
-      gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")
 
 
   describe "Fun.Go.Desugar.desugar" $ do

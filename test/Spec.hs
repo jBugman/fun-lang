@@ -243,10 +243,19 @@ unitTests = do
       , L [ L [ SL "foo", BL True ] , L [ SL "bar" , BL False ] ] ]) `shouldPrint`
       "var m = map[string]bool{\"foo\": true, \"bar\": false}"
 
+    it "slice of slices" $
+      print (L [ TP "slice" , L [ TP "slice" , TP "string" ] ]) `shouldPrint` "[][]string"
+
     it "map lookup" $
       print (L [ KW "set" , ID "_" , ID "ok" , L [ KW "val" , ID "m" , SL "Bob" ] ])
       `shouldPrint`
       "_, ok = m[\"Bob\"]"
+
+    it "slice index" $
+      print (L [ KW "val" , ID "xs" , IL 4 ]) `shouldPrint` "xs[4]"
+
+    it "slice 2D-index" $
+      print (L [ KW "val" , ID "xs" , ID "y" , ID "x" ]) `shouldPrint` "xs[y][x]"
 
     it "short range" $
       print (L [ KW "range" , ID "x" , ID "chanX" ]) `shouldPrint`

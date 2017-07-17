@@ -32,5 +32,5 @@
     (var innerLen (+ i 1))
     (set (val twoD i) (make (:slice :int) innerLen))
     (for j 0 innerLen
-      (set (val (val twoD i) j) (+ i j))  )))  ; two dimensional-slice access could be better
+      (set (val twoD i j) (+ i j))  )))  ; two dimensional-slice access could be better
 )))

@@ -37,7 +37,7 @@ print (TP "any") = Right "interface{}"
 
 print (TP x) = Right x
 
-print (L [ TP "slice" , t@(TP _) ]) = printf1 "[]{}" <$> print t
+print (L [ TP "slice" , x ]) = printf1 "[]{}" <$> print x
 
 print (L [ TP "map"   , k@(TP _) , v@(TP _) ])
     = printf2 "map[{}]{}" <$> print k <*> print v
@@ -106,7 +106,8 @@ print (L [ KW "set" , tar@(L ( KW "val" : _ )) , ex ])
     = printf2 "{} = {}" <$> print tar <*> print ex
 
 -- indexed access
-print (L [ KW "val" , ID name , idx ]) = printf2 "{}[{}]" name <$> print idx
+print (L [ KW "val" , ID n , i ])     = printf2 "{}[{}]" n <$> print i
+print (L [ KW "val" , ID n , i , j ]) = printf3 "{}[{}][{}]" n <$> print i <*> print j
 
 -- slicing
 print (L [ KW "slice" , ID name , ID "_" , to ])

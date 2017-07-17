@@ -91,9 +91,9 @@ instance IsString Atom where
 
 instance Show Literal where
     show (Str t)    = unpack $ "\"" <> t <> "\""
-    show (Chr t)    = unpack $ "'" <> t <> "'"
+    show (Chr t)    = unpack $ "'"  <> t <> "'"
     show (Int i)    = show i
-    show (Hex h)    = showHex h ""
+    show (Hex h)    = unpack $ "0x" <> showHex h ""
     show (Dbl d)    = show d
     show (Bl True)  = "true"
     show (Bl False) = "false"

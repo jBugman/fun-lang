@@ -34,30 +34,38 @@ print (A (Lit x)) = Right $ printf1 "{}" x
 
 -- types
 print (TP "any") = Right "interface{}"
-print (TP x)     = Right x
-print (L [ TP "slice" , TP x ])        = Right $ printf1 "[]{}" x
-print (L [ TP "map"   , TP k , TP v ]) = Right $ printf2 "map[{}]{}" k v
+
+print (TP x) = Right x
+
+print (L [ TP "slice" , t@(TP _) ]) = printf1 "[]{}" <$> print t
+
+print (L [ TP "map"   , k@(TP _) , v@(TP _) ])
+    = printf2 "map[{}]{}" <$> print k <*> print v
 
 -- const
-print (L [ KW "const" , ID name , e ])        = printf2 "const {} = {}" name <$> print e
-print (L [ KW "const" , ID name , TP t , e ]) = printf3 "const {} {} = {}" name t <$> print e
+print (L [ KW "const" , ID name , e ])
+    = printf2 "const {} = {}" name <$> print e
+
+print (L [ KW "const" , ID name , TP t , e ])
+    = printf3 "const {} {} = {}" name t <$> print e
 
 -- var
-print (L [ KW "var" , ID n , TP t ])             = Right $ printf2 "var {} {}" n t
-print (L [ KW "var" , ID n , ct@(L(TP _ : _)) ]) = printf2 "var {} {}" n <$> print ct
-print (L [ KW "var" , ID n , TP t , e ])         = printf3 "var {} {} = {}" n t <$> print e
-print (L [ KW "var" , ID n , ts , L xs ])        = do
-    tts <- print ts
-    txs <- printList xs
-    Right $ printf3 "var {} = {}{{}}" n tts txs
+print (L [ KW "var" , ID n , TP t ])
+    = Right $ printf2 "var {} {}" n t
+
+print (L [ KW "var" , ID n , ct@(L(TP _ : _)) ])
+    = printf2 "var {} {}" n <$> print ct
+
+print (L [ KW "var" , ID n , TP t , e ])
+    = printf3 "var {} {} = {}" n t <$> print e
+
+print (L [ KW "var" , ID n , ts , L xs ])
+    = printf3 "var {} = {}{{}}" n <$> print ts <*> printList xs
+
 print (L [ KW "var" , ID n , e ]) = printf2 "var {} = {}" n <$> print e
 
 -- FIXME: literal pair (used in maps)
 print (L [ lit@(A (Lit _)) , ex ]) = printf2 "{}: {}" <$> print lit <*> print ex
--- do
---     tlit <- print lit
---     tex  <- print ex
---     Right $ printf2 "{}: {}" tlit tex
 
 -- package
 print (L ( KW "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
@@ -65,71 +73,61 @@ print (L ( KW "package" : ID name : topLevels )) = case partitionEithers (print 
     ([] , txts)   -> Right $ printf2 "package {}\n\n{}" name (ointercalate "\n\n" txts)
 
 -- import
-print (L [ KW "import" , SL path ])            = Right $ printf1 "import \"{}\"" path
-print (L [ KW "import" , SL path , SL alias ]) = Right $ printf2 "import {} \"{}\"" alias path
+print (L [ KW "import" , SL path ])
+    = Right $ printf1 "import \"{}\"" path
+
+print (L [ KW "import" , SL path , SL alias ])
+    = Right $ printf2 "import {} \"{}\"" alias path
 
 -- func
-print (L [ KW "func" , ID n , body ]) = printf2 "func {}() {\n{}\n}" n <$> print body
-print (L [ KW "func" , ID n , L args, body ]) = do
-    tbody <- print body
-    targs <- printList args
-    Right $ printf3 "func {}({}) {\n{}\n}" n targs tbody
-print (L [ KW "func" , ID n , L args, TP t, body ]) = do
-    tbody    <- print body
-    targs    <- printList args
-    tresults <- print (TP t)
-    Right $ strictFormat "func {}({}) {} {\n{}\n}" (n, targs, tresults, tbody)
-print (L [ KW "func" , ID n , L args, L results, body ]) = do
-    tbody    <- print body
-    targs    <- printList args
-    tresults <- printList results
-    Right $ strictFormat "func {}({}) ({}) {\n{}\n}" (n, targs, tresults, tbody)
+print (L [ KW "func" , ID n , body ])
+    = printf2 "func {}() {\n{}\n}" n <$> print body
+
+print (L [ KW "func" , ID n , L args, body ])
+    = printf3 "func {}({}) {\n{}\n}" n <$> printList args <*> print body
+
+print (L [ KW "func" , ID n , L args, TP t, body ])
+    = printf4 "func {}({}) {} {\n{}\n}" n <$> printList args <*> print (TP t) <*> print body
+
+print (L [ KW "func" , ID n , L args, L results, body ])
+    = printf4 "func {}({}) ({}) {\n{}\n}" n <$> printList args <*> printList results <*> print body
 
 -- assignment
-print (L [ KW "set" , ID name , body ]) = printf2 "{} = {}" name <$> print body
-print (L [ KW "set" , xs@(L ( KW "val" : _ )) , body ]) = do
-    accesor <- print xs
-    tbody   <- print body
-    Right $ printf2 "{} = {}" accesor tbody
+print (L [ KW "set" , ID name , body ])
+    = printf2 "{} = {}" name <$> print body
+
+print (L [ KW "set" , tar@(L ( KW "val" : _ )) , body ])
+    = printf2 "{} = {}" <$> print tar <*> print body
 
 -- indexed access
 print (L [ KW "val" , ID name , idx ]) = printf2 "{}[{}]" name <$> print idx
 
 -- function call
-print (L ( ID f : args )) = funcCall f args
+print (L ( ID f : args )) = printf2 "{}({})" f <$> printList args
 
 -- unary operators
 print (L [ OP op , x ]) = printf2 "{}{}" op <$> print x
 
 -- binary operators
-print (L [ OP op , lhs , rhs ]) = do
-    lt <- print lhs
-    rt <- print rhs
-    let o = if op == "=" then "==" else op
-    return $ printf3 "{} {} {}" lt o rt
+print (L [ OP op , lhs , rhs ])
+    = printf3 "{} {} {}" <$> print lhs <*> pure o <*> print rhs
+    where
+        o = if op == "=" then "==" else op
+
 
 -- expression list, recursive
 print (L [ L h ] ) = print (L h)
-print (L ( L h : rest )) = do
-    ph    <- print (L h)
-    prest <- print (L rest)
-    return $ ph <> "\n" <> prest
+print (L ( L h : rest )) = printf2 "{}\n{}" <$> print (L h) <*> print (L rest)
 
--- catch-all todo case
+-- FIXME: catch-all case
 print s = Left . TranslationError $ "not supported yet " <> singleLine s
 
 
--- Function call printer
-funcCall :: Text -> [Expression] -> Either Error Text
-funcCall name args = case partitionEithers (print <$> args) of
-    (err : _ , _) -> Left err
-    ([] , txts)   -> Right $ printf2 "{}({})" name (ointercalate ", " txts)
-
--- Printing list of something
-printList :: [Expression] -> Either Error Text
-printList xs = intercalate ", " <$> mapM print xs
 
 -- Utils --
+
+printList :: [Expression] -> Either Error Text
+printList xs = intercalate ", " <$> mapM print xs
 
 strictFormat :: Params ps => Format -> ps -> Text
 strictFormat fmt = toStrict . format fmt
@@ -142,3 +140,6 @@ printf2 fmt x y = strictFormat fmt (x, y)
 
 printf3 :: Buildable a => Format -> a -> a -> a -> Text
 printf3 fmt x y z = strictFormat fmt (x, y, z)
+
+printf4 :: Buildable a => Format -> a -> a -> a -> a -> Text
+printf4 fmt a b c d = strictFormat fmt (a, b, c, d)

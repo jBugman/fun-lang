@@ -10,6 +10,10 @@ func plusPlus(a int, b int, c int) {
 	fmt.Println(a + b + c)
 }
 
+func vals() (int, int) {
+	return 3, 7
+}
+
 func main() {
 	var res = plus(1, 2)
 	fmt.Println("1+2 =", res)

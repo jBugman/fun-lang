@@ -10,6 +10,10 @@
   (print (+ a b c))
 ))
 
+(func vals () (:int :int) (
+  (return 3 7)
+))
+
 (func main () (
   (var res (plus 1 2))
   (print "1+2 =" res)

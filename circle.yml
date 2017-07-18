@@ -3,7 +3,7 @@ dependencies:
     - ".stack-work"
 
   override:
-    - "stack build --system-ghc test --only-dependencies"
+    - "stack test --system-ghc --only-dependencies"
 
 test:
   override:

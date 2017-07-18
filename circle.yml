@@ -1,6 +1,7 @@
 dependencies:
   cache_directories:
     - ".stack-work"
+    - "~/.stack"
 
   override:
     - "stack test --system-ghc --only-dependencies"

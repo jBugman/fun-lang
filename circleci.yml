@@ -1,0 +1,10 @@
+dependencies:
+  cache_directories:
+    - ".stack-work"
+
+  override:
+    - "stack build --no-terminal --install-ghc --only-dependencies test"
+
+test:
+  override:
+    - "stack test"

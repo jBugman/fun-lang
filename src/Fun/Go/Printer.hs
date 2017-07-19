@@ -42,6 +42,9 @@ print (L [ TP "slice" , x ]) = printf1 "[]{}" <$> print x
 print (L [ TP "map"   , k@(TP _) , v@(TP _) ])
     = printf2 "map[{}]{}" <$> print k <*> print v
 
+-- id-type pair (used in function arguments)
+print (L [ ID a , TP t ]) = Right $ printf2 "{} {}" a t
+
 -- const
 print (L [ KW "const" , ID name , e ])
     = printf2 "const {} = {}" name <$> print e
@@ -143,6 +146,7 @@ print (L [ KW "for" , ID i , from , to , body ])
     = printFor i from (L [ OP "<" , ID i , to ]) (L [ OP "++" , ID i]) body
 
 -- function call
+print (L [ ID f ]) = Right $ printf1 "{}()" f
 print (L ( ID f : args )) = printf2 "{}({})" f <$> printList args
 
 -- unary operators

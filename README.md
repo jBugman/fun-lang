@@ -1,5 +1,6 @@
-## Fun
-### Lisp-style language with static typing, compiled to Go
+# Fun [![CircleCI](https://img.shields.io/circleci/project/github/jBugman/fun-lang/master.svg)](https://circleci.com/gh/jBugman/fun-lang)
+
+Lisp-style language with static typing, compiled to Go.
 
 Idea is to provide alternative syntax with more syntax sugar using code-generation to allow more concise code.
 Also, there may be an ability to use raw inline Go code for more complex cases.

@@ -7,6 +7,7 @@ import Distribution.Simple.UserHooks
 import Distribution.Simple.Utils
 import System.Directory
 import System.FilePath
+import System.Info                        (os)
 import System.Process
 
 
@@ -19,7 +20,11 @@ buildLibGo :: Args -> ConfigFlags -> PackageDescription -> LocalBuildInfo -> IO 
 buildLibGo _ _ _ _ = do
     wd <- getCurrentDirectory
     let name         = "libfungo"
-        dynamicPath  = wd </> (name ++ ".dylib")
+        ext = case os of
+            "darwin"  -> ".dylib"
+            "windows" -> ".dll"
+            _         -> ".so"
+        dynamicPath  = wd </> (name <.> ext)
         buildDynamic = shell ("go build -buildmode=c-shared -o " ++ dynamicPath ++ " go/src/fmt.go")
         rmHeader     = shell ("rm " ++ name ++ ".h")
     putStrLn ("Compiling Go dynamic library to " ++ dynamicPath)

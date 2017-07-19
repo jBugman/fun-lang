@@ -23,8 +23,7 @@ import ClassyPrelude
 import Data.SCargot.Repr.WellFormed (WellFormedSExpr (..))
 import Data.Text.Buildable          (Buildable, build)
 import Data.Text.Lazy.Builder       (fromText)
--- import GHC.Err                      (errorWithoutStackTrace)
-import Numeric (showHex)
+import Numeric                      (showHex)
 
 
 type Expression = WellFormedSExpr Atom

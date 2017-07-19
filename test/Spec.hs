@@ -407,6 +407,48 @@ functionalTests = do
           [ L [ ID "fmt.Println" , SL "<first>" ]
           , L [ ID "fmt.Printf" , SL "<%s>\\n", SL "second" ] ]]]
 
+    it "adds return to constant func" $
+      desugar (L
+        [ KW "package" , ID "acme" , L
+        [ KW "func" , ID "Version" , Nil , TP "string" ,
+          SL "v1.02" ] ])
+      `shouldBe` L
+        [ KW "package" , ID "acme" , L
+        [ KW "func" , ID "Version" , Nil , TP "string" ,
+          L [ KW "return" , SL "v1.02" ] ]]
+
+    it "adds return to func with declared results" $
+      desugar (L
+        [ KW "package" , ID "acme" , L
+        [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
+          L [ OP "*" , ID "x" , IL 2 ] ]])
+      `shouldBe` L
+        [ KW "package" , ID "acme" , L
+        [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
+          L [ KW "return" , L [ OP "*" , ID "x" , IL 2 ] ] ]]
+
+    it "adds return to the last expression" $
+      desugar (L
+        [ KW "package" , ID "acme" , L
+        [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" , L
+          [ L [ KW "var" , ID "y" , L [ OP "*" , ID "x" , IL 2 ] ]
+          , ID "y" ]]])
+      `shouldBe` L
+        [ KW "package" , ID "acme" , L
+        [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" , L
+          [ L [ KW "var" , ID "y" , L [ OP "*" , ID "x" , IL 2 ] ]
+          , L [ KW "return" , ID "y" ] ]]]
+
+    it "does not add return if already present" $
+      desugar (L
+        [ KW "package" , ID "acme" , L
+        [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
+          L [ KW "return" , L [ OP "*" , ID "x" , IL 2 ] ] ]])
+      `shouldBe` L
+        [ KW "package" , ID "acme" , L
+        [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
+          L [ KW "return" , L [ OP "*" , ID "x" , IL 2 ] ] ]]
+
 
 dummyTests :: Spec
 dummyTests = describe "MOAR coverage!" $ do

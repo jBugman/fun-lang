@@ -333,6 +333,34 @@ unitTests = do
       `shouldPrint`
       "for x := k; true; x = x + foo.N {\nbreak\n}"
 
+    it "minimal func literal" $
+      print (L [ KW "func" , Nil , L [ ID "pass" , IL 42 ] ])
+      `shouldPrint`
+      "func() {\npass(42)\n}"
+
+    it "func literal with result" $
+      print (L [ KW "func" , Nil , TP "int" , L
+      [ L [ KW "set" , ID "i" , L [ OP "+", ID "i", IL 1 ] ]
+      , L [ KW "return" , ID "i" ] ]])
+      `shouldPrint`
+      "func() int {\ni = i + 1\nreturn i\n}"
+
+    it "func literal with args" $
+      print (L [ KW "func" , L [ L [ ID "x" , TP "int" ]] , L
+      [ L [ KW "set" , ID "i" , L [ OP "+", ID "i", ID "x" ] ]
+      , L [ KW "return" , ID "i" ] ]])
+      `shouldPrint`
+      "func(x int) {\ni = i + x\nreturn i\n}"
+
+    it "minimal func type lit" $
+       print (L [ TP "func" , Nil ]) `shouldPrint` "func()"
+
+    it "func type lit with result" $
+       print (L [ TP "func" , Nil , TP "int" ]) `shouldPrint` "func() int"
+
+    it "func type lit with args" $
+       print (L [ TP "func" , L [ TP "int" ] ]) `shouldPrint` "func(int)"
+
 
   describe "Fun.Printer.singleLine" $ do
 

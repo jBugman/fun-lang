@@ -117,11 +117,21 @@ print (L [ KW "import" , SL path , SL alias ])
 print (L [ KW "func" , ID n , body ])
     = printf2 "func {}() {\n{}\n}" n <$> print body
 
-print (L [ KW "func" , ID n , a, body ])
+print (L [ KW "func" , ID n , a , body ])
     = printf3 "func {}({}) {\n{}\n}" n <$> printArgs a <*> print body
 
-print (L [ KW "func" , ID n , a, r, body ])
+print (L [ KW "func" , ID n , a , r , body ])
     = printf4 "func {}({}) {} {\n{}\n}" n <$> printArgs a <*> printResults r <*> print body
+
+-- lambda
+print (L [ KW "func" , Nil , body ])
+    = printf1 "func() {\n{}\n}" <$> print body
+
+print (L [ KW "func" , a , body ])
+    = printf2 "func({}) {\n{}\n}" <$> printArgs a <*> print body
+
+print (L [ KW "func" , a, r, body ])
+    = printf3 "func({}) {} {\n{}\n}" <$> printArgs a <*> printResults r <*> print body
 
 -- assignment
 print (L [ KW "set" , ID name , xs ])

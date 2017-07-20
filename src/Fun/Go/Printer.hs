@@ -1,8 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
-module Fun.Go.Printer
-    ( printPretty
-    , print
-) where
+module Fun.Go.Printer ( print ) where
 
 import ClassyPrelude                hiding (print)
 import Data.Either                  (partitionEithers)
@@ -15,11 +12,7 @@ import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (Atom (..), Expression, pattern ID, pattern KW, pattern OP, pattern SL,
                           pattern TP)
-import Go.Fmt            (gofmt)
 
-
-printPretty :: Expression -> Either Error Text
-printPretty e = print e >>= gofmt
 
 print :: Expression -> Either Error Text
 -- empty

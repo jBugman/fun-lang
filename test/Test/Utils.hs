@@ -12,7 +12,7 @@ import Test.Hspec                      (Expectation, HasCallStack, Spec, describ
                                         shouldBe, shouldSatisfy)
 import Test.Hspec.Expectations.Contrib (isLeft)
 
-import Fun             (translate)
+import Fun             (translateFmt)
 import Fun.Errors      (Error, unError)
 import Fun.SExpression (Expression)
 
@@ -51,4 +51,4 @@ readGolden path = readSourceFile path ".go"
 translated :: Text -> IO Text
 translated name = do
     src <- readSourceFile name ".fun"
-    return $ either unError id $ translate src
+    return $ either unError id $ translateFmt src

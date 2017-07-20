@@ -46,6 +46,10 @@ print (L [ TP "func" , a , r ])
 
 print (L [ TP "ptr" , x ]) = printf1 "*{}" <$> print x
 
+-- type alias
+print (L [ KW "alias" , ID n , e ])
+    = printf2 "type {} {}" n <$> print e
+
 -- id-type pair (used in function arguments)
 print (L [ ID a , t@(TP _) ])
     = printf2 "{} {}" a <$> print t

@@ -378,6 +378,10 @@ unitTests = do
        `shouldPrint`
        "func foo() (func() int) {\nreturn bar\n}"
 
+    it "type alias" $
+       printGo (L [ KW "alias" , ID "UserID" , TP "string" ])
+       `shouldPrint`
+       "type UserID string"
 
   describe "Fun.Printer.singleLine" $ do
 

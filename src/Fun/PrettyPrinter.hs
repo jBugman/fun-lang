@@ -1,4 +1,4 @@
-module Fun.Printer (singleLine) where
+module Fun.PrettyPrinter (singleLine) where
 
 import ClassyPrelude
 import Data.SCargot                 (SExprPrinter, basicPrint, encodeOne, setFromCarrier)

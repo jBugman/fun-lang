@@ -11,11 +11,11 @@ import Data.Text.Buildable          (Buildable)
 import Data.Text.Format             (Format, format)
 import Data.Text.Format.Params      (Params)
 
-import Fun.Errors      (Error (..))
-import Fun.Printer     (singleLine)
-import Fun.SExpression (Atom (..), Expression, pattern ID, pattern KW, pattern OP, pattern SL,
-                        pattern TP)
-import Go.Fmt          (gofmt)
+import Fun.Errors        (Error (..))
+import Fun.PrettyPrinter (singleLine)
+import Fun.SExpression   (Atom (..), Expression, pattern ID, pattern KW, pattern OP, pattern SL,
+                          pattern TP)
+import Go.Fmt            (gofmt)
 
 
 printPretty :: Expression -> Either Error Text

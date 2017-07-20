@@ -7,15 +7,15 @@ import Data.Either.Combinators      (mapLeft)
 import Data.SCargot.Repr.WellFormed (pattern L, pattern Nil)
 import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
 
-import Fun.Errors      (Error (..), unError)
-import Fun.Go.Desugar  (desugar)
-import Fun.Go.Printer  (print, printPretty)
-import Fun.Parser      (parse)
-import Fun.Printer     (singleLine)
-import Fun.SExpression (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
-                        pattern KW, pattern OP, pattern SL, pattern TP)
-import Go.Fmt          (gofmt)
-import Test.Utils      (shouldFailOn, shouldParse, shouldPrint, translationExample)
+import Fun.Desugar       (desugar)
+import Fun.Errors        (Error (..), unError)
+import Fun.Go.Printer    (print, printPretty)
+import Fun.Parser        (parse)
+import Fun.PrettyPrinter (singleLine)
+import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
+                          pattern KW, pattern OP, pattern SL, pattern TP)
+import Go.Fmt            (gofmt)
+import Test.Utils        (shouldFailOn, shouldParse, shouldPrint, translationExample)
 
 
 main :: IO ()

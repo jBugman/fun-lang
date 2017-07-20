@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
-module Fun.Go.Desugar (desugar) where
+module Fun.Desugar (desugar) where
 
 import ClassyPrelude
 import Data.SCargot.Repr.WellFormed (pattern A, pattern L)

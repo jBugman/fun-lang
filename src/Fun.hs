@@ -2,8 +2,8 @@ module Fun ( translate ) where
 
 import ClassyPrelude
 
+import Fun.Desugar    (desugar)
 import Fun.Errors     (Error (..))
-import Fun.Go.Desugar (desugar)
 import Fun.Go.Printer (printPretty)
 import Fun.Parser     (parse)
 

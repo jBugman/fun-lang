@@ -1,5 +1,5 @@
 name:                language-fun
-version:             0.15.16.0-SNAPSHOT
+version:             0.16.0.0-SNAPSHOT
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -19,11 +19,11 @@ custom-setup
 library
   hs-source-dirs:       src
   exposed-modules:      Fun
+                      , Fun.Desugar
                       , Fun.Errors
-                      , Fun.Go.Desugar
                       , Fun.Go.Printer
                       , Fun.Parser
-                      , Fun.Printer
+                      , Fun.PrettyPrinter
                       , Fun.SExpression
                       , Go.Fmt
   other-modules:        Fun.Tokens

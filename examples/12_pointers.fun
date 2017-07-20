@@ -1,9 +1,9 @@
 (package main
 
-(func zeroval (ival :int)
+(func zeroval ((ival :int))
   (set ival 0) )
 
-(func zeroptr (iptr (:ptr :int))
+(func zeroptr ((iptr (:ptr :int)))
   (set (* iptr) 0) )
 
 (func main (

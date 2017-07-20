@@ -1,6 +1,6 @@
 (package main
 
-(func intSeq (:func :int) (
+(func intSeq ((:func () :int)) (
   (var i 0)
   (return (func () :int (
     (set i (+ i 1))

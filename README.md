@@ -24,7 +24,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 * Can't declare but can call a function with variadic parameters (yet?)
 
 
-### Learn Fun in Y minutes (translated from Go)
+## Learn Fun in Y minutes (translated from Go)
 
 ```lisp
 ; Single line comment
@@ -405,3 +405,17 @@ Transpiling is mostly literal, but there are some differences from Go:
 
 )
 ```
+
+## Docker setup for CircleCI 2.0
+
+    # Build base image
+    docker build -t jbugman/funlang-circleci:0.1 -f .circleci/Dockerfile .circleci
+
+    # Build dev image
+    docker build -t fun-dev .
+
+    # Run dev image and test CI workflow
+    docker run --rm -it fun-dev
+    stack setup
+    stack test --only-dependencies
+    stack test

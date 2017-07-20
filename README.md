@@ -1,6 +1,7 @@
 # Fun
 
-[![CircleCI](https://img.shields.io/circleci/project/github/jBugman/fun-lang/master.svg)](https://circleci.com/gh/jBugman/fun-lang)
+[![CircleCI](https://img.shields.io/circleci/project/github/jBugman/fun-lang/master.svg?label=master)](https://circleci.com/gh/jBugman/fun-lang)
+[![CircleCI](https://img.shields.io/circleci/project/github/jBugman/fun-lang/dev.svg?label=dev)](https://circleci.com/gh/jBugman/fun-lang)
 
 Lisp-style language with static typing, compiled to Go.
 

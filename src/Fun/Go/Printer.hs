@@ -43,8 +43,8 @@ print (L [ TP "map" , k@(TP _) , v@(TP _) ])
     = printf2 "map[{}]{}" <$> print k <*> print v
 
 -- id-type pair (used in function arguments)
-print (L [ ID a , TP t ])
-    = Right $ printf2 "{} {}" a t
+print (L [ ID a , t@(TP _) ])
+    = printf2 "{} {}" a <$> print t
 
 print (L [ ID a , t@(L ( TP _ : _)) ])
     = printf2 "{} {}" a <$> print t
@@ -53,21 +53,21 @@ print (L [ ID a , t@(L ( TP _ : _)) ])
 print (L [ KW "const" , ID name , e ])
     = printf2 "const {} = {}" name <$> print e
 
-print (L [ KW "const" , ID name , TP t , e ])
-    = printf3 "const {} {} = {}" name t <$> print e
+print (L [ KW "const" , ID name , t@(TP _) , e ])
+    = printf3 "const {} {} = {}" name <$> print t <*> print e
 
 -- var
-print (L [ KW "var" , ID n , TP t ])
-    = Right $ printf2 "var {} {}" n t
+print (L [ KW "var" , ID n , t@(TP _) ])
+    = printf2 "var {} {}" n <$> print t
 
 print (L [ KW "var" , ID "_" , ID n , acc@(L ( KW "val" : _)) ])
     = printf2 "var _, {} = {}" n <$> print acc
 
-print (L [ KW "var" , ID n , ct@(L(TP _ : _)) ])
-    = printf2 "var {} {}" n <$> print ct
+print (L [ KW "var" , ID n , t@(L (TP _ : _)) ])
+    = printf2 "var {} {}" n <$> print t
 
-print (L [ KW "var" , ID n , TP t , e ])
-    = printf3 "var {} {} = {}" n t <$> print e
+print (L [ KW "var" , ID n , t@(TP _) , e ])
+    = printf3 "var {} {} = {}" n <$> print t <*> print e
 
 print (L [ KW "var" , ID n , ts , L xs ])
     = printf3 "var {} = {}{{}}" n <$> print ts <*> printList xs

@@ -1,23 +1,25 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
 module Go.Fmt (gofmt) where
 
 import ClassyPrelude
-import Foreign.C.String (CString, newCString, peekCString)
+import Data.Maybe       (fromJust)
+import Data.Text        (stripEnd)
+import System.Exit      (ExitCode (..))
 import System.IO.Unsafe (unsafePerformIO)
+import System.Process   (readProcessWithExitCode)
 
 import Fun.Errors (Error (..))
 
 
-foreign import ccall unsafe "gofmt" go_fmt :: CString -> CString
-
 gofmt :: Text -> Either Error Text
 gofmt src = unsafePerformIO $ do
-    s   <- newCString $ toList src
-    res <- peekCString $ go_fmt s
-    let txt = pack res
-    return $ case stripPrefix errPrefix txt of
-        Just err -> Left (GoError err)
-        Nothing  -> Right txt
+    (exitcode, output, errors) <- readProcessWithExitCode "gofmt" [] (unpack src)
+    return $ case exitcode of
+        ExitSuccess   -> Right $ pack output
+        ExitFailure _ -> Left . GoError
+            $ fromJust -- We want exception there if something go wrong
+            $ stripPrefix errPrefix
+            $ stripEnd
+            $ pack errors
 
 errPrefix :: Text
-errPrefix = "!ERR: "
+errPrefix = "<standard input>:"

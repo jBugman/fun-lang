@@ -204,6 +204,12 @@ unitTests = do
     it "--" $
       print (L [ OP "--" , ID "j" ]) `shouldPrint` "j--"
 
+    it "* as product" $
+      print (L [ OP "*" , ID "x" , ID "y" ]) `shouldPrint` "x * y"
+
+    it "* as pointer" $
+      print (L [ OP "*" , ID "foo" ]) `shouldPrint` "*foo"
+
     it "hex == char" $
       print (L [ OP "=" , HL 1 , CL "a" ]) `shouldPrint` "0x1 == 'a'"
 

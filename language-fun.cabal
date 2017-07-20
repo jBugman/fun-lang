@@ -6,15 +6,8 @@ author:              Sergey Parshukov
 maintainer:          codedby@bugman.me
 copyright:           2017 Sergey Parshukov
 category:            Language
-build-type:          Custom
+build-type:          Simple
 cabal-version:       >=1.10
-
-custom-setup
-  setup-depends:  base >= 4.7 && < 5
-                , Cabal
-                , directory
-                , filepath
-                , process
 
 library
   hs-source-dirs:       src
@@ -37,7 +30,6 @@ library
                       , split
                       , text
                       , text-format
-  extra-libraries:      fungo
   ghc-options:         -Wall -Wno-partial-type-signatures
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   default-language:     Haskell2010
@@ -54,7 +46,6 @@ executable func
                       , process
                       , temporary
                       , text
-  extra-libraries:      fungo
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   default-language:     Haskell2010
 
@@ -63,7 +54,6 @@ test-suite fun-lang-test
   hs-source-dirs:       test
   main-is:              Spec.hs
   other-modules:        Test.Utils
-                     -- Test.Instances
   build-depends:        base
                       , classy-prelude
                       , language-fun
@@ -74,7 +64,6 @@ test-suite fun-lang-test
                       , QuickCheck
                       , s-cargot
                       , text
-  extra-libraries:      fungo
   ghc-options:         -Wall -threaded -rtsopts
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   default-language:     Haskell2010

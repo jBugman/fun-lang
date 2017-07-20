@@ -2,6 +2,8 @@ version: 2
 
 jobs:
   build:
+    docker:
+      - image: golang:1.8.3
     working_directory: ~/fun-lang
     steps:
       - checkout
@@ -17,4 +19,5 @@ jobs:
             - ~/.stack
 
       - run:
-        command: "stack test --system-ghc"
+          name: Running tests
+          command: "stack test --system-ghc"

@@ -2,14 +2,14 @@
 {-# LANGUAGE PatternSynonyms  #-}
 module Main where
 
-import ClassyPrelude                hiding (print)
+import ClassyPrelude
 import Data.Either.Combinators      (mapLeft)
 import Data.SCargot.Repr.WellFormed (pattern L, pattern Nil)
 import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
 
 import Fun.Desugar       (desugar)
 import Fun.Errors        (Error (..), unError)
-import Fun.Go.Printer    (print)
+import Fun.Go.Printer    (printGo)
 import Fun.Parser        (parse)
 import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
@@ -182,197 +182,197 @@ unitTests = do
       parse "(:func () :int)" `shouldParse` L [ TP "func" , Nil , TP "int" ]
 
 
-  describe "Fun.Go.Printer.print" $ do
+  describe "Fun.Go.Printer.printGo" $ do
 
     it "fail on standalone Nil" $
-      mapLeft unError (print Nil) `shouldBe` Left "translation error: empty expression"
+      mapLeft unError (printGo Nil) `shouldBe` Left "translation error: empty expression"
 
     it "import" $
-      print (L [ KW "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
+      printGo (L [ KW "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
 
     it "import with alias" $
-      print (L [ KW "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
+      printGo (L [ KW "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
       "import pkg \"very/long-package\""
 
     it "simple func" $
-      print (L [ KW "func" , ID "setS" , L [ KW "set" , ID "s" , IL 2 ] ]) `shouldPrint`
+      printGo (L [ KW "func" , ID "setS" , L [ KW "set" , ID "s" , IL 2 ] ]) `shouldPrint`
       "func setS() {\ns = 2\n}"
 
     it "<" $
-      print (L [ OP "<" , ID "n" , IL 10 ]) `shouldPrint` "n < 10"
+      printGo (L [ OP "<" , ID "n" , IL 10 ]) `shouldPrint` "n < 10"
 
     it "==" $
-      print (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
+      printGo (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
 
     it "--" $
-      print (L [ OP "--" , ID "j" ]) `shouldPrint` "j--"
+      printGo (L [ OP "--" , ID "j" ]) `shouldPrint` "j--"
 
     it "* as product" $
-      print (L [ OP "*" , ID "x" , ID "y" ]) `shouldPrint` "x * y"
+      printGo (L [ OP "*" , ID "x" , ID "y" ]) `shouldPrint` "x * y"
 
     it "* as pointer" $
-      print (L [ OP "*" , ID "foo" ]) `shouldPrint` "*foo"
+      printGo (L [ OP "*" , ID "foo" ]) `shouldPrint` "*foo"
 
     it "hex == char" $
-      print (L [ OP "=" , HL 1 , CL "a" ]) `shouldPrint` "0x1 == 'a'"
+      printGo (L [ OP "=" , HL 1 , CL "a" ]) `shouldPrint` "0x1 == 'a'"
 
     it "double" $
-      print (DL 9.99) `shouldPrint` "9.99"
+      printGo (DL 9.99) `shouldPrint` "9.99"
 
     it "string" $
-      print (SL "fizzbuzz") `shouldPrint` "\"fizzbuzz\""
+      printGo (SL "fizzbuzz") `shouldPrint` "\"fizzbuzz\""
 
     it "'any' type" $
-      print (TP "any") `shouldPrint` "interface{}"
+      printGo (TP "any") `shouldPrint` "interface{}"
 
     it "const decl" $
-      print (L [ KW "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
+      printGo (L [ KW "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
 
     it "full const decl" $
-      print (L [ KW "const" , ID "a" , TP "State" , HL 10 ]) `shouldPrint` "const a State = 0xa"
+      printGo (L [ KW "const" , ID "a" , TP "State" , HL 10 ]) `shouldPrint` "const a State = 0xa"
 
     it "full var decl" $
-      print (L [ KW "var" , ID "b" , TP "int" , IL 1 ]) `shouldPrint` "var b int = 1"
+      printGo (L [ KW "var" , ID "b" , TP "int" , IL 1 ]) `shouldPrint` "var b int = 1"
 
     it "infer type var" $
-      print (L [ KW "var" , ID "d" , BL True ]) `shouldPrint` "var d = true"
+      printGo (L [ KW "var" , ID "d" , BL True ]) `shouldPrint` "var d = true"
 
     it "zero value var" $
-      print (L [ KW "var" , ID "x" , TP "int" ]) `shouldPrint` "var x int"
+      printGo (L [ KW "var" , ID "x" , TP "int" ]) `shouldPrint` "var x int"
 
     it "zero value var with composite type" $
-      print (L [ KW "var" , ID "x" , L [ TP "slice" , TP "string" ] ]) `shouldPrint` "var x []string"
+      printGo (L [ KW "var" , ID "x" , L [ TP "slice" , TP "string" ] ]) `shouldPrint` "var x []string"
 
     it "var with slice literal initializer" $
-      print (L [ KW "var" , ID "nums" , L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2, IL 3 ] ])
+      printGo (L [ KW "var" , ID "nums" , L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2, IL 3 ] ])
       `shouldPrint`
       "var nums = []int{1, 2, 3}"
 
     it "var with map literal initializer" $
-      print (L [ KW "var" , ID "m"
+      printGo (L [ KW "var" , ID "m"
       , L [ TP "map" , TP "string" , TP "bool" ]
       , L [ L [ SL "foo", BL True ] , L [ SL "bar" , BL False ] ] ]) `shouldPrint`
       "var m = map[string]bool{\"foo\": true, \"bar\": false}"
 
     it "slice of slices" $
-      print (L [ TP "slice" , L [ TP "slice" , TP "string" ] ]) `shouldPrint` "[][]string"
+      printGo (L [ TP "slice" , L [ TP "slice" , TP "string" ] ]) `shouldPrint` "[][]string"
 
     it "map lookup" $
-      print (L [ KW "set" , ID "_" , ID "ok" , L [ KW "val" , ID "m" , SL "Bob" ] ])
+      printGo (L [ KW "set" , ID "_" , ID "ok" , L [ KW "val" , ID "m" , SL "Bob" ] ])
       `shouldPrint`
       "_, ok = m[\"Bob\"]"
 
     it "slice index" $
-      print (L [ KW "val" , ID "xs" , IL 4 ]) `shouldPrint` "xs[4]"
+      printGo (L [ KW "val" , ID "xs" , IL 4 ]) `shouldPrint` "xs[4]"
 
     it "slice 2D-index" $
-      print (L [ KW "val" , ID "xs" , ID "y" , ID "x" ]) `shouldPrint` "xs[y][x]"
+      printGo (L [ KW "val" , ID "xs" , ID "y" , ID "x" ]) `shouldPrint` "xs[y][x]"
 
     it "short range" $
-      print (L [ KW "range" , ID "x" , ID "chanX" ]) `shouldPrint`
+      printGo (L [ KW "range" , ID "x" , ID "chanX" ]) `shouldPrint`
       "x := range chanX"
 
     it "full range" $
-      print (L [ KW "range" , ID "k" , ID "v" , ID "users" ]) `shouldPrint`
+      printGo (L [ KW "range" , ID "k" , ID "v" , ID "users" ]) `shouldPrint`
       "k, v := range users"
 
     it "slice from" $
-      print (L [ KW "slice" , ID "xs" , IL 1 , ID "_" ]) `shouldPrint` "xs[1:]"
+      printGo (L [ KW "slice" , ID "xs" , IL 1 , ID "_" ]) `shouldPrint` "xs[1:]"
 
     it "slice to" $
-      print (L [ KW "slice" , ID "xs" , ID "_" , IL 4 ]) `shouldPrint` "xs[:4]"
+      printGo (L [ KW "slice" , ID "xs" , ID "_" , IL 4 ]) `shouldPrint` "xs[:4]"
 
     it "slice from-to" $
-      print (L [ KW "slice" , ID "indexes" , ID "i" , L [ OP "+" , ID "j" , IL 1 ] ])
+      printGo (L [ KW "slice" , ID "indexes" , ID "i" , L [ OP "+" , ID "j" , IL 1 ] ])
       `shouldPrint` "indexes[i:j + 1]"
 
     it "empty struct" $
-      print (L [ KW "struct" , ID "foo" ])
+      printGo (L [ KW "struct" , ID "foo" ])
       `shouldPrint` "type foo struct{}"
 
     it "single entry struct" $
-      print (L [ KW "struct" , ID "List" , L [ ID "xs" , L [ TP "slice" , TP "string" ] ] ])
+      printGo (L [ KW "struct" , ID "List" , L [ ID "xs" , L [ TP "slice" , TP "string" ] ] ])
       `shouldPrint` "type List struct {\nxs []string\n}"
 
     it "multiple entries struct" $
-      print (L [ KW "struct" , ID "point"
+      printGo (L [ KW "struct" , ID "point"
         , L [ ID "x" , TP "int" ]
         , L [ ID "y" , TP "int" ] ])
       `shouldPrint` "type point struct {\nx int\ny int\n}"
 
     it "empty interface" $
-      print (L [ KW "interface" , ID "foo" ])
+      printGo (L [ KW "interface" , ID "foo" ])
       `shouldPrint` "type foo interface{}"
 
     it "single entry interface" $
-      print (L [ KW "interface" , ID "Printer" ,
+      printGo (L [ KW "interface" , ID "Printer" ,
         L [ ID "Print" , L [ L [ ID "x" , TP "any" ]] ] ])
       `shouldPrint` "type Printer interface {\nPrint(x interface{})\n}"
 
     it "multiple entries interface" $
-      print (L [ KW "interface" , ID "shape"
+      printGo (L [ KW "interface" , ID "shape"
         , L [ ID "area" , Nil , TP "double" ]
         , L [ ID "perimeter" , Nil , TP "double" ] ])
       `shouldPrint` "type shape interface {\narea() double\nperimeter() double\n}"
 
     it "forever for loop" $
-      print (L [ KW "for" , L [ ID "fmt.Println" , SL "fizz" ] ]) `shouldPrint`
+      printGo (L [ KW "for" , L [ ID "fmt.Println" , SL "fizz" ] ]) `shouldPrint`
       "for {\nfmt.Println(\"fizz\")\n}"
 
     it "standard for loop" $
-      print (L [ KW "for" , ID "i" , IL 0 , IL 10 , L [ ID "fmt.Println" , SL "buzz" ] ])
+      printGo (L [ KW "for" , ID "i" , IL 0 , IL 10 , L [ ID "fmt.Println" , SL "buzz" ] ])
       `shouldPrint`
       "for i := 0; i < 10; i++ {\nfmt.Println(\"buzz\")\n}"
 
     it "only condition for loop" $
-      print (L [ KW "for" , L [ OP "<" , ID "n" , IL 42 ] , L [ ID "fmt.Print" , SL "?" ] ])
+      printGo (L [ KW "for" , L [ OP "<" , ID "n" , IL 42 ] , L [ ID "fmt.Print" , SL "?" ] ])
       `shouldPrint`
       "for n < 42 {\nfmt.Print(\"?\")\n}"
 
     it "custom for loop" $
-      print (L [ KW "for" , ID "x" , ID "k" , BL True
+      printGo (L [ KW "for" , ID "x" , ID "k" , BL True
       , L [ KW "set" , ID "x" , L [ OP "+", ID "x", ID "foo.N" ] ]
       , L [ KW "break" ] ])
       `shouldPrint`
       "for x := k; true; x = x + foo.N {\nbreak\n}"
 
     it "minimal func literal" $
-      print (L [ KW "func" , Nil , L [ ID "pass" , IL 42 ] ])
+      printGo (L [ KW "func" , Nil , L [ ID "pass" , IL 42 ] ])
       `shouldPrint`
       "func() {\npass(42)\n}"
 
     it "func literal with result" $
-      print (L [ KW "func" , Nil , TP "int" , L
+      printGo (L [ KW "func" , Nil , TP "int" , L
       [ L [ KW "set" , ID "i" , L [ OP "+", ID "i", IL 1 ] ]
       , L [ KW "return" , ID "i" ] ]])
       `shouldPrint`
       "func() int {\ni = i + 1\nreturn i\n}"
 
     it "func literal with args" $
-      print (L [ KW "func" , L [ L [ ID "x" , TP "int" ]] , L
+      printGo (L [ KW "func" , L [ L [ ID "x" , TP "int" ]] , L
       [ L [ KW "set" , ID "i" , L [ OP "+", ID "i", ID "x" ] ]
       , L [ KW "return" , ID "i" ] ]])
       `shouldPrint`
       "func(x int) {\ni = i + x\nreturn i\n}"
 
     it "minimal func type lit" $
-       print (L [ TP "func" , Nil ]) `shouldPrint` "func()"
+       printGo (L [ TP "func" , Nil ]) `shouldPrint` "func()"
 
     it "func type lit with result" $
-       print (L [ TP "func" , Nil , TP "int" ]) `shouldPrint` "func() int"
+       printGo (L [ TP "func" , Nil , TP "int" ]) `shouldPrint` "func() int"
 
     it "func type lit with args" $
-       print (L [ TP "func" , L [ TP "int" ] ]) `shouldPrint` "func(int)"
+       printGo (L [ TP "func" , L [ TP "int" ] ]) `shouldPrint` "func(int)"
 
     it "func returning func A" $
-       print (L [ KW "func" , ID "foo" , Nil
+       printGo (L [ KW "func" , ID "foo" , Nil
        , L [ TP "func" , Nil , TP "int" ]
        , L [ KW "return" , ID "bar" ] ])
        `shouldPrint`
        "func foo() func() int {\nreturn bar\n}"
 
     it "func returning func B" $
-       print (L [ KW "func" , ID "foo" , Nil
+       printGo (L [ KW "func" , ID "foo" , Nil
        , L [ L [ TP "func" , Nil , TP "int" ] ]
        , L [ KW "return" , ID "bar" ] ])
        `shouldPrint`

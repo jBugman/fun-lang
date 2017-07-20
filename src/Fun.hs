@@ -1,19 +1,16 @@
 module Fun ( translate, translateFmt ) where
 
-import ClassyPrelude hiding (print)
+import ClassyPrelude
 
 import Fun.Desugar    (desugar)
 import Fun.Errors     (Error (..))
-import Fun.Go.Printer (print)
+import Fun.Go.Printer (printGo)
 import Fun.Parser     (parse)
 import Go.Fmt         (gofmt)
 
 
 translate :: Text -> Either Error Text
-translate txt = parse txt >>= print . desugar
+translate txt = parse txt >>= printGo . desugar
 
 translateFmt :: Text -> Either Error Text
-translateFmt txt = do
-    ex <- parse txt
-    s <- print . desugar $ ex
-    gofmt s
+translateFmt txt = parse txt >>= printGo . desugar >>= gofmt

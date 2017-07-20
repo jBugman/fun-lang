@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: golang:1.8.3
+      - image: jbugman/funlang-circleci:0.1
     working_directory: ~/fun-lang
     steps:
       - checkout
@@ -11,8 +11,11 @@ jobs:
       - restore_cache:
           key: dependency-cache
       - run:
+          name: Installing GHC
+          command: "stack setup"
+      - run:
           name: Installing dependencies with Stack
-          command: "stack test --system-ghc --only-dependencies"
+          command: "stack test --only-dependencies"
       - save_cache:
           key: dependency-cache
           paths:
@@ -20,4 +23,4 @@ jobs:
 
       - run:
           name: Running tests
-          command: "stack test --system-ghc"
+          command: "stack test"

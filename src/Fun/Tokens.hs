@@ -31,6 +31,7 @@ keywords = goKeywords <>
     , "set"
     , "slice"
     , "val"
+    , "make"
     ]
 
 goKeywords :: [String]

@@ -275,6 +275,35 @@ unitTests = do
       print (L [ KW "slice" , ID "indexes" , ID "i" , L [ OP "+" , ID "j" , IL 1 ] ])
       `shouldPrint` "indexes[i:j + 1]"
 
+    it "empty struct" $
+      print (L [ KW "struct" , ID "foo" ])
+      `shouldPrint` "type foo struct{}"
+
+    it "single entry struct" $
+      print (L [ KW "struct" , ID "List" , L [ ID "xs" , L [ TP "slice" , TP "string" ] ] ])
+      `shouldPrint` "type List struct {\nxs []string\n}"
+
+    it "multiple entries struct" $
+      print (L [ KW "struct" , ID "point"
+        , L [ ID "x" , TP "int" ]
+        , L [ ID "y" , TP "int" ] ])
+      `shouldPrint` "type point struct {\nx int\ny int\n}"
+
+    it "empty interface" $
+      print (L [ KW "interface" , ID "foo" ])
+      `shouldPrint` "type foo interface{}"
+
+    it "single entry interface" $
+      print (L [ KW "interface" , ID "Printer" ,
+        L [ ID "Print" , L [ L [ ID "x" , TP "any" ]] ] ])
+      `shouldPrint` "type Printer interface {\nPrint(x interface{})\n}"
+
+    it "multiple entries interface" $
+      print (L [ KW "interface" , ID "shape"
+        , L [ ID "area" , Nil , TP "double" ]
+        , L [ ID "perimeter" , Nil , TP "double" ] ])
+      `shouldPrint` "type shape interface {\narea() double\nperimeter() double\n}"
+
 
   describe "Fun.Printer.singleLine" $ do
 

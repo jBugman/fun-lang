@@ -39,11 +39,15 @@ print (TP x) = Right x
 
 print (L [ TP "slice" , x ]) = printf1 "[]{}" <$> print x
 
-print (L [ TP "map"   , k@(TP _) , v@(TP _) ])
+print (L [ TP "map" , k@(TP _) , v@(TP _) ])
     = printf2 "map[{}]{}" <$> print k <*> print v
 
 -- id-type pair (used in function arguments)
-print (L [ ID a , TP t ]) = Right $ printf2 "{} {}" a t
+print (L [ ID a , TP t ])
+    = Right $ printf2 "{} {}" a t
+
+print (L [ ID a , t@(L ( TP _ : _)) ])
+    = printf2 "{} {}" a <$> print t
 
 -- const
 print (L [ KW "const" , ID name , e ])
@@ -69,6 +73,30 @@ print (L [ KW "var" , ID n , ts , L xs ])
     = printf3 "var {} = {}{{}}" n <$> print ts <*> printList xs
 
 print (L [ KW "var" , ID n , e ]) = printf2 "var {} = {}" n <$> print e
+
+-- struct decl
+print (L [ KW "struct" , ID n ])
+    = Right $ printf2 "type {} struct{}" n "{}"
+
+print (L ( KW "struct" : ID n : xs ))
+    = printf2 "type {} struct {\n{}\n}" n <$> (intercalate "\n" <$> mapM print xs)
+
+-- interface decl
+print (L [ KW "interface" , ID n ])
+    = Right $ printf2 "type {} interface{}" n "{}"
+
+print (L ( KW "interface" : ID n : xs ))
+    = printf2 "type {} interface {\n{}\n}" n
+    <$> (intercalate "\n" <$> mapM print' xs)
+    where
+        print' :: Expression -> Either Error Text
+        print' (L [ ID nm , args ])
+            = printf2 "{}({})" nm <$> printArgs args
+
+        print' (L [ ID nm , args , res ])
+            = printf3 "{}({}) {}" nm <$> printArgs args <*> printResults res
+
+        print' e = mkError "unexpected " e
 
 -- FIXME: literal pair (used in maps)
 print (L [ lit@(A (Lit _)) , ex ]) = printf2 "{}: {}" <$> print lit <*> print ex
@@ -149,6 +177,13 @@ print (L [ KW "for" , ID i , from , to , body ])
 print (L [ ID f ]) = Right $ printf1 "{}()" f
 print (L ( ID f : args )) = printf2 "{}({})" f <$> printList args
 
+-- make
+print (L [ KW "make" , s@(L ( TP "slice" : _ )) , d ])
+    = printf2 "make({}, {})" <$> print s <*> print d
+
+print (L [ KW "make" , m@(L [ TP "map" , _ , _ ]) ])
+    = printf1 "make({})" <$> print m
+
 -- unary operators
 print (L [ OP "++" , x ]) = printf1 "{}++" <$> print x
 print (L [ OP "--" , x ]) = printf1 "{}--" <$> print x
@@ -176,11 +211,14 @@ print (L [ KW "range" , ID x , ID y, xs ])
 print (L [ KW x ]) = Right x
 
 -- FIXME: catch-all case
-print s = Left . TranslationError $ "not supported yet " <> singleLine s
+print s = mkError "not supported yet " s
 
 
 
 -- Utils --
+
+mkError :: Text -> Expression -> Either Error Text
+mkError msg e = Left . TranslationError $ msg <> singleLine e
 
 printFor :: Text -> Expression -> Expression -> Expression -> Expression -> Either Error Text
 printFor i from cond iter body = do
@@ -189,6 +227,16 @@ printFor i from cond iter body = do
     titer <- print iter
     tbody <- print body
     Right $ strictFormat "for {} := {}; {}; {} {\n{}\n}" (i, tfrom, tcond, titer, tbody)
+
+printArgs :: Expression -> Either Error Text
+printArgs Nil    = Right ""
+printArgs (L as) = printList as
+printArgs t      = print t
+
+printResults :: Expression -> Either Error Text
+printResults (L as)   = printf1 "({})" <$> printList as
+printResults t@(TP _) = print t
+printResults e        = mkError "unexpected" e
 
 printList :: [Expression] -> Either Error Text
 printList xs = intercalate ", " <$> mapM print xs

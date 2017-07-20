@@ -266,7 +266,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 (struct pair (
   (x :int)
   (y :int)
-)
+))
 
 ; Define a method on type pair. Pair now implements Stringer.
 (method (p :pair) String () :string (  ; p is called the "receiver"

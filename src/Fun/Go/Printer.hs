@@ -48,6 +48,7 @@ print (L [ TP "func" , a ])
 print (L [ TP "func" , a , r ])
     = printf2 "func({}) {}" <$> printArgs a <*> printResults r
 
+print (L [ TP "ptr" , x ]) = printf1 "*{}" <$> print x
 
 -- id-type pair (used in function arguments)
 print (L [ ID a , t@(TP _) ])

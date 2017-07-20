@@ -42,6 +42,13 @@ print (L [ TP "slice" , x ]) = printf1 "[]{}" <$> print x
 print (L [ TP "map" , k@(TP _) , v@(TP _) ])
     = printf2 "map[{}]{}" <$> print k <*> print v
 
+print (L [ TP "func" , a ])
+    = printf1 "func({})" <$> printArgs a
+
+print (L [ TP "func" , a , r ])
+    = printf2 "func({}) {}" <$> printArgs a <*> printResults r
+
+
 -- id-type pair (used in function arguments)
 print (L [ ID a , t@(TP _) ])
     = printf2 "{} {}" a <$> print t
@@ -130,7 +137,7 @@ print (L [ KW "func" , Nil , body ])
 print (L [ KW "func" , a , body ])
     = printf2 "func({}) {\n{}\n}" <$> printArgs a <*> print body
 
-print (L [ KW "func" , a, r, body ])
+print (L [ KW "func" , a , r , body ])
     = printf3 "func({}) {} {\n{}\n}" <$> printArgs a <*> printResults r <*> print body
 
 -- assignment
@@ -241,9 +248,10 @@ printArgs (L as) = printList as
 printArgs e      = mkError "unexpected" e
 
 printResults :: Expression -> Either Error Text
-printResults (L as)   = printf1 "({})" <$> printList as
-printResults t@(TP _) = print t
-printResults e        = mkError "unexpected" e
+printResults t@(L ( TP "func" : _ )) = print t
+printResults (L as)                  = printf1 "({})" <$> printList as
+printResults t@(TP _)                = print t
+printResults e                       = mkError "unexpected" e
 
 printList :: [Expression] -> Either Error Text
 printList xs = intercalate ", " <$> mapM print xs

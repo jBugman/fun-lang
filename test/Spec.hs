@@ -178,6 +178,9 @@ unitTests = do
       parse "(var t (:slice :string) (\"g\" \"h\" \"c\"))" `shouldParse`
       L [ KW "var" , ID "t" , L [ TP "slice" , TP "string" ] , L [ SL "g" , SL "h" , SL "c" ] ]
 
+    it "func type" $
+      parse "(:func () :int)" `shouldParse` L [ TP "func" , Nil , TP "int" ]
+
 
   describe "Fun.Go.Printer.print" $ do
 
@@ -360,6 +363,20 @@ unitTests = do
 
     it "func type lit with args" $
        print (L [ TP "func" , L [ TP "int" ] ]) `shouldPrint` "func(int)"
+
+    it "func returning func A" $
+       print (L [ KW "func" , ID "foo" , Nil
+       , L [ TP "func" , Nil , TP "int" ]
+       , L [ KW "return" , ID "bar" ] ])
+       `shouldPrint`
+       "func foo() func() int {\nreturn bar\n}"
+
+    it "func returning func B" $
+       print (L [ KW "func" , ID "foo" , Nil
+       , L [ L [ TP "func" , Nil , TP "int" ] ]
+       , L [ KW "return" , ID "bar" ] ])
+       `shouldPrint`
+       "func foo() (func() int) {\nreturn bar\n}"
 
 
   describe "Fun.Printer.singleLine" $ do

@@ -142,11 +142,11 @@ print (L [ KW "func" , a , r , body ])
     = printf3 "func({}) {} {\n{}\n}" <$> printArgs a <*> printResults r <*> print body
 
 -- assignment
-print (L [ KW "set" , ID name , xs ])
-    = printf2 "{} = {}" name <$> print xs
+print (L [ KW "set" , x , xs ])
+    = printf2 "{} = {}" <$> print x <*> print xs
 
-print (L [ KW "set" , ID "_", ID name , xs ])
-    = printf2 "_, {} = {}" name <$> print xs
+print (L [ KW "set" , ID "_", x , xs ])
+    = printf2 "_, {} = {}" <$> print x <*> print xs
 
 print (L [ KW "set" , tar@(L ( KW "val" : _ )) , ex ])
     = printf2 "{} = {}" <$> print tar <*> print ex

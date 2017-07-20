@@ -117,14 +117,11 @@ print (L [ KW "import" , SL path , SL alias ])
 print (L [ KW "func" , ID n , body ])
     = printf2 "func {}() {\n{}\n}" n <$> print body
 
-print (L [ KW "func" , ID n , L args, body ])
-    = printf3 "func {}({}) {\n{}\n}" n <$> printList args <*> print body
+print (L [ KW "func" , ID n , a, body ])
+    = printf3 "func {}({}) {\n{}\n}" n <$> printArgs a <*> print body
 
-print (L [ KW "func" , ID n , L args, TP t, body ])
-    = printf4 "func {}({}) {} {\n{}\n}" n <$> printList args <*> print (TP t) <*> print body
-
-print (L [ KW "func" , ID n , L args, L results, body ])
-    = printf4 "func {}({}) ({}) {\n{}\n}" n <$> printList args <*> printList results <*> print body
+print (L [ KW "func" , ID n , a, r, body ])
+    = printf4 "func {}({}) {} {\n{}\n}" n <$> printArgs a <*> printResults r <*> print body
 
 -- assignment
 print (L [ KW "set" , ID name , xs ])
@@ -231,7 +228,7 @@ printFor i from cond iter body = do
 printArgs :: Expression -> Either Error Text
 printArgs Nil    = Right ""
 printArgs (L as) = printList as
-printArgs t      = print t
+printArgs e      = mkError "unexpected" e
 
 printResults :: Expression -> Either Error Text
 printResults (L as)   = printf1 "({})" <$> printList as

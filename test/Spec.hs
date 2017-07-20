@@ -9,7 +9,7 @@ import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
 
 import Fun.Desugar       (desugar)
 import Fun.Errors        (Error (..), unError)
-import Fun.Go.Printer    (print, printPretty)
+import Fun.Go.Printer    (print)
 import Fun.Parser        (parse)
 import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
@@ -20,10 +20,10 @@ import Test.Utils        (shouldFailOn, shouldParse, shouldPrint, translationExa
 
 main :: IO ()
 main = hspec $ describe "Everything" $ do
+  dummyTests
   describe "Tests" $ do
-    dummyTests
     unitTests
-    functionalTests
+    integrationTests
   examples
 
 
@@ -304,6 +304,27 @@ unitTests = do
         , L [ ID "perimeter" , Nil , TP "double" ] ])
       `shouldPrint` "type shape interface {\narea() double\nperimeter() double\n}"
 
+    it "forever for loop" $
+      print (L [ KW "for" , L [ ID "fmt.Println" , SL "fizz" ] ]) `shouldPrint`
+      "for {\nfmt.Println(\"fizz\")\n}"
+
+    it "standard for loop" $
+      print (L [ KW "for" , ID "i" , IL 0 , IL 10 , L [ ID "fmt.Println" , SL "buzz" ] ])
+      `shouldPrint`
+      "for i := 0; i < 10; i++ {\nfmt.Println(\"buzz\")\n}"
+
+    it "only condition for loop" $
+      print (L [ KW "for" , L [ OP "<" , ID "n" , IL 42 ] , L [ ID "fmt.Print" , SL "?" ] ])
+      `shouldPrint`
+      "for n < 42 {\nfmt.Print(\"?\")\n}"
+
+    it "custom for loop" $
+      print (L [ KW "for" , ID "x" , ID "k" , BL True
+      , L [ KW "set" , ID "x" , L [ OP "+", ID "x", ID "foo.N" ] ]
+      , L [ KW "break" ] ])
+      `shouldPrint`
+      "for x := k; true; x = x + foo.N {\nbreak\n}"
+
 
   describe "Fun.Printer.singleLine" $ do
 
@@ -316,63 +337,7 @@ unitTests = do
       "(var foo :int 42)"
 
 
-functionalTests :: Spec
-functionalTests = do
-
-  describe "Go.Fmt.gofmt" $ do
-
-    it "formats valid code" $
-      gofmt "func  foo  (  ) { \n i++}" `shouldPrint` "func foo() {\n\ti++\n}"
-
-    it "returns err on a broken code" $
-      gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")
-
-    it "unError GoError" $
-      mapLeft unError (gofmt "func foo }( __") `shouldBe` Left "Go error: 1:20: expected '(', found '}'"
-
-
-  describe "Fun.Go.Printer.printPretty" $ do
-
-    it "import" $
-      printPretty (L [ KW "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
-
-    it "import with alias" $ printPretty ( L
-      [ KW "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
-      "import pkg \"very/long-package\""
-
-    it "simple func" $ printPretty ( L
-      [ KW "func" , ID "setS" , L [ KW "set", ID "s", IL 2 ] ]) `shouldPrint`
-      "func setS() {\n\ts = 2\n}"
-
-    it "lt op" $
-      printPretty (L [ OP "<" , ID "n" , IL 10 ]) `shouldPrint` "n < 10"
-
-    it "eq op" $
-      printPretty (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
-
-    it "forever for loop" $
-      printPretty (L [ KW "for" , L [ ID "fmt.Println" , SL "fizz" ] ]) `shouldPrint`
-      "for {\n\tfmt.Println(\"fizz\")\n}"
-
-    it "standard for loop" $
-      printPretty (L [ KW "for" , ID "i" , IL 0 , IL 10 , L [ ID "fmt.Println" , SL "buzz" ] ])
-      `shouldPrint`
-      "for i := 0; i < 10; i++ {\n\tfmt.Println(\"buzz\")\n}"
-
-    it "only condition for loop" $
-      printPretty (L [ KW "for" , L [ OP "<" , ID "n" , IL 42 ] , L [ ID "fmt.Print" , SL "?" ] ])
-      `shouldPrint`
-      "for n < 42 {\n\tfmt.Print(\"?\")\n}"
-
-    it "custom for loop" $
-      printPretty (L [ KW "for" , ID "x" , ID "k" , BL True
-      , L [ KW "set" , ID "x" , L [ OP "+", ID "x", ID "foo.N" ] ]
-      , L [ KW "break" ] ])
-      `shouldPrint`
-      "for x := k; true; x = x + foo.N {\n\tbreak\n}"
-
-
-  describe "Fun.Go.Desugar.desugar" $ do
+  describe "Fun.Desugar.desugar" $ do
     it "does nothing when there is nothing to do" $
       desugar (L [ ID "foo" , ID "bar" ]) `shouldBe` L [ ID "foo" , ID "bar" ]
 
@@ -477,6 +442,19 @@ functionalTests = do
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
           L [ KW "return" , L [ OP "*" , ID "x" , IL 2 ] ] ]]
+
+
+integrationTests :: Spec
+integrationTests = describe "Go.Fmt.gofmt" $ do
+
+    it "formats valid code" $
+      gofmt "func  foo  (  ) { \n i++}" `shouldPrint` "func foo() {\n\ti++\n}"
+
+    it "returns err on a broken code" $
+      gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")
+
+    it "unError GoError" $
+      mapLeft unError (gofmt "func foo }( __") `shouldBe` Left "Go error: 1:20: expected '(', found '}'"
 
 
 dummyTests :: Spec

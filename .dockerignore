@@ -2,3 +2,4 @@ LICENSE
 README.md
 .stack-work/
 .circleci/
+*.json

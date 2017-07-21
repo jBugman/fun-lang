@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: jbugman/funlang-circleci:0.1
+      - image: jbugman/funlang-circleci:0.2
     working_directory: ~/fun-lang
     steps:
       - checkout
@@ -23,4 +23,15 @@ jobs:
 
       - run:
           name: Running tests
-          command: "stack test"
+          command: "stack test --coverage"
+
+      - run:
+          name: Report coverage to coveralls.io
+          command: >
+            timeout 10
+            hpc-coveralls fun-lang-test
+            --tix-dir=$(stack path --local-hpc-root)/language-fun
+            --mix-dir=$(stack path --dist-dir)/hpc
+            --repo-token=$COVERALLS_TOKEN
+            || true
+

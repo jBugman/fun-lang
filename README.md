@@ -1,7 +1,8 @@
 # Fun
 
-[![CircleCI](https://img.shields.io/circleci/project/github/jBugman/fun-lang/master.svg?label=master)](https://circleci.com/gh/jBugman/fun-lang)
-[![CircleCI](https://img.shields.io/circleci/project/github/jBugman/fun-lang/dev.svg?label=dev)](https://circleci.com/gh/jBugman/fun-lang)
+[![CircleCI master](https://img.shields.io/circleci/project/github/jBugman/fun-lang/master.svg?label=master)](https://circleci.com/gh/jBugman/fun-lang)
+[![CircleCI dev](https://img.shields.io/circleci/project/github/jBugman/fun-lang/dev.svg?label=dev)](https://circleci.com/gh/jBugman/fun-lang)
+[![Coverage](https://img.shields.io/coveralls/jBugman/fun-lang/master.svg)](https://coveralls.io/github/jBugman/fun-lang?branch=master)
 
 Lisp-style language with static typing, compiled to Go.
 

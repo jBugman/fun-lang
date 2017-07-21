@@ -27,5 +27,5 @@ jobs:
 
       - run:
           name: Report coverage to coveralls.io
-          command: "hpc-coveralls fun-lang-test --tix-dir=$(stack path --local-hpc-root)/language-fun --mix-dir=$(stack path --dist-dir)/hpc --repo-token=$COVERALLS_TOKEN"
+          command: "timeout 10 hpc-coveralls fun-lang-test --tix-dir=$(stack path --local-hpc-root)/language-fun --mix-dir=$(stack path --dist-dir)/hpc --repo-token=$COVERALLS_TOKEN"
 

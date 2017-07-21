@@ -32,6 +32,6 @@ jobs:
             hpc-coveralls fun-lang-test
             --tix-dir=$(stack path --local-hpc-root)/language-fun
             --mix-dir=$(stack path --dist-dir)/hpc
-            --repo-token=$COVERALLS_TOKEN"
+            --repo-token=$COVERALLS_TOKEN
             || true
 

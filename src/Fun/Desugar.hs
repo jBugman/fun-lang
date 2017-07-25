@@ -52,19 +52,22 @@ swapWith f (imports, decls) = (imports, fmap f decls)
 addReturn :: E -> E
 addReturn (L [ KW "func" , name , args , results , body ])
     = L [ KW "func" , name , args , results , withReturn body ]
-    where
-        withReturn (A a)                      = L [KW "return" , A a ]
-        withReturn ret@(L (KW "return" : _ )) = ret
-        withReturn b
-            | isExpression b = L [KW "return" , b ]
-            | L exprs <- b   = case unsnoc exprs of
-                Nothing      -> b  -- This is really a syntax error, body cannot be empty here
-                Just (xs, x) -> L $ xs `snoc` withReturn x
-            -- FIXME: throwing for now to catch edge cases
-            | otherwise      = errorWithoutStackTrace ("addReturn: " <> show b)
-
-addReturn (L xs)                                             = L $ fmap addReturn xs
+addReturn (L [ KW "method" , recv , name , args , results , body ])
+    = L [ KW "method" , recv , name , args , results , withReturn body ]
+addReturn (L xs)                                             = L (addReturn <$> xs)
 addReturn ex                                                 = ex
+
+withReturn :: E -> E
+withReturn (A a)                      = L [KW "return" , A a ]
+withReturn ret@(L (KW "return" : _ )) = ret
+withReturn b
+    | isExpression b = L [KW "return" , b ]
+    | L exprs <- b   = case unsnoc exprs of
+        Just (xs, x) -> L $ xs `snoc` withReturn x
+    -- Throwing exceptions here for to catch edge cases.
+    -- These conditions should not be met.
+        Nothing      -> errorWithoutStackTrace ("addReturn: " <> show b)
+    | otherwise      =  errorWithoutStackTrace ("addReturn: " <> show b)
 
 
 isExpression :: E -> Bool

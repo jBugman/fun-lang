@@ -19,6 +19,6 @@
   (print "perim: " (r.perim))
   (var rp (& r))
   (print "area: " (rp.area))
-  (print "perim:" (rp.perim))
+  (print "perim: " (rp.perim))
 ))
 )

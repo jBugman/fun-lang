@@ -142,15 +142,15 @@ print (L [ KW "func" , n@(ID _) , a , r , b ])
 
 -- method
 print (L [ KW "method" , o , n@(ID _) , b ])
-    = printf3 "func {} {}() {}" <$> printReciever o <*> print n <*> printBody b
+    = printf3 "func {} {}() {}" <$> printRecv o <*> print n <*> printBody b
 
 print (L [ KW "method" , o , n@(ID _) , a , b ])
     = printf4 "func {} {}({}) {}"
-    <$> printReciever o <*> print n <*> printArgs a <*> printBody b
+    <$> printRecv o <*> print n <*> printArgs a <*> printBody b
 
 print (L [ KW "method" , o , n@(ID _) , a , r , b ])
     = printf5 "func {} {}({}) {} {}"
-    <$> printReciever o <*> print n <*> printArgs a <*> printResults r <*> printBody b
+    <$> printRecv o <*> print n <*> printArgs a <*> printResults r <*> printBody b
 
 -- lambda
 print (L [ KW "func" , Nil , b ])
@@ -303,10 +303,10 @@ printBody Nil      = Right "{}"
 printBody x@(L[_]) = printf1 "{{}}"     <$> print x
 printBody xs       = printf1 "{\n{}\n}" <$> print xs
 
-printReciever :: E -> Either Error Text
-printReciever t@(TP _)             = printf1 "({})"    <$> print t
-printReciever (L [ n@(ID _) , t ]) = printf2 "({} {})" <$> print n <*> print t
-printReciever e                    = mkError "invalid reciever: " e
+printRecv :: E -> Either Error Text
+printRecv t@(TP _)             = printf1 "({})"    <$> print t
+printRecv (L [ n@(ID _) , t ]) = printf2 "({} {})" <$> print n <*> print t
+printRecv e                    = mkError "invalid reciever: " e
 
 -- Utils --
 

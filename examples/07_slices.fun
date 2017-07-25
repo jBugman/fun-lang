@@ -24,7 +24,7 @@
 
   (set l (slice s 2 _))
 
-  (var t (:slice :string) ("g" "h" "i"))
+  (var t ((:slice :string) ("g" "h" "i")))
   (print "dcl:" t)
 
   (var twoD (make (:slice (:slice :int)) 3))

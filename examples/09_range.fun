@@ -1,7 +1,7 @@
 (package main
 
 (func main (
-  (var nums (:slice :int) (2 3 4))
+  (var nums ((:slice :int) (2 3 4)))
   (var sum 0)
   (for (range _ num nums) (
       (set sum (+ sum num)) ))

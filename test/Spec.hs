@@ -284,7 +284,7 @@ unitTests = do
       "var x []string"
 
     it "var with slice literal initializer" $
-      printGo (L [ KW "var" , ID "nums" , L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2, IL 3 ] ])
+      printGo (L [ KW "var" , ID "nums" , L [ L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2, IL 3 ] ] ])
       `shouldPrint`
       "var nums = []int{1, 2, 3}"
 
@@ -440,6 +440,11 @@ unitTests = do
       printGo (L [ TP "api" , L [ L [ ID "key" , SL "SJFKD" ] ] ])
       `shouldPrint`
       "api{key: \"SJFKD\"}"
+
+    it "var from struct literal" $
+      printGo (L [ KW "var" , ID "x" , L [ TP "api" , L [ L [ ID "key" , SL "SJFKD" ] ] ] ])
+      `shouldPrint`
+      "var x = api{key: \"SJFKD\"}"
 
 
   describe "Fun.Printer.singleLine" $ do

@@ -2,7 +2,6 @@
 module Fun.Go.Printer ( printGo ) where
 
 import ClassyPrelude                hiding (print)
-import Data.Either                  (partitionEithers)
 import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
 import Data.Text.Buildable          (Buildable)
 import Data.Text.Format             (Format, format)
@@ -13,11 +12,12 @@ import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (Atom (..), Expression, pattern ID, pattern KW, pattern OP, pattern SL,
                           pattern TP)
 
+type E = Expression
 
-printGo :: Expression -> Either Error Text
+printGo :: E -> Either Error Text
 printGo = print
 
-print :: Expression -> Either Error Text
+print :: E -> Either Error Text
 -- empty
 print Nil = Left . TranslationError $ "empty expression"
 
@@ -90,18 +90,20 @@ print (L [ KW "struct" , n@(ID _) ])
     = printf2 "type {} struct{}" <$> print n <*> Right "{}"
 
 print (L ( KW "struct" : n@(ID _) : xs ))
-    = printf2 "type {} struct {\n{}\n}" <$> print n
-        <*> (intercalate "\n" <$> mapM printPair xs)
+    = printf2 "type {} struct {\n{}\n}"
+    <$> print n
+    <*> (intercalate "\n" <$> mapM printPair xs)
 
 -- interface decl
 print (L [ KW "interface" , n@(ID _) ])
     = printf2 "type {} interface{}" <$> print n <*> Right "{}"
 
 print (L ( KW "interface" : n@(ID _) : xs ))
-    = printf2 "type {} interface {\n{}\n}" <$> print n
+    = printf2 "type {} interface {\n{}\n}"
+    <$> print n
     <*> (intercalate "\n" <$> mapM print' xs)
     where
-        print' :: Expression -> Either Error Text
+        print' :: E -> Either Error Text
         print' (L [ nm@(ID _) , args ])
             = printf2 "{}({})" <$> print nm <*> printArgs args
 
@@ -115,9 +117,10 @@ print (L [ t@(TP _) , L xs ])
     = printf2 "{}{{}}" <$> print t <*> printPairs xs
 
 -- package
-print (L ( KW "package" : n@(ID _) : topLevels )) = case partitionEithers (print <$> topLevels) of
-    (err : _ , _) -> Left err
-    ([] , txts)   -> printf2 "package {}\n\n{}" <$> print n <*> Right (ointercalate "\n\n" txts)
+print (L ( KW "package" : n@(ID _) : topLevels ))
+    = printf2 "package {}\n\n{}"
+    <$> print n
+    <*> (intercalate "\n\n" <$> mapM print topLevels)
 
 -- import
 print (L [ KW "import" , SL path ])
@@ -134,8 +137,8 @@ print (L [ KW "func" , n@(ID _) , a , body ])
     = printf3 "func {}({}) {\n{}\n}" <$> print n <*> printArgs a <*> print body
 
 print (L [ KW "func" , n@(ID _) , a , r , body ])
-    = printf4 "func {}({}) {} {\n{}\n}" <$> print n
-        <*> printArgs a <*> printResults r <*> print body
+    = printf4 "func {}({}) {} {\n{}\n}"
+    <$> print n <*> printArgs a <*> printResults r <*> print body
 
 -- lambda
 print (L [ KW "func" , Nil , body ])
@@ -176,10 +179,12 @@ print (L [ KW "slice" , n@(ID _) , from , to ])
 
 -- if-then-else
 print (L [ KW "if" , cond , thenBr , elseBr@(L ( KW "if" : _ )) ]) -- elseif
-    = printf3 "if {} {\n{}\n} else {}" <$> print cond <*> print thenBr <*> print elseBr
+    = printf3 "if {} {\n{}\n} else {}"
+    <$> print cond <*> print thenBr <*> print elseBr
 
 print (L [ KW "if" , cond , thenBr , elseBr ])
-    = printf3 "if {} {\n{}\n} else {\n{}\n}" <$> print cond <*> print thenBr <*> print elseBr
+    = printf3 "if {} {\n{}\n} else {\n{}\n}"
+    <$> print cond <*> print thenBr <*> print elseBr
 
 print (L [ KW "if" , cond , thenBr ])
     = printf2 "if {} {\n{}\n}" <$> print cond <*> print thenBr
@@ -244,49 +249,46 @@ print s = mkError "not supported yet " s
 
 -- Sub printers --
 
-printFor :: Expression -> Expression -> Expression -> Expression -> Expression -> Either Error Text
-printFor i from cond iter body = do
-    ti    <- print i
-    tfrom <- print from
-    tcond <- print cond
-    titer <- print iter
-    tbody <- print body
-    Right $ strictFormat "for {} := {}; {}; {} {\n{}\n}" (ti, tfrom, tcond, titer, tbody)
+printFor :: E -> E -> E -> E -> E -> Either Error Text
+printFor i from cond iter body
+    = printf5 "for {} := {}; {}; {} {\n{}\n}"
+    <$> print i <*> print from <*> print cond <*> print iter <*> print body
 
-printArgs :: Expression -> Either Error Text
+printArgs :: E -> Either Error Text
 printArgs Nil    = Right ""
-printArgs (L as) = intercalate ", " <$> mapM printArg as where
+printArgs (L as) = intercalate ", " <$> mapM printArg as
+    where
     printArg x@(TP _)             = print x
     printArg xs@(L (TP _ : _))    = print xs
     printArg (L [ x@(ID _) , y ]) = printf2 "{} {}" <$> print x <*> print y
     printArg e                    = mkError "invalid arg: " e
 printArgs e      = mkError "invalid args: " e
 
-printResults :: Expression -> Either Error Text
+printResults :: E -> Either Error Text
 printResults t@(L ( TP "func" : _ )) = print t
 printResults (L as)                  = printf1 "({})" <$> printList as
 printResults t@(TP _)                = print t
 printResults e                       = mkError "invalid results: " e
 
-printPair :: Expression -> Either Error Text
+printPair :: E -> Either Error Text
 printPair (L [ x@(ID _) , y ])      = printf2 "{} {}" <$> print x <*> print y
 printPair (L [ x@(A (Lit _)) , y ]) = printf2 "{} {}" <$> print x <*> print y
 printPair e                         = mkError "invalid pair: " e
 
-printList :: [Expression] -> Either Error Text
+printList :: [E] -> Either Error Text
 printList xs = intercalate ", " <$> mapM print xs
 
-printPairs :: [Expression] -> Either Error Text
+printPairs :: [E] -> Either Error Text
 printPairs xs = intercalate ", " <$> mapM printColonPair xs
 
-printColonPair :: Expression -> Either Error Text
+printColonPair :: E -> Either Error Text
 printColonPair (L [ x@(ID _) , y ])      = printf2 "{}: {}" <$> print x <*> print y
 printColonPair (L [ x@(A (Lit _)) , y ]) = printf2 "{}: {}" <$> print x <*> print y
 printColonPair e                         = mkError "invalid pair: " e
 
 -- Utils --
 
-mkError :: Text -> Expression -> Either Error Text
+mkError :: Text -> E -> Either Error Text
 mkError msg e = Left . TranslationError $ msg <> singleLine e
 
 strictFormat :: Params ps => Format -> ps -> Text
@@ -303,3 +305,6 @@ printf3 fmt x y z = strictFormat fmt (x, y, z)
 
 printf4 :: Buildable a => Format -> a -> a -> a -> a -> Text
 printf4 fmt a b c d = strictFormat fmt (a, b, c, d)
+
+printf5 :: Buildable a => Format -> a -> a -> a -> a -> a -> Text
+printf5 fmt a b c d e = strictFormat fmt (a, b, c, d, e)

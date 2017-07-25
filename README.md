@@ -15,6 +15,7 @@ Also, there may be an ability to use raw inline Go code for more complex cases.
 
 Transpiling is mostly literal, but there are some differences from Go:
 
+* Struct literals must have explicit fields
 * No arrays, only slices
 * No `:=`, only `var` everywhere
 * No named return values

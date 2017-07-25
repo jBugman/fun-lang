@@ -148,8 +148,8 @@ print (L [ KW "set" , x , xs ])
 print (L [ KW "set" , ID "_", x , xs ])
     = printf2 "_, {} = {}" <$> print x <*> print xs
 
-print (L [ KW "set" , tar@(L ( KW "val" : _ )) , ex ])
-    = printf2 "{} = {}" <$> print tar <*> print ex
+print (L [ KW "set" , x@(ID _) , y@(ID _) , xs ])
+    = printf3 "{}, {} = {}" <$> print x <*> print y <*> print xs
 
 -- indexed access
 print (L [ KW "val" , ID n , i ])     = printf2 "{}[{}]" n <$> print i

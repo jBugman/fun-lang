@@ -401,6 +401,16 @@ unitTests = do
        `shouldPrint`
        "type UserID string"
 
+    it "two-var function result" $
+      printGo (L [ KW "set" , ID "x" , ID "ok" , L [ ID "os.LookupEnv" , ID "name" ] ])
+      `shouldPrint`
+      "x, ok = os.LookupEnv(name)"
+
+    it "slice elem set" $
+      printGo (L [ KW "set" , L [ KW "val" , ID "names" , IL 5 ] , SL "Bob" ])
+      `shouldPrint`
+      "names[5] = \"Bob\""
+
 
   describe "Fun.Printer.singleLine" $ do
 

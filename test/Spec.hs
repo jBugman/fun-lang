@@ -129,6 +129,18 @@ unitTests = do
     it "&" $
       parse "&" `shouldParse` OP "&"
 
+    it "||" $
+      parse "||" `shouldParse` OP "||"
+
+    it "|" $
+      parse "|" `shouldParse` OP "|"
+
+    it "!=" $
+      parse "!=" `shouldParse` OP "!="
+
+    it "!" $
+      parse "!" `shouldParse` OP "!"
+
     it "op + ident" $
       parse "(+ foo)" `shouldParse` L [ OP "+" , ID "foo" ]
 
@@ -382,6 +394,7 @@ unitTests = do
        printGo (L [ KW "alias" , ID "UserID" , TP "string" ])
        `shouldPrint`
        "type UserID string"
+
 
   describe "Fun.Printer.singleLine" $ do
 

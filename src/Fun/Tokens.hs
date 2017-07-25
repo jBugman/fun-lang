@@ -8,10 +8,13 @@ import ClassyPrelude
 
 operators :: [String]
 operators =
-    [ "="
-    , "++"
-    , "+"
+    [ "++"
     , "--"
+    , "!="
+    , "&&"
+    , "||"
+    , "="
+    , "+"
     , "-"
     , "*"
     , "/"
@@ -19,9 +22,8 @@ operators =
     , ">"
     , "!"
     , "%"
-    , "&&"
-    , "||"
     , "&"
+    , "|"
     ]
 
 keywords :: [String]

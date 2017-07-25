@@ -258,8 +258,30 @@ unitTests = do
     it "zero value var" $
       printGo (L [ KW "var" , ID "x" , TP "int" ]) `shouldPrint` "var x int"
 
+    it "var from a function" $
+      printGo (L [ KW "var" , ID "foo" , L [ ID "calc" , ID "x" ] ])
+      `shouldPrint`
+      "var foo = calc(x)"
+
+    it "two vars from a function" $
+      printGo (L [ KW "var" , ID "x" , ID "y" , L [ ID "factory" , ID "z" ] ])
+      `shouldPrint`
+      "var x, y = factory(z)"
+
+    it "var x, y = m[2]" $
+      printGo (L [ KW "var" , ID "x" , ID "y" , L [ KW "val" , ID "m" , IL 2 ] ])
+      `shouldPrint`
+      "var x, y = m[2]"
+
+    it "var _, x = m[2]" $
+      printGo (L [ KW "var" , ID "_" , ID "x" , L [ KW "val" , ID "m" , IL 2 ] ])
+      `shouldPrint`
+      "var _, x = m[2]"
+
     it "zero value var with composite type" $
-      printGo (L [ KW "var" , ID "x" , L [ TP "slice" , TP "string" ] ]) `shouldPrint` "var x []string"
+      printGo (L [ KW "var" , ID "x" , L [ TP "slice" , TP "string" ] ])
+      `shouldPrint`
+      "var x []string"
 
     it "var with slice literal initializer" $
       printGo (L [ KW "var" , ID "nums" , L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2, IL 3 ] ])
@@ -269,11 +291,14 @@ unitTests = do
     it "var with map literal initializer" $
       printGo (L [ KW "var" , ID "m"
       , L [ TP "map" , TP "string" , TP "bool" ]
-      , L [ L [ SL "foo", BL True ] , L [ SL "bar" , BL False ] ] ]) `shouldPrint`
+      , L [ L [ SL "foo", BL True ] , L [ SL "bar" , BL False ] ] ])
+      `shouldPrint`
       "var m = map[string]bool{\"foo\": true, \"bar\": false}"
 
     it "slice of slices" $
-      printGo (L [ TP "slice" , L [ TP "slice" , TP "string" ] ]) `shouldPrint` "[][]string"
+      printGo (L [ TP "slice" , L [ TP "slice" , TP "string" ] ])
+      `shouldPrint`
+      "[][]string"
 
     it "map lookup" $
       printGo (L [ KW "set" , ID "_" , ID "ok" , L [ KW "val" , ID "m" , SL "Bob" ] ])

@@ -68,8 +68,8 @@ print (L [ KW "const" , ID name , t@(TP _) , e ])
 print (L [ KW "var" , ID n , t@(TP _) ])
     = printf2 "var {} {}" n <$> print t
 
-print (L [ KW "var" , ID "_" , ID n , acc@(L ( KW "val" : _)) ])
-    = printf2 "var _, {} = {}" n <$> print acc
+print (L [ KW "var" , x@(ID _) , y@(ID _) , xs ])
+    = printf3 "var {}, {} = {}" <$> print x <*> print y <*> print xs
 
 print (L [ KW "var" , ID n , t@(L (TP _ : _)) ])
     = printf2 "var {} {}" n <$> print t
@@ -77,8 +77,11 @@ print (L [ KW "var" , ID n , t@(L (TP _ : _)) ])
 print (L [ KW "var" , ID n , t@(TP _) , e ])
     = printf3 "var {} {} = {}" n <$> print t <*> print e
 
-print (L [ KW "var" , ID n , ts , L xs ])
-    = printf3 "var {} = {}{{}}" n <$> print ts <*> printList xs
+print (L [ KW "var" , ID n , t@(L (TP "slice" : _)) , L xs ])
+    = printf3 "var {} = {}{{}}" n <$> print t <*> printList xs
+
+print (L [ KW "var" , ID n , t@(L (TP "map" : _)) , L xs ])
+    = printf3 "var {} = {}{{}}" n <$> print t <*> printList xs
 
 print (L [ KW "var" , ID n , e ]) = printf2 "var {} = {}" n <$> print e
 

@@ -42,6 +42,7 @@ examples = describe "Examples" $ do
   translationExample "11_closures"
   translationExample "12_pointers"
   translationExample "13_structs"
+  translationExample "14_methods"
 
 
 unitTests :: Spec
@@ -446,6 +447,35 @@ unitTests = do
       printGo (L [ KW "var" , ID "x" , L [ TP "api" , L [ L [ ID "key" , SL "SJFKD" ] ] ] ])
       `shouldPrint`
       "var x = api{key: \"SJFKD\"}"
+
+    it "func foo() {}" $
+      printGo (L [ KW "func" , ID "foo" , Nil , Nil ])
+      `shouldPrint`
+      "func foo() {}"
+
+    it "func foo() {...}" $
+      printGo (L [ KW "func" , ID "foo" , Nil , L
+      [ L [ KW "var" , ID "x" , IL 5 ]
+      , L [ ID "boop" , ID "x" ] ] ])
+      `shouldPrint`
+      "func foo() {\nvar x = 5\nboop(x)\n}"
+
+    it "method (x bar) foo() {}" $
+      printGo (L [ KW "method" , L [ ID "x" , TP "bar" ] , ID "foo" , Nil , Nil ])
+      `shouldPrint`
+      "func (x bar) foo() {}"
+
+    it "method (bar) foo() {}" $
+      printGo (L [ KW "method" , TP "bar" , ID "foo" , Nil , Nil ])
+      `shouldPrint`
+      "func (bar) foo() {}"
+
+    it "func (b *bar) foo() {...}" $
+      printGo (L [ KW "method" , L [ ID "b" , L [ TP "ptr" , TP "bar" ] ] ,  ID "foo" , Nil , L
+      [ L [ KW "var" , ID "x" , L [ OP "+" , ID "b" , IL 3 ] ]
+      , L [ ID "boop" , ID "x" ] ] ])
+      `shouldPrint`
+      "func (b *bar) foo() {\nvar x = b + 3\nboop(x)\n}"
 
 
   describe "Fun.Printer.singleLine" $ do

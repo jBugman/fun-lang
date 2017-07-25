@@ -110,7 +110,7 @@ print (L ( KW "interface" : n@(ID _) : xs ))
         print' (L [ nm@(ID _) , args , res ])
             = printf3 "{}({}) {}" <$> print nm <*> printArgs args <*> printResults res
 
-        print' e = mkError "unexpected " e
+        print' e = mkError "invalid interface member: " e
 
 -- struct literal
 print (L [ t@(TP _) , L xs ])
@@ -130,25 +130,37 @@ print (L [ KW "import" , SL path , SL alias ])
     = Right $ printf2 "import {} \"{}\"" alias path
 
 -- func
-print (L [ KW "func" , n@(ID _) , body ])
-    = printf2 "func {}() {\n{}\n}" <$> print n <*> print body
+print (L [ KW "func" , n@(ID _) , b ])
+    = printf2 "func {}() {}" <$> print n <*> printBody b
 
-print (L [ KW "func" , n@(ID _) , a , body ])
-    = printf3 "func {}({}) {\n{}\n}" <$> print n <*> printArgs a <*> print body
+print (L [ KW "func" , n@(ID _) , a , b ])
+    = printf3 "func {}({}) {}" <$> print n <*> printArgs a <*> printBody b
 
-print (L [ KW "func" , n@(ID _) , a , r , body ])
-    = printf4 "func {}({}) {} {\n{}\n}"
-    <$> print n <*> printArgs a <*> printResults r <*> print body
+print (L [ KW "func" , n@(ID _) , a , r , b ])
+    = printf4 "func {}({}) {} {}"
+    <$> print n <*> printArgs a <*> printResults r <*> printBody b
+
+-- method
+print (L [ KW "method" , o , n@(ID _) , b ])
+    = printf3 "func {} {}() {}" <$> printReciever o <*> print n <*> printBody b
+
+print (L [ KW "method" , o , n@(ID _) , a , b ])
+    = printf4 "func {} {}({}) {}"
+    <$> printReciever o <*> print n <*> printArgs a <*> printBody b
+
+print (L [ KW "method" , o , n@(ID _) , a , r , b ])
+    = printf5 "func {} {}({}) {} {}"
+    <$> printReciever o <*> print n <*> printArgs a <*> printResults r <*> printBody b
 
 -- lambda
-print (L [ KW "func" , Nil , body ])
-    = printf1 "func() {\n{}\n}" <$> print body
+print (L [ KW "func" , Nil , b ])
+    = printf1 "func() {}" <$> printBody b
 
-print (L [ KW "func" , a , body ])
-    = printf2 "func({}) {\n{}\n}" <$> printArgs a <*> print body
+print (L [ KW "func" , a , b ])
+    = printf2 "func({}) {}" <$> printArgs a <*> printBody b
 
-print (L [ KW "func" , a , r , body ])
-    = printf3 "func({}) {} {\n{}\n}" <$> printArgs a <*> printResults r <*> print body
+print (L [ KW "func" , a , r , b ])
+    = printf3 "func({}) {} {}" <$> printArgs a <*> printResults r <*> printBody b
 
 -- assignment
 print (L [ KW "set" , x , xs ])
@@ -285,6 +297,16 @@ printColonPair :: E -> Either Error Text
 printColonPair (L [ x@(ID _) , y ])      = printf2 "{}: {}" <$> print x <*> print y
 printColonPair (L [ x@(A (Lit _)) , y ]) = printf2 "{}: {}" <$> print x <*> print y
 printColonPair e                         = mkError "invalid pair: " e
+
+printBody :: E -> Either Error Text
+printBody Nil      = Right "{}"
+printBody x@(L[_]) = printf1 "{{}}"     <$> print x
+printBody xs       = printf1 "{\n{}\n}" <$> print xs
+
+printReciever :: E -> Either Error Text
+printReciever t@(TP _)             = printf1 "({})"    <$> print t
+printReciever (L [ n@(ID _) , t ]) = printf2 "({} {})" <$> print n <*> print t
+printReciever e                    = mkError "invalid reciever: " e
 
 -- Utils --
 

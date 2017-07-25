@@ -28,7 +28,8 @@ operators =
 
 keywords :: [String]
 keywords = goKeywords <>
-    [ "print"
+    [ "method"
+    , "print"
     , "printf"
     , "set"
     , "slice"

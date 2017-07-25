@@ -11,7 +11,7 @@
     (if (= num 3)
       (print "index:" i) ) ))
 
-  (var kvs (:map :string :string) (("a" "apple") ("b" "banana")) )
+  (var kvs ((:map :string :string) (("a" "apple") ("b" "banana"))) )
   (for (range k v kvs)
     (printf "%s -> %s\n" k v) )
 

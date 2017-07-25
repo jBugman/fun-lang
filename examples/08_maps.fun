@@ -19,6 +19,6 @@
   (var _ present (val m "k2"))
   (print "prs:" present)
 
-  (var n (:map :string :int) (("foo" 1) ("bar" 2)) )
+  (var n ((:map :string :int) (("foo" 1) ("bar" 2))) )
   (print n)
 )))

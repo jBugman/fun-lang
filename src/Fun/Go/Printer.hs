@@ -50,13 +50,6 @@ print (L [ TP "ptr" , x ]) = printf1 "*{}" <$> print x
 print (L [ KW "alias" , ID n , e ])
     = printf2 "type {} {}" n <$> print e
 
--- id-type pair (used in function arguments)
-print (L [ ID a , t@(TP _) ])
-    = printf2 "{} {}" a <$> print t
-
-print (L [ ID a , t@(L ( TP _ : _)) ])
-    = printf2 "{} {}" a <$> print t
-
 -- const
 print (L [ KW "const" , ID name , e ])
     = printf2 "const {} = {}" name <$> print e
@@ -65,32 +58,33 @@ print (L [ KW "const" , ID name , t@(TP _) , e ])
     = printf3 "const {} {} = {}" name <$> print t <*> print e
 
 -- var
-print (L [ KW "var" , ID n , t@(TP _) ])
-    = printf2 "var {} {}" n <$> print t
+print (L [ KW "var" , n@(ID _) , t@(TP _) ])
+    = printf2 "var {} {}" <$> print n <*> print t
+
+print (L [ KW "var" , n@(ID _) , t@(L (TP _ : _)) ])
+    = printf2 "var {} {}" <$> print n <*> print t
 
 print (L [ KW "var" , x@(ID _) , y@(ID _) , xs ])
     = printf3 "var {}, {} = {}" <$> print x <*> print y <*> print xs
 
-print (L [ KW "var" , ID n , t@(L (TP _ : _)) ])
-    = printf2 "var {} {}" n <$> print t
+print (L [ KW "var" , n@(ID _) , t@(TP _) , e ])
+    = printf3 "var {} {} = {}" <$> print n <*> print t <*> print e
 
-print (L [ KW "var" , ID n , t@(TP _) , e ])
-    = printf3 "var {} {} = {}" n <$> print t <*> print e
+print (L [ KW "var" , n@(ID _) , t@(L (TP "slice" : _)) , L xs ])
+    = printf3 "var {} = {}{{}}" <$> print n <*> print t <*> printList xs
 
-print (L [ KW "var" , ID n , t@(L (TP "slice" : _)) , L xs ])
-    = printf3 "var {} = {}{{}}" n <$> print t <*> printList xs
+print (L [ KW "var" , n@(ID _) , L [ t@(L (TP _ : _)) , L xs ] ])
+    = printf3 "var {} = {}{{}}" <$> print n <*> print t <*> printPairs xs
 
-print (L [ KW "var" , ID n , t@(L (TP "map" : _)) , L xs ])
-    = printf3 "var {} = {}{{}}" n <$> print t <*> printList xs
-
-print (L [ KW "var" , ID n , e ]) = printf2 "var {} = {}" n <$> print e
+print (L [ KW "var" , n@(ID _) , e ])
+    = printf2 "var {} = {}" <$> print n <*> print e
 
 -- struct decl
 print (L [ KW "struct" , ID n ])
     = Right $ printf2 "type {} struct{}" n "{}"
 
 print (L ( KW "struct" : ID n : xs ))
-    = printf2 "type {} struct {\n{}\n}" n <$> (intercalate "\n" <$> mapM print xs)
+    = printf2 "type {} struct {\n{}\n}" n <$> (intercalate "\n" <$> mapM printPair xs)
 
 -- interface decl
 print (L [ KW "interface" , ID n ])
@@ -109,8 +103,9 @@ print (L ( KW "interface" : ID n : xs ))
 
         print' e = mkError "unexpected " e
 
--- FIXME: literal pair (used in maps)
-print (L [ lit@(A (Lit _)) , ex ]) = printf2 "{}: {}" <$> print lit <*> print ex
+-- struct literal
+print (L [ t@(TP _) , L xs ])
+    = printf2 "{}{{}}" <$> print t <*> printPairs xs
 
 -- package
 print (L ( KW "package" : ID name : topLevels )) = case partitionEithers (print <$> topLevels) of
@@ -232,11 +227,7 @@ print (L [ KW x ]) = Right x
 print s = mkError "not supported yet " s
 
 
-
--- Utils --
-
-mkError :: Text -> Expression -> Either Error Text
-mkError msg e = Left . TranslationError $ msg <> singleLine e
+-- Sub printers --
 
 printFor :: Text -> Expression -> Expression -> Expression -> Expression -> Either Error Text
 printFor i from cond iter body = do
@@ -248,17 +239,39 @@ printFor i from cond iter body = do
 
 printArgs :: Expression -> Either Error Text
 printArgs Nil    = Right ""
-printArgs (L as) = printList as
-printArgs e      = mkError "unexpected" e
+printArgs (L as) = intercalate ", " <$> mapM printArg as where
+    printArg x@(TP _)             = print x
+    printArg xs@(L (TP _ : _))    = print xs
+    printArg (L [ x@(ID _) , y ]) = printf2 "{} {}" <$> print x <*> print y
+    printArg e                    = mkError "invalid arg" e
+printArgs e      = mkError "invalid args" e
 
 printResults :: Expression -> Either Error Text
 printResults t@(L ( TP "func" : _ )) = print t
 printResults (L as)                  = printf1 "({})" <$> printList as
 printResults t@(TP _)                = print t
-printResults e                       = mkError "unexpected" e
+printResults e                       = mkError "invalid results" e
+
+printPair :: Expression -> Either Error Text
+printPair (L [ x@(ID _) , y ])      = printf2 "{} {}" <$> print x <*> print y
+printPair (L [ x@(A (Lit _)) , y ]) = printf2 "{} {}" <$> print x <*> print y
+printPair e                         = mkError "invalid pair" e
 
 printList :: [Expression] -> Either Error Text
 printList xs = intercalate ", " <$> mapM print xs
+
+printPairs :: [Expression] -> Either Error Text
+printPairs xs = intercalate ", " <$> mapM printColonPair xs
+
+printColonPair :: Expression -> Either Error Text
+printColonPair (L [ x@(ID _) , y ])      = printf2 "{}: {}" <$> print x <*> print y
+printColonPair (L [ x@(A (Lit _)) , y ]) = printf2 "{}: {}" <$> print x <*> print y
+printColonPair e                         = mkError "invalid pair" e
+
+-- Utils --
+
+mkError :: Text -> Expression -> Either Error Text
+mkError msg e = Left . TranslationError $ msg <> singleLine e
 
 strictFormat :: Params ps => Format -> ps -> Text
 strictFormat fmt = toStrict . format fmt

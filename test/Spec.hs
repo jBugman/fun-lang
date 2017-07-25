@@ -289,9 +289,9 @@ unitTests = do
       "var nums = []int{1, 2, 3}"
 
     it "var with map literal initializer" $
-      printGo (L [ KW "var" , ID "m"
-      , L [ TP "map" , TP "string" , TP "bool" ]
-      , L [ L [ SL "foo", BL True ] , L [ SL "bar" , BL False ] ] ])
+      printGo (L [ KW "var" , ID "m" , L
+      [ L [ TP "map" , TP "string" , TP "bool" ]
+      , L [ L [ SL "foo", BL True ] , L [ SL "bar" , BL False ] ] ] ])
       `shouldPrint`
       "var m = map[string]bool{\"foo\": true, \"bar\": false}"
 
@@ -435,6 +435,11 @@ unitTests = do
       printGo (L [ KW "set" , L [ KW "val" , ID "names" , IL 5 ] , SL "Bob" ])
       `shouldPrint`
       "names[5] = \"Bob\""
+
+    it "struct literal" $
+      printGo (L [ TP "api" , L [ L [ ID "key" , SL "SJFKD" ] ] ])
+      `shouldPrint`
+      "api{key: \"SJFKD\"}"
 
 
   describe "Fun.Printer.singleLine" $ do

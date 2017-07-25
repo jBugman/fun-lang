@@ -97,7 +97,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 
   ; Slices have dynamic size. Arrays and slices each have advantages
   ; but use cases for slices are much more common.
-  (var s3 (:slice :int) (4 5 9))
+  (var s3 ((:slice :int) (4 5 9)))
   (var s4 (make (:slice :int) 4))      ; Allocates slice of 4 ints, initialized to all 0.
   (var d2 (:slice (:slice :float64)))  ; Declaration only, nothing allocated here.
   (var bs ((:slice :byte) "a slice"))  ; Type conversion syntax.
@@ -106,11 +106,11 @@ Transpiling is mostly literal, but there are some differences from Go:
   ; To append elements to a slice, the built-in append() function is used.
   ; First argument is a slice to which we are appending. Commonly,
   ; the array variable is updated in place, as in example below.
-  (var s (:slice :int) (1 2 3))  ; Result is a slice of length 3.
-  (set s (append s 4 5 6))       ; Added 3 elements. Slice now has length of 6.
-  (print s)                      ; Updated slice is now [1 2 3 4 5 6]
+  (var s ((:slice :int) (1 2 3))) ; Result is a slice of length 3.
+  (set s (append s 4 5 6))        ; Added 3 elements. Slice now has length of 6.
+  (print s)                       ; Updated slice is now [1 2 3 4 5 6]
 
-  (var s1 (:slice :int) (7 8 9))
+  (var s1 ((:slice :int) (7 8 9)))
   (set s (concat s s1))  ; Like append, but second argument is another slice.
   (print s)              ; Updated slice is now [1 2 3 4 5 6 7 8 9]
 
@@ -120,7 +120,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 
   ; Maps are a dynamically growable associative array type, like the
   ; hash or dictionary types of some other languages.
-  (set m (:map :string :int) (("three" 3) ("four" 4)))
+  (set m ((:map :string :int) (("three" 3) ("four" 4))))
   (set (val m "one") 1)  ; val == map[key]
 
   ; Unused variables are an error in Go.
@@ -142,7 +142,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 
 ; Go is fully garbage collected. It has pointers but no pointer arithmetic.
 ; You can make a mistake with a nil pointer, but not by incrementing a pointer.
-(func learnMemory () ((:ptr :int) (:prt :int)) (
+(func learnMemory () ((:ptr :int) (:ptr :int)) (
   (var p int)                      ; int is initialized to 0.
   (var s (make (:slice :int) 20))  ; Allocate 20 ints as a single block of memory.
   (set (val s 3) 7)                ; Assign one of them.
@@ -183,7 +183,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 
   ; You can use range to iterate over a slice, a string, a map, or a channel.
   ; range returns one (channel) or two values (array, slice, string and map).
-  (var mp (:map :string :int) (("one" 1) ("two" 2) ("three" 3)))
+  (var mp ((:map :string :int) (("one" 1) ("two" 2) ("three" 3))))
   (for (range key value mp) (
     ; for each pair in the map, print key and value
     (fmt.Printf "key=%s, value=%d\n" key value)
@@ -313,7 +313,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 (func learnErrorHandling () (
   ; ", ok" idiom used to tell if something worked or not.
   ; There is no direct alternative in Fun (yet).
-  (var m (:map :int :string) ((3 "three") (4 "four")))
+  (var m ((:map :int :string) ((3 "three") (4 "four"))))
 
   (var x ok (val m 1))  ; ok will be false because 1 is not in the map.
   (if ok

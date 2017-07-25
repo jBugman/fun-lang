@@ -7,7 +7,7 @@ import Data.Either.Combinators        (mapLeft)
 import Data.SCargot                   (SExprParser, asWellFormed, decodeOne)
 import Data.SCargot.Atom              (atom, mkAtomParser)
 import Data.SCargot.Comments          (withLispComments)
-import Data.SCargot.Common            (hexNumber, signedDecNumber)
+import Data.SCargot.Common            (hexNumber, octNumber, signedDecNumber)
 import Data.SCargot.Language.HaskLike (parseHaskellFloat)
 import Data.SCargot.Repr              (SExpr)
 import Text.Parsec                    (char, choice, many, noneOf, oneOf, satisfy, sepBy1, try,
@@ -36,6 +36,7 @@ parseAtom = mkAtomParser
     , identOrKeyword
     , atom Lit     (Dbl  <$> parseFloat)
     , atom Lit     (Hex  <$> parseHexLit)
+    , atom Lit     (Oct  <$> parseOctLit)
     , atom Lit     (Int  <$> signedDecNumber)
     ]
 
@@ -85,6 +86,9 @@ parseCharLit = do
 
 parseHexLit :: Parser Integer
 parseHexLit = try ((string "0x" <|> string "0X") *> hexNumber) <?> "hex literal"
+
+parseOctLit :: Parser Integer
+parseOctLit = try (string "0" *> octNumber) <?> "oct literal"
 
 parseFloat :: Parser Double
 parseFloat = try parseHaskellFloat <?> "float"

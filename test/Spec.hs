@@ -13,7 +13,7 @@ import Fun.Go.Printer    (printGo)
 import Fun.Parser        (parse)
 import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
-                          pattern KW, pattern OP, pattern SL, pattern TP)
+                          pattern KW, pattern OL, pattern OP, pattern SL, pattern TP)
 import Go.Fmt            (gofmt)
 import Test.Utils        (shouldFailOn, shouldParse, shouldPrint, translationExample)
 
@@ -101,6 +101,9 @@ unitTests = do
 
     it "exp double lit" $
       parse "1e3" `shouldParse` DL 1000
+
+    it "oct lit" $
+      parse "0644" `shouldParse` OL 420
 
     it "hex lit" $
       parse "0x2A" `shouldParse` HL 42
@@ -230,6 +233,9 @@ unitTests = do
 
     it "double" $
       printGo (DL 9.99) `shouldPrint` "9.99"
+
+    it "oct" $
+      printGo (OL 420) `shouldPrint` "0644"
 
     it "string" $
       printGo (SL "fizzbuzz") `shouldPrint` "\"fizzbuzz\""

@@ -11,6 +11,7 @@ module Fun.SExpression
     , pattern CL
     , pattern IL
     , pattern HL
+    , pattern OL
     , pattern DL
     , pattern BL
     , pattern ID
@@ -23,7 +24,7 @@ import ClassyPrelude
 import Data.SCargot.Repr.WellFormed (WellFormedSExpr (..))
 import Data.Text.Buildable          (Buildable, build)
 import Data.Text.Lazy.Builder       (fromText)
-import Numeric                      (showHex)
+import Numeric                      (showHex, showOct)
 
 
 type Expression = WellFormedSExpr Atom
@@ -43,6 +44,7 @@ data Literal
     | Chr Text
     | Int Integer
     | Hex Integer
+    | Oct Integer
     | Dbl Double
     | Bl  Bool
     deriving (Eq, Ord)
@@ -71,6 +73,9 @@ pattern IL x = WFSAtom (Lit (Int x))
 pattern HL :: Integer -> Expression
 pattern HL x = WFSAtom (Lit (Hex x))
 
+pattern OL :: Integer -> Expression
+pattern OL x = WFSAtom (Lit (Oct x))
+
 pattern DL :: Double -> Expression
 pattern DL x = WFSAtom (Lit (Dbl x))
 
@@ -88,6 +93,7 @@ instance Show Literal where
     show (Chr t)    = unpack $ "'"  <> t <> "'"
     show (Int i)    = show i
     show (Hex h)    = unpack $ "0x" <> showHex h ""
+    show (Oct h)    = unpack $ "0"  <> showOct h ""
     show (Dbl d)    = show d
     show (Bl True)  = "true"
     show (Bl False) = "false"

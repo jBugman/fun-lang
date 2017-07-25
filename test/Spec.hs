@@ -43,6 +43,7 @@ examples = describe "Examples" $ do
   translationExample "12_pointers"
   translationExample "13_structs"
   translationExample "14_methods"
+  translationExample "15_interfaces"
 
 
 unitTests :: Spec

@@ -7,6 +7,7 @@ import Data.Either.Combinators      (mapLeft)
 import Data.SCargot.Repr.WellFormed (pattern L, pattern Nil)
 import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
 
+import Fun               (translate)
 import Fun.Desugar       (desugar)
 import Fun.Errors        (Error (..), unError)
 import Fun.Go.Printer    (printGo)
@@ -22,8 +23,8 @@ main :: IO ()
 main = hspec $ describe "Everything" $ do
   dummyTests
   describe "Tests" $ do
-    unitTests
-    integrationTests
+    describe "Unit"        unitTests
+    describe "Integration" integrationTests
   examples
 
 
@@ -281,10 +282,15 @@ unitTests = do
       `shouldPrint`
       "var _, x = m[2]"
 
-    it "zero value var with composite type" $
+    it "zero value slice var" $
       printGo (L [ KW "var" , ID "x" , L [ TP "slice" , TP "string" ] ])
       `shouldPrint`
       "var x []string"
+
+    it "zero value map var" $
+      printGo (L [ KW "var" , ID "counters" , L [ TP "map" , TP "string" , TP "int" ] ])
+      `shouldPrint`
+      "var counters map[string]int"
 
     it "var with slice literal initializer" $
       printGo (L [ KW "var" , ID "nums" , L [ L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2, IL 3 ] ] ])
@@ -354,6 +360,11 @@ unitTests = do
       printGo (L [ KW "interface" , ID "Printer" ,
         L [ ID "Print" , L [ L [ ID "x" , TP "any" ]] ] ])
       `shouldPrint` "type Printer interface {\nPrint(x interface{})\n}"
+
+    it "interface entry with slice arg" $
+      printGo (L [ KW "interface" , ID "foo" ,
+        L [ ID "bar" , L [ L [ TP "slice" , TP "string" ] ] ] ])
+      `shouldPrint` "type foo interface {\nbar([]string)\n}"
 
     it "multiple entries interface" $
       printGo (L [ KW "interface" , ID "shape"
@@ -454,6 +465,14 @@ unitTests = do
       `shouldPrint`
       "func foo() {}"
 
+    it "func f(xs []string) int {...}" $
+      printGo (L [ KW "func" , ID "f"
+        , L [ L [ ID "xs" , L [ TP "slice" , TP "string" ] ] ]
+        , TP "int"
+        , L [ KW "return" , IL 42 ] ])
+      `shouldPrint`
+      "func f(xs []string) int {\nreturn 42\n}"
+
     it "func foo() {...}" $
       printGo (L [ KW "func" , ID "foo" , Nil , L
       [ L [ KW "var" , ID "x" , IL 5 ]
@@ -466,7 +485,12 @@ unitTests = do
       `shouldPrint`
       "func (x bar) foo() {}"
 
-    it "method (bar) foo() {}" $
+    it "method (bar) foo() {} #1" $
+      printGo (L [ KW "method" , TP "bar" , ID "foo" , Nil ])
+      `shouldPrint`
+      "func (bar) foo() {}"
+
+    it "method (bar) foo() {} #2" $
       printGo (L [ KW "method" , TP "bar" , ID "foo" , Nil , Nil ])
       `shouldPrint`
       "func (bar) foo() {}"
@@ -598,7 +622,17 @@ unitTests = do
 
 
 integrationTests :: Spec
-integrationTests = describe "Go.Fmt.gofmt" $ do
+integrationTests = do
+
+  describe "Fmt.translate" $
+
+    it "translates simple expression" $
+      translate "(func foo (bar x 42))"
+      `shouldPrint`
+      "func foo() {\nbar(x, 42)\n}"
+
+
+  describe "Go.Fmt.gofmt" $ do
 
     it "formats valid code" $
       gofmt "func  foo  (  ) { \n i++}" `shouldPrint` "func foo() {\n\ti++\n}"

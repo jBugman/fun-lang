@@ -28,7 +28,6 @@ print (ID x) = Right x
 print (OP x) = Right x
 
 -- literal
-print (SL x)      = Right $ printf1 "\"{}\"" x
 print (A (Lit x)) = Right $ printf1 "{}" x
 
 -- types
@@ -123,11 +122,12 @@ print (L ( KW "package" : n@(ID _) : topLevels ))
     <*> (intercalate "\n\n" <$> mapM print topLevels)
 
 -- import
-print (L [ KW "import" , SL path ])
-    = Right $ printf1 "import \"{}\"" path
+print (L [ KW "import" , p@(SL _) ])
+    = printf1 "import {}" <$> print p
 
-print (L [ KW "import" , SL path , SL alias ])
-    = Right $ printf2 "import {} \"{}\"" alias path
+print (L [ KW "import" , p@(SL _) , SL alias ])
+    -- Stripping alias of quotes manually
+    = printf2 "import {} {}" alias <$> print p
 
 -- func
 print (L [ KW "func" , n@(ID _) , b ])
@@ -283,9 +283,8 @@ printResults t@(TP _)                = print t
 printResults e                       = mkError "invalid results: " e
 
 printPair :: E -> Either Error Text
-printPair (L [ x@(ID _) , y ])      = printf2 "{} {}" <$> print x <*> print y
-printPair (L [ x@(A (Lit _)) , y ]) = printf2 "{} {}" <$> print x <*> print y
-printPair e                         = mkError "invalid pair: " e
+printPair (L [ x@(ID _) , y ]) = printf2 "{} {}" <$> print x <*> print y
+printPair e                    = mkError "invalid pair: " e
 
 printList :: [E] -> Either Error Text
 printList xs = intercalate ", " <$> mapM print xs
@@ -299,9 +298,8 @@ printColonPair (L [ x@(A (Lit _)) , y ]) = printf2 "{}: {}" <$> print x <*> prin
 printColonPair e                         = mkError "invalid pair: " e
 
 printBody :: E -> Either Error Text
-printBody Nil      = Right "{}"
-printBody x@(L[_]) = printf1 "{{}}"     <$> print x
-printBody xs       = printf1 "{\n{}\n}" <$> print xs
+printBody Nil = Right "{}"
+printBody xs  = printf1 "{\n{}\n}" <$> print xs
 
 printRecv :: E -> Either Error Text
 printRecv t@(TP _)             = printf1 "({})"    <$> print t

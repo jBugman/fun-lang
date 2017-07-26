@@ -200,6 +200,14 @@ unitTests = do
     it "func type" $
       parse "(:func () :int)" `shouldParse` L [ TP "func" , Nil , TP "int" ]
 
+    it "type assertion" $
+      parse "(assert :foo x)" `shouldParse` L [ KW "assert" , TP "foo" , ID "x" ]
+
+    it "testing assert" $
+      parse "(assert.Equal (s.T) text t)"
+      `shouldParse`
+      L [ ID "assert.Equal" , L [ ID "s.T" ] , ID "text" , ID "t" ]
+
 
   describe "Fun.Go.Printer.printGo" $ do
 

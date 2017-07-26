@@ -112,6 +112,9 @@ print (L ( KW "interface" : n@(ID _) : xs ))
         print' e = mkError "invalid interface member: " e
 
 -- struct literal
+print (L [ t@(TP _) ])
+    = printf2 "{}{}" <$> print t <*> Right "{}"
+
 print (L [ t@(TP _) , L xs ])
     = printf2 "{}{{}}" <$> print t <*> printPairs xs
 

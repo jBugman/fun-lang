@@ -36,6 +36,8 @@ keywords = goKeywords <>
     , "val"
     , "make"
     , "alias"
+    , "cast"
+    , "assert"
     ]
 
 goKeywords :: [String]

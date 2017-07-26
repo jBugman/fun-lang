@@ -91,7 +91,7 @@ Transpiling is mostly literal, but there are some differences from Go:
   (var pi :float32 (/ 22.0 7))
 
   ; Conversion syntax. byte is an alias for uint8.
-  (var n (:byte '\n'))  ; TODO: subject to change (conversion syntax)
+  (var n (cast :byte '\n'))
 
   ; Arrays have size fixed at compile time. But Fun do not support them (yet?).
   ; var a4 [4]int  // An array of 4 ints, initialized to all 0.
@@ -99,9 +99,9 @@ Transpiling is mostly literal, but there are some differences from Go:
   ; Slices have dynamic size. Arrays and slices each have advantages
   ; but use cases for slices are much more common.
   (var s3 ((:slice :int) (4 5 9)))
-  (var s4 (make (:slice :int) 4))      ; Allocates slice of 4 ints, initialized to all 0.
-  (var d2 (:slice (:slice :float64)))  ; Declaration only, nothing allocated here.
-  (var bs ((:slice :byte) "a slice"))  ; Type conversion syntax.
+  (var s4 (make (:slice :int) 4))           ; Allocates slice of 4 ints, initialized to all 0.
+  (var d2 (:slice (:slice :float64)))       ; Declaration only, nothing allocated here.
+  (var bs (cast (:slice :byte) "a slice"))  ; Type conversion syntax.
 
   ; Because they are dynamic, slices can be appended to on-demand.
   ; To append elements to a slice, the built-in append() function is used.
@@ -116,7 +116,7 @@ Transpiling is mostly literal, but there are some differences from Go:
   (print s)              ; Updated slice is now [1 2 3 4 5 6 7 8 9]
 
   (var p q (learnMemory))  ; Declares p, q to be type pointer to int.
-  (print *p *q)            ; * designates a pointer. This prints two ints.
+  (print (* p) (* q))      ; * designates a pointer. This prints two ints.
                            ; TODO: subject to change (pointer dereference)
 
   ; Maps are a dynamically growable associative array type, like the
@@ -394,7 +394,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 ; Make pair an http.Handler by implementing its only method, ServeHTTP.
 (method (:pair) ServeHTTP ((w :http.ResponseWriter) (r (:ptr :http.Request))) (
   ; Serve data with a method of http.ResponseWriter.
-  (w.Write ((:slice :byte) "You learned Go in Y minutes!"))
+  (w.Write (cast (:slice :byte) "You learned Go in Y minutes!"))
 ))
 
 (func requestServer () (
@@ -402,7 +402,7 @@ Transpiling is mostly literal, but there are some differences from Go:
   (print err)
   (defer (resp.Body.Close))
   (var body err (ioutil.ReadAll resp.Body))
-  (fmt.Printf "\nWebserver said: `%s`" (:string body))
+  (fmt.Printf "\nWebserver said: `%s`" (cast :string body))
 ))
 
 )

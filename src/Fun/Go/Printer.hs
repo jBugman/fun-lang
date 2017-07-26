@@ -217,6 +217,17 @@ print (L [ KW "for" , i@(ID _) , from , cond , iter , body ])
 print (L [ KW "for" , i@(ID _) , from , to , body ])
     = printFor i from (L [ OP "<" , i , to ]) (L [ OP "++" , i ]) body
 
+-- type conversion
+print (L [ KW "cast" , x@(TP _) , y ])
+    = printf2 "{}({})" <$> print x <*> print y
+
+print (L [ KW "cast" , x@(L (TP _ : _ )) , y ])
+    = printf2 "{}({})" <$> print x <*> print y
+
+-- type conversion
+print (L [ KW "assert" , x@(TP _) , y ])
+    = printf2 "{}.({})" <$> print y <*> print x
+
 -- function call
 print (L [ f@(ID _) ])
     = printf1 "{}()" <$> print f

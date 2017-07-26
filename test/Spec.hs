@@ -502,6 +502,21 @@ unitTests = do
       `shouldPrint`
       "func (b *bar) foo() {\nvar x = b + 3\nboop(x)\n}"
 
+    it "x = string(y)" $
+      printGo (L [ KW "set" , ID "x" , L [ KW "cast" , TP "string" , ID "y" ] ])
+      `shouldPrint`
+      "x = string(y)"
+
+    it "x = []byte(y)" $
+      printGo (L [ KW "set" , ID "x" , L [ KW "cast" , L [ TP "slice" , TP "byte" ] , ID "y" ] ])
+      `shouldPrint`
+      "x = []byte(y)"
+
+    it "x = y.(Foo)" $
+      printGo (L [ KW "set" , ID "x" , L [ KW "assert" , TP "Foo" , ID "y" ] ])
+      `shouldPrint`
+      "x = y.(Foo)"
+
 
   describe "Fun.Printer.singleLine" $ do
 

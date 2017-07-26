@@ -525,6 +525,18 @@ unitTests = do
       `shouldPrint`
       "x = y.(Foo)"
 
+    it "slice literal" $
+      printGo (L [ L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2 , IL 3 ] ])
+      `shouldPrint`
+      "[]int{1, 2, 3}"
+
+    it "map literal" $
+      printGo (L
+        [ L [ TP "map" , TP "foo" , TP "int" ]
+        , L [ L [ SL "foo" , IL 42 ] , L [ SL "bar" , IL 3 ] ] ])
+      `shouldPrint`
+      "map[foo]int{\"foo\": 42, \"bar\": 3}"
+
 
   describe "Fun.Printer.singleLine" $ do
 

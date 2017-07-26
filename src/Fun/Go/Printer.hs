@@ -111,6 +111,14 @@ print (L ( KW "interface" : n@(ID _) : xs ))
 
         print' e = mkError "invalid interface member: " e
 
+-- slice literal
+print (L [ t@(L [ TP "slice" , _ ]) , L xs ])
+    = printf2 "{}{{}}" <$> print t <*> printList xs
+
+-- map literal
+print (L [ t@(L [ TP "map" , _ , _ ]) , L xs ])
+    = printf2 "{}{{}}" <$> print t <*> printPairs xs
+
 -- struct literal
 print (L [ t@(TP _) ])
     = printf2 "{}{}" <$> print t <*> Right "{}"

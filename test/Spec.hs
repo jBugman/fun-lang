@@ -537,6 +537,21 @@ unitTests = do
       `shouldPrint`
       "map[foo]int{\"foo\": 42, \"bar\": 3}"
 
+    it "map of slices" $
+      printGo (L [ TP "map" , TP "q" , L [ TP "slice" , TP "a" ] ])
+      `shouldPrint`
+      "map[q][]a"
+
+    it "map of pointers" $
+      printGo (L [ TP "map" , TP "q" , L [ TP "ptr" , TP "a" ] ])
+      `shouldPrint`
+      "map[q]*a"
+
+    it "map of maps" $
+      printGo (L [ TP "map" , TP "x" , L [ TP "map" , TP "y" , TP "z" ] ])
+      `shouldPrint`
+      "map[x]map[y]z"
+
 
   describe "Fun.Printer.singleLine" $ do
 

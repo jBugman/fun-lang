@@ -22,18 +22,13 @@ printGo = print
 
 print :: E -> Either Error Text
 -- types
-print (L [ TP "slice" , x ]) = printf1 "[]{}" <$> print x
-
-print (L [ TP "map" , k@(TP _) , v@(TP _) ])
-    = printf2 "map[{}]{}" <$> print k <*> print v
+print x@(L [ TP "slice" , _ ]) = tshow <$> pprint x
 
 print (L [ TP "func" , a ])
     = printf1 "func({})" <$> printArgs a
 
 print (L [ TP "func" , a , r ])
     = printf2 "func({}) {}" <$> printArgs a <*> printResults r
-
-print (L [ TP "ptr" , x ]) = printf1 "*{}" <$> print x
 
 -- type alias
 print (L [ KW "alias" , n@(ID _) , e ])
@@ -267,17 +262,24 @@ print x = tshow <$> pprint x
 
 pprint :: E -> Either Error PP.Doc
 -- ident
-pprint (ID x)       = Right $ PP.textStrict x
+pprint (ID x)      = Right $ PP.textStrict x
 
 -- operator
-pprint (OP x)       = Right $ PP.textStrict x
+pprint (OP x)      = Right $ PP.textStrict x
 
 -- literal
-pprint (A (Lit x))  = Right $ PP.pretty x
+pprint (A (Lit x)) = Right $ PP.pretty x
 
 -- types
-pprint (TP "any")   = Right $ PP.text "interface{}"
-pprint (TP x)       = Right $ PP.textStrict x
+pprint (TP "any")  = Right $ PP.text "interface{}"
+pprint (TP x)      = Right $ PP.textStrict x
+
+pprint (L [ TP "ptr" , x ]) = token "*" <+> pprint x
+
+pprint (L [ TP "slice" , x ]) = token "[]" <+> pprint x
+
+pprint (L [ TP "map" , k@(TP _) , v ])
+    = token "map" <+> (PP.brackets <$> pprint k) <+> pprint v
 
 -- Bare keyword (continue e.t.c.)
 pprint (L [ KW x ]) = Right $ PP.textStrict x
@@ -335,6 +337,12 @@ printRecv (L [ n@(ID _) , t ]) = printf2 "({} {})" <$> print n <*> print t
 printRecv e                    = mkError "invalid reciever: " e
 
 -- Utils --
+
+token :: Text -> Either Error PP.Doc
+token = Right . PP.textStrict
+
+(<+>) :: Either Error PP.Doc -> Either Error PP.Doc -> Either Error PP.Doc
+(<+>) = liftA2 (<>)
 
 mkError :: Text -> E -> Either Error Text
 mkError msg e = Left . TranslationError $ msg <> singleLine e

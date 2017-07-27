@@ -22,9 +22,9 @@ module Fun.SExpression
 
 import ClassyPrelude
 import Data.SCargot.Repr.WellFormed (WellFormedSExpr (..))
-import Data.Text.Buildable          (Buildable, build)
-import Data.Text.Lazy.Builder       (fromText)
 import Numeric                      (showHex, showOct)
+
+import qualified Text.PrettyPrint.Leijen.Text as PP
 
 
 type Expression = WellFormedSExpr Atom
@@ -88,15 +88,15 @@ instance Ord Expression where
     compare (WFSList _) (WFSAtom _) = GT
     compare (WFSAtom _) (WFSList _) = LT
 
-instance Show Literal where
-    show (Str t)    = unpack $ "\"" <> t <> "\""
-    show (Chr t)    = unpack $ "'"  <> t <> "'"
-    show (Int i)    = show i
-    show (Hex h)    = unpack $ "0x" <> showHex h ""
-    show (Oct h)    = unpack $ "0"  <> showOct h ""
-    show (Dbl d)    = show d
-    show (Bl True)  = "true"
-    show (Bl False) = "false"
+instance PP.Pretty Literal where
+    pretty (Str x)    = PP.dquotes . PP.textStrict $ x
+    pretty (Chr x)    = PP.squotes . PP.textStrict $ x
+    pretty (Int x)    = PP.integer x
+    pretty (Hex x)    = PP.text . pack $ "0x" ++ showHex x ""
+    pretty (Oct x)    = PP.text . pack $ "0"  ++ showOct x ""
+    pretty (Dbl x)    = PP.double x
+    pretty (Bl True)  = PP.text "true"
+    pretty (Bl False) = PP.text "false"
 
-instance Buildable Literal where
-    build = fromText . tshow
+instance Show Literal where
+    show = show . PP.pretty

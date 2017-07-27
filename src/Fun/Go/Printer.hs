@@ -7,6 +7,8 @@ import Data.Text.Buildable          (Buildable)
 import Data.Text.Format             (Format, format)
 import Data.Text.Format.Params      (Params)
 
+import qualified Text.PrettyPrint.Leijen.Text as PP
+
 import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (Atom (..), Expression, pattern ID, pattern KW, pattern OP, pattern SL,
@@ -17,24 +19,9 @@ type E = Expression
 printGo :: E -> Either Error Text
 printGo = print
 
+
 print :: E -> Either Error Text
--- empty
-print Nil = Left . TranslationError $ "empty expression"
-
--- ident
-print (ID x) = Right x
-
--- operator
-print (OP x) = Right x
-
--- literal
-print (A (Lit x)) = Right $ printf1 "{}" x
-
 -- types
-print (TP "any") = Right "interface{}"
-
-print (TP x) = Right x
-
 print (L [ TP "slice" , x ]) = printf1 "[]{}" <$> print x
 
 print (L [ TP "map" , k@(TP _) , v@(TP _) ])
@@ -274,11 +261,30 @@ print (L [ KW "range" , x@(ID _) , xs ])
 print (L [ KW "range" , x@(ID _) , y@(ID _) , xs ])
     = printf3 "{}, {} := range {}" <$> print x <*> print y <*> print xs
 
--- Keyword-function (continue e.t.c.)
-print (L [ KW x ]) = Right x
+-- Otherwise forward to PrettyPrint.Leijen-based printer
+print x = tshow <$> pprint x
 
--- FIXME: catch-all case
-print s = mkError "not supported yet " s
+
+pprint :: E -> Either Error PP.Doc
+-- ident
+pprint (ID x)       = Right $ PP.textStrict x
+
+-- operator
+pprint (OP x)       = Right $ PP.textStrict x
+
+-- literal
+pprint (A (Lit x))  = Right $ PP.pretty x
+
+-- types
+pprint (TP "any")   = Right $ PP.text "interface{}"
+pprint (TP x)       = Right $ PP.textStrict x
+
+-- Bare keyword (continue e.t.c.)
+pprint (L [ KW x ]) = Right $ PP.textStrict x
+
+-- FIXME: Catching everything that is not allowed (yet)
+pprint Nil          = Left . TranslationError $ "empty expression"
+pprint s            = Left . TranslationError $ "not supported yet " <> singleLine s
 
 
 -- Sub printers --

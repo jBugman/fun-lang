@@ -6,8 +6,7 @@ import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
 import Data.Text.Buildable          (Buildable)
 import Data.Text.Format             (Format, format)
 import Data.Text.Format.Params      (Params)
-
-import qualified Text.PrettyPrint.Leijen.Text as PP
+import Text.PrettyPrint.Leijen.Text (Doc, brackets, pretty, text, textStrict, (<+>), (</>))
 
 import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
@@ -260,29 +259,35 @@ print (L [ KW "range" , x@(ID _) , y@(ID _) , xs ])
 print x = tshow <$> pprint x
 
 
-pprint :: E -> Either Error PP.Doc
+pprint :: E -> Either Error Doc
 -- ident
-pprint (ID x)      = Right $ PP.textStrict x
+pprint (ID x)      = doc x
 
 -- operator
-pprint (OP x)      = Right $ PP.textStrict x
+pprint (OP x)      = doc x
 
 -- literal
-pprint (A (Lit x)) = Right $ PP.pretty x
+pprint (A (Lit x)) = pure $ pretty x
 
 -- types
-pprint (TP "any")  = Right $ PP.text "interface{}"
-pprint (TP x)      = Right $ PP.textStrict x
+pprint (TP "any")  = doc "interface{}"
+pprint (TP x)      = doc x
 
-pprint (L [ TP "ptr" , x ]) = token "*" <+> pprint x
+pprint (L [ TP "ptr" , x ]) = do
+    x' <- pprint x
+    pure $ text "*" <> x'
 
-pprint (L [ TP "slice" , x ]) = token "[]" <+> pprint x
+pprint (L [ TP "slice" , x ]) = do
+    x' <- pprint x
+    pure $ text "[]" <> x'
 
-pprint (L [ TP "map" , k@(TP _) , v ])
-    = token "map" <+> (PP.brackets <$> pprint k) <+> pprint v
+pprint (L [ TP "map" , k@(TP _) , v ]) = do
+    k' <- pprint k
+    v' <- pprint v
+    pure $ text "map" <> brackets k' <> v'
 
 -- Bare keyword (continue e.t.c.)
-pprint (L [ KW x ]) = Right $ PP.textStrict x
+pprint (L [ KW x ]) = doc x
 
 -- FIXME: Catching everything that is not allowed (yet)
 pprint Nil          = Left . TranslationError $ "empty expression"
@@ -338,11 +343,8 @@ printRecv e                    = mkError "invalid reciever: " e
 
 -- Utils --
 
-token :: Text -> Either Error PP.Doc
-token = Right . PP.textStrict
-
-(<+>) :: Either Error PP.Doc -> Either Error PP.Doc -> Either Error PP.Doc
-(<+>) = liftA2 (<>)
+doc :: Text -> Either Error Doc
+doc = pure . textStrict
 
 mkError :: Text -> E -> Either Error Text
 mkError msg e = Left . TranslationError $ msg <> singleLine e

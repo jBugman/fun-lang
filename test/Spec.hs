@@ -572,6 +572,22 @@ unitTests = do
       `shouldPrint`
       "map[x]map[y]z"
 
+    it "call chain A" $
+      printGo (L [ OP "."
+        , ID "c"
+        , L [ ID "Echo" ]
+        , L [ ID "URI" , ID "bot.handleSession" ] ])
+      `shouldPrint`
+      "c.Echo().URI(bot.handleSession)"
+
+    it "call chain B" $
+      printGo (L [ OP "=" , IL 0 , L
+        [ OP "."
+        , L [ KW "val" , ID "suite.t.Messages" , ID "userID" ]
+        , L [ ID "Size" ] ] ])
+      `shouldPrint`
+      "0 == suite.t.Messages[userID].Size()"
+
 
   describe "Fun.Printer.singleLine" $ do
 

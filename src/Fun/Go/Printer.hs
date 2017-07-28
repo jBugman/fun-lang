@@ -4,8 +4,9 @@ module Fun.Go.Printer ( printGo ) where
 import ClassyPrelude                hiding (empty)
 import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
 import Text.PrettyPrint.Leijen.Text (Doc, braces, brackets, colon, comma, displayTStrict, dot,
-                                     empty, equals, hsep, indent, line, parens, pretty, punctuate,
-                                     renderPretty, semi, space, text, textStrict, vsep, (<+>))
+                                     empty, equals, hcat, hsep, indent, line, parens, pretty,
+                                     punctuate, renderPretty, semi, space, text, textStrict, vsep,
+                                     (<+>))
 
 import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
@@ -145,6 +146,10 @@ pprint (L [ OP "=" , lhs , rhs ]) = do -- TODO: change to ==
     lhs' <- pprint lhs
     rhs' <- pprint rhs
     pure $ lhs' <+> text "==" <+> rhs'
+
+pprint (L ( OP "." : xs )) = do -- chained function call
+    xs' <- mapM pprint xs
+    pure $ hcat (punctuate dot xs')
 
 pprint (L ( op@(OP _) : xs )) = do
     op' <- pprint op

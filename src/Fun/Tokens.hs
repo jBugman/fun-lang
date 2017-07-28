@@ -26,6 +26,7 @@ operators =
     , "%"
     , "&"
     , "|"
+    , "."
     ]
 
 keywords :: [String]

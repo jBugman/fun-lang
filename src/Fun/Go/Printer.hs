@@ -207,8 +207,9 @@ pprint (L [ t@(L [ TP "map" , _ , _ ]) , L xs ])
     = printMapLike t xs
 
 -- struct literal
-pprint (L [ t@(TP _) ])
-    = printMapLike t []
+
+-- pprint (L [ t@(TP _) ]) -- TODO: investigate viability
+--     = printMapLike t []
 
 pprint (L [ t@(TP _) , L xs ])
     = printMapLike t xs

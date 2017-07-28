@@ -62,37 +62,37 @@ pprint (L [ KW "alias" , n@(ID _) , t ]) = do
 
 -- const
 pprint (L [ KW "const" , x@(ID _) , rhs ])
-    = printDeclXE (text "const") x rhs
+    = printAssignmentX kwConst x Nothing (Just rhs)
 
 pprint (L [ KW "const" , x@(ID _) , t@(TP _) , rhs ])
-    = printDeclXTE (text "const") x t rhs
+    = printAssignmentX kwConst x (Just t) (Just rhs)
 
 -- var
 pprint (L [ KW "var" , x@(ID _) , t@(TP _) ])
-    = printDeclXT (text "var") x t
+    = printAssignmentX kwVar x (Just t) Nothing
 
 pprint (L [ KW "var" , x@(ID _) , rhs@(L [ TP _ , L _ ]) ])
-    = printDeclXE (text "var") x rhs
+    = printAssignmentX kwVar x Nothing (Just rhs)
 
 pprint (L [ KW "var" , x@(ID _) , rhs@(L [ L( TP _ : _ ) , L _ ]) ])
-    = printDeclXE (text "var") x rhs
+    = printAssignmentX kwVar x Nothing (Just rhs)
 
 pprint (L [ KW "var" , x@(ID _) , t@( L( TP _ : _ )) ])
-    = printDeclXT (text "var") x t
+    = printAssignmentX kwVar x (Just t) Nothing
 
 pprint (L [ KW "var" , x@(ID _) , y@(ID _) , rhs ])
-    = printDeclXYE (text "var") x y rhs
+    = printAssignmentXY kwVar x y rhs
 
 pprint (L [ KW "var" , x@(ID _) , t@(TP _) , rhs ])
-    = printDeclXTE (text "var") x t rhs
+    = printAssignmentX kwVar x (Just t) (Just rhs)
 
 pprint (L [ KW "var" , x@(ID _) , rhs ])
-    = printDeclXE (text "var") x rhs
+    = printAssignmentX kwVar x Nothing (Just rhs)
 
 -- struct decl
 pprint (L [ KW "struct" , n@(ID _) ]) = do
     n' <- pprint n
-    pure $ text "type" <+> n' <+> text "struct" <> text "{}"
+    pure $ text "type" <+> n' <+> text "struct" <> emptyBraces
 
 pprint (L ( KW "struct" : n@(ID _) : xs )) = do
     n'  <- pprint n
@@ -103,7 +103,7 @@ pprint (L ( KW "struct" : n@(ID _) : xs )) = do
 -- interface decl
 pprint (L [ KW "interface" , n@(ID _) ]) = do
     n'  <- pprint n
-    pure $ text "type" <+> n' <+> text "interface" <> text "{}"
+    pure $ text "type" <+> n' <+> text "interface" <> emptyBraces
 
 pprint (L ( KW "interface" : n@(ID _) : xs )) = do
     n'  <- pprint n
@@ -237,7 +237,7 @@ pprint (L [ t@(L [ TP "map" , _ , _ ]) , L xs ]) = printMapLike t xs
 -- struct literal
 pprint (L [ t@(TP _) ]) = do
     t' <- pprint t
-    pure $ t' <> text "{}"
+    pure $ t' <> emptyBraces
 
 pprint (L [ t@(TP _) , L xs ]) = printMapLike t xs
 
@@ -409,7 +409,7 @@ printResults (L ts)  = do
 printResults e        = mkError "invalid results: " e
 
 printBody :: E -> Either Error Doc
-printBody Nil = doc "{}"
+printBody Nil = pure emptyBraces
 printBody xs  = bracedBlock <$> pprint xs
 
 printStructElem :: E -> Either Error Doc
@@ -457,33 +457,38 @@ printIfThen cond branch1 = do
     b' <- pprint branch1
     pure $ text "if" <+> c' <+> bracedBlock b'
 
-printDeclXT :: Doc -> E -> E -> Either Error Doc
-printDeclXT txt x t = do
-    x' <- pprint x
-    t' <- pprint t
-    pure $ txt <+> x' <+> t'
-
-printDeclXTE :: Doc -> E -> E -> E -> Either Error Doc
-printDeclXTE txt x t rhs = do
+printAssignmentX :: Doc -> E -> Maybe E -> Maybe E -> Either Error Doc
+printAssignmentX txt x t rhs = do
     x'   <- pprint x
-    t'   <- pprint t
-    rhs' <- pprint rhs
-    pure $ txt <+> x' <+> t' <+> equals <+> rhs'
+    mt'  <- maybePrint id t
+    rhs' <- maybePrint (equals <+>) rhs
+    pure $ txt <+> x' <+> mt' <+> rhs'
 
-printDeclXE :: Doc -> E -> E -> Either Error Doc
-printDeclXE txt x rhs = do
-    x'   <- pprint x
-    rhs' <- pprint rhs
-    pure $ txt <+> x' <+> equals <+> rhs'
-
-printDeclXYE :: Doc -> E -> E -> E -> Either Error Doc
-printDeclXYE txt x y rhs = do
+printAssignmentXY :: Doc -> E -> E -> E -> Either Error Doc
+printAssignmentXY txt x y rhs = do
     x'   <- pprint x
     y'   <- pprint y
     rhs' <- pprint rhs
     pure $ txt <+> x' <> comma <+> y' <+> equals <+> rhs'
 
+
+-- Constants --
+
+emptyBraces :: Doc
+emptyBraces = text "{}"
+
+kwConst :: Doc
+kwConst = text "const"
+
+kwVar :: Doc
+kwVar = text "var"
+
+
 -- Utils --
+
+maybePrint :: (Doc -> Doc) -> Maybe E -> Either Error Doc
+maybePrint f (Just x) = f <$> pprint x
+maybePrint _ Nothing  = pure empty
 
 doc :: Text -> Either Error Doc
 doc = pure . textStrict

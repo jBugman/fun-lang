@@ -61,54 +61,33 @@ pprint (L [ KW "alias" , n@(ID _) , t ]) = do
     pure $ text "type" <+> n' <+> t'
 
 -- const
-pprint (L [ KW "const" , n@(ID _) , x ]) = do
-    n' <- pprint n
-    x' <- pprint x
-    pure $ text "const" <+> n' <+> equals <+> x'
+pprint (L [ KW "const" , x@(ID _) , rhs ])
+    = printDeclXE (text "const") x rhs
 
-pprint (L [ KW "const" , n@(ID _) , t@(TP _) , x ]) = do
-    n' <- pprint n
-    t' <- pprint t
-    x' <- pprint x
-    pure $ text "const" <+> n' <+> t' <+> equals <+> x'
+pprint (L [ KW "const" , x@(ID _) , t@(TP _) , rhs ])
+    = printDeclXTE (text "const") x t rhs
 
 -- var
-pprint (L [ KW "var" , x@(ID _) , t@(TP _) ]) = do
-    x' <- pprint x
-    t' <- pprint t
-    pure $ text "var" <+> x' <+> t'
+pprint (L [ KW "var" , x@(ID _) , t@(TP _) ])
+    = printDeclXT (text "var") x t
 
-pprint (L [ KW "var" , x@(ID _) , rhs@(L [ TP _ , L _ ]) ]) = do
-    x'   <- pprint x
-    rhs' <- pprint rhs
-    pure $ text "var" <+> x' <+> equals <+> rhs'
+pprint (L [ KW "var" , x@(ID _) , rhs@(L [ TP _ , L _ ]) ])
+    = printDeclXE (text "var") x rhs
 
-pprint (L [ KW "var" , x@(ID _) , rhs@(L [ L( TP _ : _ ) , L _ ]) ]) = do
-    x'   <- pprint x
-    rhs' <- pprint rhs
-    pure $ text "var" <+> x' <+> equals <+> rhs'
+pprint (L [ KW "var" , x@(ID _) , rhs@(L [ L( TP _ : _ ) , L _ ]) ])
+    = printDeclXE (text "var") x rhs
 
-pprint (L [ KW "var" , x@(ID _) , t@( L( TP _ : _ )) ]) = do
-    x' <- pprint x
-    t' <- pprint t
-    pure $ text "var" <+> x' <+> t'
+pprint (L [ KW "var" , x@(ID _) , t@( L( TP _ : _ )) ])
+    = printDeclXT (text "var") x t
 
-pprint (L [ KW "var" , x@(ID _) , y@(ID _) , rhs ]) = do
-    x'   <- pprint x
-    y'   <- pprint y
-    rhs' <- pprint rhs
-    pure $ text "var" <+> x' <> comma <+> y' <+> equals <+> rhs'
+pprint (L [ KW "var" , x@(ID _) , y@(ID _) , rhs ])
+    = printDeclXYE (text "var") x y rhs
 
-pprint (L [ KW "var" , x@(ID _) , t@(TP _) , rhs ]) = do
-    x'   <- pprint x
-    t'   <- pprint t
-    rhs' <- pprint rhs
-    pure $ text "var" <+> x' <+> t' <+> equals <+> rhs'
+pprint (L [ KW "var" , x@(ID _) , t@(TP _) , rhs ])
+    = printDeclXTE (text "var") x t rhs
 
-pprint (L [ KW "var" , x@(ID _) , rhs ]) = do
-    x'   <- pprint x
-    rhs' <- pprint rhs
-    pure $ text "var" <+> x' <+> equals <+> rhs'
+pprint (L [ KW "var" , x@(ID _) , rhs ])
+    = printDeclXE (text "var") x rhs
 
 -- struct decl
 pprint (L [ KW "struct" , n@(ID _) ]) = do
@@ -316,28 +295,18 @@ pprint (L [ KW "func" , a , r , b ]) = do
     pure $ text "func" <> parens a' <+> r' <+> b'
 
 -- if-then-else
-pprint (L [ KW "if" , c , t , e@(L ( KW "if" : _ )) ]) = do -- elseif
-    c' <- pprint c
-    t' <- pprint t
+pprint (L [ KW "if" , c , t ]) = printIfThen c t
+
+-- elseif
+pprint (L [ KW "if" , c , t , e@(L ( KW "if" : _ )) ]) = do
+    it <- printIfThen c t
     e' <- pprint e
-    pure $ text "if" <+> c'
-        <+> bracedBlock t'
-        <+> text "else"
-        <+> e'
+    pure $ it <+> text "else" <+> e'
 
 pprint (L [ KW "if" , c , t , e ]) = do
-    c' <- pprint c
-    t' <- pprint t
+    it <- printIfThen c t
     e' <- pprint e
-    pure $ text "if" <+> c'
-        <+> bracedBlock t'
-        <+> text "else"
-        <+> bracedBlock e'
-
-pprint (L [ KW "if" , c , t ]) = do
-    c' <- pprint c
-    t' <- pprint t
-    pure $ text "if" <+> c' <+> bracedBlock t'
+    pure $ it <+> text "else" <+> bracedBlock e'
 
 -- for loop
 pprint (L [ KW "for" , body ]) = do
@@ -392,7 +361,7 @@ pprint (L ( x@(L _) : xs )) = do
 pprint x = Left . TranslationError $ "not supported yet: " <> singleLine x
 
 
--- Subprinters --
+-- Tier 2 --
 
 printFor :: E -> E -> E -> E -> E -> Either Error Doc
 printFor var from cond iter body = do
@@ -469,16 +438,50 @@ printMapLike t xs = do
     pure $ t' <> braces (commaSep xs')
 
 printMaplikeElem :: E -> Either Error Doc
-printMaplikeElem (L [ x@(ID _) , y ]) = do
-    x' <- pprint x
-    y' <- pprint y
-    pure $ x' <> colon <+> y'
-printMaplikeElem (L [ x@(A (Lit _)) , y ]) = do
-    x' <- pprint x
-    y' <- pprint y
-    pure $ x' <> colon <+> y'
-printMaplikeElem e = mkError "invalid map-like elem: " e
+printMaplikeElem (L [ x@(ID _) , y ])      = printColonPair x y
+printMaplikeElem (L [ x@(A (Lit _)) , y ]) = printColonPair x y
+printMaplikeElem e                         = mkError "invalid map-like elem: " e
 
+
+-- Tier 3 --
+
+printColonPair :: E -> E -> Either Error Doc
+printColonPair x y = do
+    x' <- pprint x
+    y' <- pprint y
+    pure $ x' <> colon <+> y'
+
+printIfThen :: E -> E -> Either Error Doc
+printIfThen cond branch1 = do
+    c' <- pprint cond
+    b' <- pprint branch1
+    pure $ text "if" <+> c' <+> bracedBlock b'
+
+printDeclXT :: Doc -> E -> E -> Either Error Doc
+printDeclXT txt x t = do
+    x' <- pprint x
+    t' <- pprint t
+    pure $ txt <+> x' <+> t'
+
+printDeclXTE :: Doc -> E -> E -> E -> Either Error Doc
+printDeclXTE txt x t rhs = do
+    x'   <- pprint x
+    t'   <- pprint t
+    rhs' <- pprint rhs
+    pure $ txt <+> x' <+> t' <+> equals <+> rhs'
+
+printDeclXE :: Doc -> E -> E -> Either Error Doc
+printDeclXE txt x rhs = do
+    x'   <- pprint x
+    rhs' <- pprint rhs
+    pure $ txt <+> x' <+> equals <+> rhs'
+
+printDeclXYE :: Doc -> E -> E -> E -> Either Error Doc
+printDeclXYE txt x y rhs = do
+    x'   <- pprint x
+    y'   <- pprint y
+    rhs' <- pprint rhs
+    pure $ txt <+> x' <> comma <+> y' <+> equals <+> rhs'
 
 -- Utils --
 

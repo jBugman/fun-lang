@@ -1,5 +1,5 @@
 name:                language-fun
-version:             0.19.4.2
+version:             0.19.4.3
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -29,7 +29,6 @@ library
                       , s-cargot
                       , split
                       , text
-                      , text-format
                       , wl-pprint-text
   ghc-options:         -Wall -Wno-partial-type-signatures
   default-extensions:   OverloadedStrings, NoImplicitPrelude

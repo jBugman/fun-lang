@@ -5,7 +5,7 @@ import ClassyPrelude                hiding (empty)
 import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
 import Text.PrettyPrint.Leijen.Text (Doc, braces, brackets, colon, comma, displayTStrict, dot,
                                      empty, equals, hsep, indent, line, parens, pretty, punctuate,
-                                     renderPretty, semi, text, textStrict, vsep, (<+>))
+                                     renderPretty, semi, space, text, textStrict, vsep, (<+>))
 
 import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
@@ -47,18 +47,18 @@ pprint (L [ TP "map" , k@(TP _) , v ]) = do
 
 pprint (L [ TP "func" , a ]) = do
     a' <- printArgs a
-    pure $ text "func" <> parens a'
+    pure $ kwFunc <> parens a'
 
 pprint (L [ TP "func" , a , r ]) = do
     a' <- printArgs a
     r' <- pprint r
-    pure $ text "func" <> parens a' <+> r'
+    pure $ kwFunc <> parens a' <+> r'
 
 -- type alias
 pprint (L [ KW "alias" , n@(ID _) , t ]) = do
     n' <- pprint n
     t' <- pprint t
-    pure $ text "type" <+> n' <+> t'
+    pure $ kwType <+> n' <+> t'
 
 -- const
 pprint (L [ KW "const" , x@(ID _) , rhs ])
@@ -81,7 +81,7 @@ pprint (L [ KW "var" , x@(ID _) , t@( L( TP _ : _ )) ])
     = printAssignmentX kwVar x (Just t) Nothing
 
 pprint (L [ KW "var" , x@(ID _) , y@(ID _) , rhs ])
-    = printAssignmentXY kwVar x y rhs
+    = (kwVar <+>) <$> printAssignmentXY x (Just y) rhs
 
 pprint (L [ KW "var" , x@(ID _) , t@(TP _) , rhs ])
     = printAssignmentX kwVar x (Just t) (Just rhs)
@@ -92,65 +92,60 @@ pprint (L [ KW "var" , x@(ID _) , rhs ])
 -- struct decl
 pprint (L [ KW "struct" , n@(ID _) ]) = do
     n' <- pprint n
-    pure $ text "type" <+> n' <+> text "struct" <> emptyBraces
+    pure $ kwType <+> n' <+> text "struct" <> emptyBraces
 
 pprint (L ( KW "struct" : n@(ID _) : xs )) = do
     n'  <- pprint n
     xs' <- mapM printStructElem xs
-    pure $ text "type" <+> n' <+> text "struct"
+    pure $ kwType <+> n' <+> text "struct"
         <+> bracedBlock (vsep xs')
 
 -- interface decl
 pprint (L [ KW "interface" , n@(ID _) ]) = do
     n'  <- pprint n
-    pure $ text "type" <+> n' <+> text "interface" <> emptyBraces
+    pure $ kwType <+> n' <+> text "interface" <> emptyBraces
 
 pprint (L ( KW "interface" : n@(ID _) : xs )) = do
     n'  <- pprint n
     xs' <- mapM printInterfaceElem xs
-    pure $ text "type" <+> n' <+> text "interface"
+    pure $ kwType <+> n' <+> text "interface"
         <+> bracedBlock (vsep xs')
 
 -- func
 pprint (L [ KW "func" , n@(ID _) , b ]) = do
     n' <- pprint n
     b' <- printBody b
-    pure $ text "func" <+> n' <> parens empty <+> b'
+    pure $ kwFunc <+> n' <> parens empty <+> b'
 
 pprint (L [ KW "func" , n@(ID _) , a , b ]) = do
     n' <- pprint n
     a' <- printArgs a
     b' <- printBody b
-    pure $ text "func" <+> n' <> parens a' <+> b'
+    pure $ kwFunc <+> n' <> parens a' <+> b'
 
 pprint (L [ KW "func" , n@(ID _) , a , r , b ]) = do
     n' <- pprint n
     a' <- printArgs a
     r' <- printResults r
     b' <- printBody b
-    pure $ text "func" <+> n' <> parens a' <+> r' <+> b'
+    pure $ kwFunc <+> n' <> parens a' <+> r' <+> b'
 
 -- method
 pprint (L [ KW "method" , r , n@(ID _) , b ]) = do
     r' <- printRecv r
     n' <- pprint n
     b' <- printBody b
-    pure $ text "func" <+> r' <+> n' <> parens empty <+> b'
+    pure $ kwFunc <+> r' <+> n' <> parens empty <+> b'
 
 pprint (L [ KW "method" , r , n@(ID _) , a , b ]) = do
     r' <- printRecv r
     n' <- pprint n
     a' <- printArgs a
     b' <- printBody b
-    pure $ text "func" <+> r' <+> n' <> parens a' <+> b'
+    pure $ kwFunc <+> r' <+> n' <> parens a' <+> b'
 
-pprint (L [ KW "method" , r , n@(ID _) , a , rs , b ]) = do
-    r'  <- printRecv r
-    n'  <- pprint n
-    a'  <- printArgs a
-    rs' <- printResults rs
-    b'  <- printBody b
-    pure $ text "func" <+> r' <+> n' <> parens a' <+> rs' <+> b'
+pprint (L [ KW "method" , r , n@(ID _) , a , rs , b ])
+    = printFuncDecl r n a rs b
 
 -- unary operators
 pprint (L [ op@(OP _) , x ]) = do
@@ -173,19 +168,11 @@ pprint (L ( op@(OP _) : xs )) = do
     pure $ hsep (intersperse op' xs')
 
 -- assignment
-pprint (L [ KW "set" , x , rhs ]) = do
-    x'   <- pprint x
-    rhs' <- pprint rhs
-    pure $ x' <+> equals <+> rhs'
+pprint (L [ KW "set" , x , rhs ])
+    = printAssignmentXY x Nothing rhs
 
--- pprint (L [ KW "set" , ID "_", x , xs ])
---     = printf2 "_, {} = {}" <$> print x <*> print xs
-
-pprint (L [ KW "set" , x@(ID _) , y@(ID _) , rhs ]) = do
-    x'   <- pprint x
-    y'   <- pprint y
-    rhs' <- pprint rhs
-    pure $ x' <> comma <+> y' <+> equals <+> rhs'
+pprint (L [ KW "set" , x@(ID _) , y@(ID _) , rhs ])
+    = printAssignmentXY x (Just y) rhs
 
 -- import
 pprint (L [ KW "import" , x@(SL _) ]) = do
@@ -242,9 +229,8 @@ pprint (L [ t@(TP _) ]) = do
 pprint (L [ t@(TP _) , L xs ]) = printMapLike t xs
 
 -- function call
-pprint (L [ f@(ID _) ]) = do
-    f' <- pprint f
-    pure $ f' <> text "()"
+pprint (L [ f@(ID _) ])
+    = printCallLike f Nothing
 
 pprint (L ( f@(ID _) : a )) = do
     f' <- pprint f
@@ -262,15 +248,11 @@ pprint (L [ KW "make" , m@(L [ TP "map" , _ , _ ]) ]) = do
     pure $ text "make" <> parens m'
 
 -- type casting
-pprint (L [ KW "cast" , t@(TP _) , x ]) = do
-    t' <- pprint t
-    x' <- pprint x
-    pure $ t' <> parens x'
+pprint (L [ KW "cast" , t@(TP _) , x ])
+    = printCallLike t (Just x)
 
-pprint (L [ KW "cast" , t@(L (TP _ : _ )) , x ])= do
-    t' <- pprint t
-    x' <- pprint x
-    pure $ t' <> parens x'
+pprint (L [ KW "cast" , t@(L (TP _ : _ )) , x ])
+    = printCallLike t (Just x)
 
 -- type assertion
 pprint (L [ KW "assert" , t@(TP _) , x ])= do
@@ -281,18 +263,18 @@ pprint (L [ KW "assert" , t@(TP _) , x ])= do
 -- lambda
 pprint (L [ KW "func" , Nil , b ]) = do
     b' <- printBody b
-    pure $ text "func" <> parens empty <+> b'
+    pure $ kwFunc <> parens empty <+> b'
 
 pprint (L [ KW "func" , a , b ]) = do
     a' <- printArgs a
     b' <- printBody b
-    pure $ text "func" <> parens a' <+> b'
+    pure $ kwFunc <> parens a' <+> b'
 
 pprint (L [ KW "func" , a , r , b ]) = do
     a' <- printArgs a
     r' <- printResults r
     b' <- printBody b
-    pure $ text "func" <> parens a' <+> r' <+> b'
+    pure $ kwFunc <> parens a' <+> r' <+> b'
 
 -- if-then-else
 pprint (L [ KW "if" , c , t ]) = printIfThen c t
@@ -460,17 +442,31 @@ printIfThen cond branch1 = do
 printAssignmentX :: Doc -> E -> Maybe E -> Maybe E -> Either Error Doc
 printAssignmentX txt x t rhs = do
     x'   <- pprint x
-    mt'  <- maybePrint id t
-    rhs' <- maybePrint (equals <+>) rhs
+    mt'  <- maybePrint empty id t
+    rhs' <- maybePrint empty (equals <+>) rhs
     pure $ txt <+> x' <+> mt' <+> rhs'
 
-printAssignmentXY :: Doc -> E -> E -> E -> Either Error Doc
-printAssignmentXY txt x y rhs = do
+printAssignmentXY :: E -> Maybe E -> E -> Either Error Doc
+printAssignmentXY x y rhs = do
     x'   <- pprint x
-    y'   <- pprint y
+    y'   <- maybePrint space (\t -> comma <+> t <> space) y
     rhs' <- pprint rhs
-    pure $ txt <+> x' <> comma <+> y' <+> equals <+> rhs'
+    pure $ x' <> y' <> equals <+> rhs'
 
+printCallLike :: E -> Maybe E -> Either Error Doc
+printCallLike f x = do
+    f' <- pprint f
+    x' <- maybePrint empty id x
+    pure $ f' <> parens x'
+
+printFuncDecl :: E -> E -> E -> E -> E -> Either Error Doc
+printFuncDecl recv name args res body = do
+    r'  <- printRecv recv
+    n'  <- pprint name
+    a'  <- printArgs args
+    rs' <- printResults res
+    b'  <- printBody body
+    pure $ kwFunc <+> r' <+> n' <> parens a' <+> rs' <+> b'
 
 -- Constants --
 
@@ -483,12 +479,18 @@ kwConst = text "const"
 kwVar :: Doc
 kwVar = text "var"
 
+kwType :: Doc
+kwType = text "type"
+
+kwFunc :: Doc
+kwFunc = text "func"
+
 
 -- Utils --
 
-maybePrint :: (Doc -> Doc) -> Maybe E -> Either Error Doc
-maybePrint f (Just x) = f <$> pprint x
-maybePrint _ Nothing  = pure empty
+maybePrint :: Doc -> (Doc -> Doc) -> Maybe E -> Either Error Doc
+maybePrint _ g (Just x) = g <$> pprint x
+maybePrint z _ Nothing  = pure z
 
 doc :: Text -> Either Error Doc
 doc = pure . textStrict

@@ -212,18 +212,22 @@ unitTests = do
   describe "Fun.Go.Printer.printGo" $ do
 
     it "fail on standalone Nil" $
-      mapLeft unError (printGo Nil) `shouldBe` Left "translation error: empty expression"
+      mapLeft unError (printGo Nil)
+      `shouldBe`
+      Left "translation error: not supported yet: ()"
 
     it "import" $
       printGo (L [ KW "import" , SL "fmt" ]) `shouldPrint` "import \"fmt\""
 
     it "import with alias" $
-      printGo (L [ KW "import" , SL "very/long-package" , SL "pkg" ]) `shouldPrint`
+      printGo (L [ KW "import" , SL "very/long-package" , SL "pkg" ])
+      `shouldPrint`
       "import pkg \"very/long-package\""
 
     it "simple func" $
-      printGo (L [ KW "func" , ID "setS" , L [ KW "set" , ID "s" , IL 2 ] ]) `shouldPrint`
-      "func setS() {\ns = 2\n}"
+      printGo (L [ KW "func" , ID "setS" , L [ KW "set" , ID "s" , IL 2 ] ])
+      `shouldPrint`
+      "func setS() {\n  s = 2\n}"
 
     it "<" $
       printGo (L [ OP "<" , ID "n" , IL 10 ]) `shouldPrint` "n < 10"
@@ -256,10 +260,14 @@ unitTests = do
       printGo (TP "any") `shouldPrint` "interface{}"
 
     it "const decl" $
-      printGo (L [ KW "const" , ID "a" , SL "initial" ]) `shouldPrint` "const a = \"initial\""
+      printGo (L [ KW "const" , ID "a" , SL "initial" ])
+      `shouldPrint`
+      "const a = \"initial\""
 
     it "full const decl" $
-      printGo (L [ KW "const" , ID "a" , TP "State" , HL 10 ]) `shouldPrint` "const a State = 0xa"
+      printGo (L [ KW "const" , ID "a" , TP "State" , HL 10 ])
+      `shouldPrint`
+      "const a State = 0xa"
 
     it "full var decl" $
       printGo (L [ KW "var" , ID "b" , TP "int" , IL 1 ]) `shouldPrint` "var b int = 1"
@@ -296,12 +304,17 @@ unitTests = do
       "var x []string"
 
     it "zero value map var" $
-      printGo (L [ KW "var" , ID "counters" , L [ TP "map" , TP "string" , TP "int" ] ])
+      printGo (L
+        [ KW "var" , ID "counters"
+        , L [ TP "map" , TP "string" , TP "int" ] ])
       `shouldPrint`
       "var counters map[string]int"
 
     it "var with slice literal initializer" $
-      printGo (L [ KW "var" , ID "nums" , L [ L [ TP "slice" , TP "int" ] , L [ IL 1 , IL 2, IL 3 ] ] ])
+      printGo (L
+        [ KW "var" , ID "nums"
+        , L [ L [ TP "slice" , TP "int" ]
+        , L [ IL 1 , IL 2, IL 3 ] ] ])
       `shouldPrint`
       "var nums = []int{1, 2, 3}"
 
@@ -351,14 +364,16 @@ unitTests = do
       `shouldPrint` "type foo struct{}"
 
     it "single entry struct" $
-      printGo (L [ KW "struct" , ID "List" , L [ ID "xs" , L [ TP "slice" , TP "string" ] ] ])
-      `shouldPrint` "type List struct {\nxs []string\n}"
+      printGo (L [ KW "struct" , ID "List" , L
+        [ ID "xs" , L [ TP "slice" , TP "string" ] ] ])
+      `shouldPrint`
+      "type List struct {\n  xs []string\n}"
 
     it "multiple entries struct" $
       printGo (L [ KW "struct" , ID "point"
         , L [ ID "x" , TP "int" ]
         , L [ ID "y" , TP "int" ] ])
-      `shouldPrint` "type point struct {\nx int\ny int\n}"
+      `shouldPrint` "type point struct {\n  x int\n  y int\n}"
 
     it "empty interface" $
       printGo (L [ KW "interface" , ID "foo" ])
@@ -367,58 +382,60 @@ unitTests = do
     it "single entry interface" $
       printGo (L [ KW "interface" , ID "Printer" ,
         L [ ID "Print" , L [ L [ ID "x" , TP "any" ]] ] ])
-      `shouldPrint` "type Printer interface {\nPrint(x interface{})\n}"
+      `shouldPrint` "type Printer interface {\n  Print(x interface{})\n}"
 
     it "interface entry with slice arg" $
       printGo (L [ KW "interface" , ID "foo" ,
         L [ ID "bar" , L [ L [ TP "slice" , TP "string" ] ] ] ])
-      `shouldPrint` "type foo interface {\nbar([]string)\n}"
+      `shouldPrint` "type foo interface {\n  bar([]string)\n}"
 
     it "multiple entries interface" $
       printGo (L [ KW "interface" , ID "shape"
         , L [ ID "area" , Nil , TP "double" ]
         , L [ ID "perimeter" , Nil , TP "double" ] ])
-      `shouldPrint` "type shape interface {\narea() double\nperimeter() double\n}"
+      `shouldPrint` "type shape interface {\n  area() double\n  perimeter() double\n}"
 
     it "forever for loop" $
       printGo (L [ KW "for" , L [ ID "fmt.Println" , SL "fizz" ] ]) `shouldPrint`
-      "for {\nfmt.Println(\"fizz\")\n}"
+      "for {\n  fmt.Println(\"fizz\")\n}"
 
     it "standard for loop" $
       printGo (L [ KW "for" , ID "i" , IL 0 , IL 10 , L [ ID "fmt.Println" , SL "buzz" ] ])
       `shouldPrint`
-      "for i := 0; i < 10; i++ {\nfmt.Println(\"buzz\")\n}"
+      "for i := 0; i < 10; i++ {\n  fmt.Println(\"buzz\")\n}"
 
     it "only condition for loop" $
-      printGo (L [ KW "for" , L [ OP "<" , ID "n" , IL 42 ] , L [ ID "fmt.Print" , SL "?" ] ])
+      printGo (L [ KW "for"
+        , L [ OP "<" , ID "n" , IL 42 ]
+        , L [ ID "fmt.Print" , SL "?" ] ])
       `shouldPrint`
-      "for n < 42 {\nfmt.Print(\"?\")\n}"
+      "for n < 42 {\n  fmt.Print(\"?\")\n}"
 
     it "custom for loop" $
       printGo (L [ KW "for" , ID "x" , ID "k" , BL True
       , L [ KW "set" , ID "x" , L [ OP "+", ID "x", ID "foo.N" ] ]
       , L [ KW "break" ] ])
       `shouldPrint`
-      "for x := k; true; x = x + foo.N {\nbreak\n}"
+      "for x := k; true; x = x + foo.N {\n  break\n}"
 
     it "minimal func literal" $
       printGo (L [ KW "func" , Nil , L [ ID "pass" , IL 42 ] ])
       `shouldPrint`
-      "func() {\npass(42)\n}"
+      "func() {\n  pass(42)\n}"
 
     it "func literal with result" $
       printGo (L [ KW "func" , Nil , TP "int" , L
       [ L [ KW "set" , ID "i" , L [ OP "+", ID "i", IL 1 ] ]
       , L [ KW "return" , ID "i" ] ]])
       `shouldPrint`
-      "func() int {\ni = i + 1\nreturn i\n}"
+      "func() int {\n  i = i + 1\n  return i\n}"
 
     it "func literal with args" $
       printGo (L [ KW "func" , L [ L [ ID "x" , TP "int" ]] , L
       [ L [ KW "set" , ID "i" , L [ OP "+", ID "i", ID "x" ] ]
       , L [ KW "return" , ID "i" ] ]])
       `shouldPrint`
-      "func(x int) {\ni = i + x\nreturn i\n}"
+      "func(x int) {\n  i = i + x\n  return i\n}"
 
     it "minimal func type lit" $
        printGo (L [ TP "func" , Nil ]) `shouldPrint` "func()"
@@ -434,14 +451,14 @@ unitTests = do
        , L [ TP "func" , Nil , TP "int" ]
        , L [ KW "return" , ID "bar" ] ])
        `shouldPrint`
-       "func foo() func() int {\nreturn bar\n}"
+       "func foo() func() int {\n  return bar\n}"
 
     it "func returning func B" $
        printGo (L [ KW "func" , ID "foo" , Nil
        , L [ L [ TP "func" , Nil , TP "int" ] ]
        , L [ KW "return" , ID "bar" ] ])
        `shouldPrint`
-       "func foo() (func() int) {\nreturn bar\n}"
+       "func foo() (func() int) {\n  return bar\n}"
 
     it "type alias" $
        printGo (L [ KW "alias" , ID "UserID" , TP "string" ])
@@ -479,14 +496,14 @@ unitTests = do
         , TP "int"
         , L [ KW "return" , IL 42 ] ])
       `shouldPrint`
-      "func f(xs []string) int {\nreturn 42\n}"
+      "func f(xs []string) int {\n  return 42\n}"
 
     it "func foo() {...}" $
       printGo (L [ KW "func" , ID "foo" , Nil , L
       [ L [ KW "var" , ID "x" , IL 5 ]
       , L [ ID "boop" , ID "x" ] ] ])
       `shouldPrint`
-      "func foo() {\nvar x = 5\nboop(x)\n}"
+      "func foo() {\n  var x = 5\n  boop(x)\n}"
 
     it "method (x bar) foo() {}" $
       printGo (L [ KW "method" , L [ ID "x" , TP "bar" ] , ID "foo" , Nil , Nil ])
@@ -504,11 +521,13 @@ unitTests = do
       "func (bar) foo() {}"
 
     it "func (b *bar) foo() {...}" $
-      printGo (L [ KW "method" , L [ ID "b" , L [ TP "ptr" , TP "bar" ] ] ,  ID "foo" , Nil , L
-      [ L [ KW "var" , ID "x" , L [ OP "+" , ID "b" , IL 3 ] ]
-      , L [ ID "boop" , ID "x" ] ] ])
+      printGo (L [ KW "method"
+        , L [ ID "b" , L [ TP "ptr" , TP "bar" ] ]
+        , ID "foo" , Nil , L
+          [ L [ KW "var" , ID "x" , L [ OP "+" , ID "b" , IL 3 ] ]
+          , L [ ID "boop" , ID "x" ] ] ])
       `shouldPrint`
-      "func (b *bar) foo() {\nvar x = b + 3\nboop(x)\n}"
+      "func (b *bar) foo() {\n  var x = b + 3\n  boop(x)\n}"
 
     it "x = string(y)" $
       printGo (L [ KW "set" , ID "x" , L [ KW "cast" , TP "string" , ID "y" ] ])
@@ -516,7 +535,8 @@ unitTests = do
       "x = string(y)"
 
     it "x = []byte(y)" $
-      printGo (L [ KW "set" , ID "x" , L [ KW "cast" , L [ TP "slice" , TP "byte" ] , ID "y" ] ])
+      printGo (L [ KW "set" , ID "x" , L
+        [ KW "cast" , L [ TP "slice" , TP "byte" ] , ID "y" ] ])
       `shouldPrint`
       "x = []byte(y)"
 
@@ -679,7 +699,7 @@ integrationTests = do
     it "translates simple expression" $
       translate "(func foo (bar x 42))"
       `shouldPrint`
-      "func foo() {\nbar(x, 42)\n}"
+      "func foo() {\n  bar(x, 42)\n}"
 
 
   describe "Go.Fmt.gofmt" $ do
@@ -691,7 +711,9 @@ integrationTests = do
       gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")
 
     it "unError GoError" $
-      mapLeft unError (gofmt "func foo }( __") `shouldBe` Left "Go error: 1:20: expected '(', found '}'"
+      mapLeft unError (gofmt "func foo }( __")
+      `shouldBe`
+      Left "Go error: 1:20: expected '(', found '}'"
 
 
 dummyTests :: Spec

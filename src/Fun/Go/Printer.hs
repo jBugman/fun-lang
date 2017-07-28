@@ -112,40 +112,24 @@ pprint (L ( KW "interface" : n@(ID _) : xs )) = do
         <+> bracedBlock (vsep xs')
 
 -- func
-pprint (L [ KW "func" , n@(ID _) , b ]) = do
-    n' <- pprint n
-    b' <- printBody b
-    pure $ kwFunc <+> n' <> parens empty <+> b'
+pprint (L [ KW "func" , n@(ID _) , b ])
+    = printFunc Nothing (Just n) Nothing Nothing b
 
-pprint (L [ KW "func" , n@(ID _) , a , b ]) = do
-    n' <- pprint n
-    a' <- printArgs a
-    b' <- printBody b
-    pure $ kwFunc <+> n' <> parens a' <+> b'
+pprint (L [ KW "func" , n@(ID _) , a , b ])
+    = printFunc Nothing (Just n) (Just a) Nothing b
 
-pprint (L [ KW "func" , n@(ID _) , a , r , b ]) = do
-    n' <- pprint n
-    a' <- printArgs a
-    r' <- printResults r
-    b' <- printBody b
-    pure $ kwFunc <+> n' <> parens a' <+> r' <+> b'
+pprint (L [ KW "func" , n@(ID _) , a , r , b ])
+    = printFunc Nothing (Just n) (Just a) (Just r) b
 
 -- method
-pprint (L [ KW "method" , r , n@(ID _) , b ]) = do
-    r' <- printRecv r
-    n' <- pprint n
-    b' <- printBody b
-    pure $ kwFunc <+> r' <+> n' <> parens empty <+> b'
+pprint (L [ KW "method" , o , n@(ID _) , b ])
+    = printFunc (Just o) (Just n) Nothing Nothing b
 
-pprint (L [ KW "method" , r , n@(ID _) , a , b ]) = do
-    r' <- printRecv r
-    n' <- pprint n
-    a' <- printArgs a
-    b' <- printBody b
-    pure $ kwFunc <+> r' <+> n' <> parens a' <+> b'
+pprint (L [ KW "method" , o , n@(ID _) , a , b ])
+    = printFunc (Just o) (Just n) (Just a) Nothing b
 
-pprint (L [ KW "method" , r , n@(ID _) , a , rs , b ])
-    = printFuncDecl r n a rs b
+pprint (L [ KW "method" , o , n@(ID _) , a , r , b ])
+    = printFunc (Just o) (Just n) (Just a) (Just r) b
 
 -- unary operators
 pprint (L [ op@(OP _) , x ]) = do
@@ -219,14 +203,15 @@ pprint (L [ t@(L [ TP "slice" , _ ]) , L xs ]) = do
     pure $ t' <> braces (commaSep xs')
 
 -- map literal
-pprint (L [ t@(L [ TP "map" , _ , _ ]) , L xs ]) = printMapLike t xs
+pprint (L [ t@(L [ TP "map" , _ , _ ]) , L xs ])
+    = printMapLike t xs
 
 -- struct literal
-pprint (L [ t@(TP _) ]) = do
-    t' <- pprint t
-    pure $ t' <> emptyBraces
+pprint (L [ t@(TP _) ])
+    = printMapLike t []
 
-pprint (L [ t@(TP _) , L xs ]) = printMapLike t xs
+pprint (L [ t@(TP _) , L xs ])
+    = printMapLike t xs
 
 -- function call
 pprint (L [ f@(ID _) ])
@@ -261,20 +246,14 @@ pprint (L [ KW "assert" , t@(TP _) , x ])= do
     pure $ x' <> dot <> parens t'
 
 -- lambda
-pprint (L [ KW "func" , Nil , b ]) = do
-    b' <- printBody b
-    pure $ kwFunc <> parens empty <+> b'
+pprint (L [ KW "func" , Nil , b ])
+    = printFunc Nothing Nothing Nothing Nothing b
 
-pprint (L [ KW "func" , a , b ]) = do
-    a' <- printArgs a
-    b' <- printBody b
-    pure $ kwFunc <> parens a' <+> b'
+pprint (L [ KW "func" , a , b ])
+    = printFunc Nothing Nothing (Just a) Nothing b
 
-pprint (L [ KW "func" , a , r , b ]) = do
-    a' <- printArgs a
-    r' <- printResults r
-    b' <- printBody b
-    pure $ kwFunc <> parens a' <+> r' <+> b'
+pprint (L [ KW "func" , a , r , b ])
+    = printFunc Nothing Nothing (Just a) (Just r) b
 
 -- if-then-else
 pprint (L [ KW "if" , c , t ]) = printIfThen c t
@@ -424,6 +403,35 @@ printMaplikeElem (L [ x@(ID _) , y ])      = printColonPair x y
 printMaplikeElem (L [ x@(A (Lit _)) , y ]) = printColonPair x y
 printMaplikeElem e                         = mkError "invalid map-like elem: " e
 
+printFunc :: Maybe E -> Maybe E -> Maybe E -> Maybe E -> E -> Either Error Doc
+printFunc recv name args res body = do
+    r'  <- maybeWith (space <>) empty printRecv recv
+    n'  <- maybeWith (space <>) empty pprint name
+    a'  <- maybe' empty printArgs args
+    rs' <- maybe' empty printResults res
+    b'  <- printBody body
+    pure $ kwFunc <> r' <> n' <> parens a' <+> rs' <+> b'
+
+printCallLike :: E -> Maybe E -> Either Error Doc
+printCallLike f x = do
+    f' <- pprint f
+    x' <- maybe' empty pprint x
+    pure $ f' <> parens x'
+
+printAssignmentX :: Doc -> E -> Maybe E -> Maybe E -> Either Error Doc
+printAssignmentX txt x t rhs = do
+    x'   <- pprint x
+    t'   <- maybe' empty pprint t
+    rhs' <- maybeWith (equals <+>) empty pprint rhs
+    pure $ txt <+> x' <+> t' <+> rhs'
+
+printAssignmentXY :: E -> Maybe E -> E -> Either Error Doc
+printAssignmentXY x y rhs = do
+    x'   <- pprint x
+    y'   <- maybeWith (\t -> comma <+> t <> space) space pprint  y
+    rhs' <- pprint rhs
+    pure $ x' <> y' <> equals <+> rhs'
+
 
 -- Tier 3 --
 
@@ -439,34 +447,6 @@ printIfThen cond branch1 = do
     b' <- pprint branch1
     pure $ text "if" <+> c' <+> bracedBlock b'
 
-printAssignmentX :: Doc -> E -> Maybe E -> Maybe E -> Either Error Doc
-printAssignmentX txt x t rhs = do
-    x'   <- pprint x
-    mt'  <- maybePrint empty id t
-    rhs' <- maybePrint empty (equals <+>) rhs
-    pure $ txt <+> x' <+> mt' <+> rhs'
-
-printAssignmentXY :: E -> Maybe E -> E -> Either Error Doc
-printAssignmentXY x y rhs = do
-    x'   <- pprint x
-    y'   <- maybePrint space (\t -> comma <+> t <> space) y
-    rhs' <- pprint rhs
-    pure $ x' <> y' <> equals <+> rhs'
-
-printCallLike :: E -> Maybe E -> Either Error Doc
-printCallLike f x = do
-    f' <- pprint f
-    x' <- maybePrint empty id x
-    pure $ f' <> parens x'
-
-printFuncDecl :: E -> E -> E -> E -> E -> Either Error Doc
-printFuncDecl recv name args res body = do
-    r'  <- printRecv recv
-    n'  <- pprint name
-    a'  <- printArgs args
-    rs' <- printResults res
-    b'  <- printBody body
-    pure $ kwFunc <+> r' <+> n' <> parens a' <+> rs' <+> b'
 
 -- Constants --
 
@@ -488,9 +468,11 @@ kwFunc = text "func"
 
 -- Utils --
 
-maybePrint :: Doc -> (Doc -> Doc) -> Maybe E -> Either Error Doc
-maybePrint _ g (Just x) = g <$> pprint x
-maybePrint z _ Nothing  = pure z
+maybeWith :: (Doc -> Doc)-> Doc -> (E -> Either Error Doc) -> Maybe E -> Either Error Doc
+maybeWith g z f = maybe (pure z) (\x -> g <$> f x)
+
+maybe' :: Doc -> (E -> Either Error Doc) -> Maybe E -> Either Error Doc
+maybe' z = maybe (pure z)
 
 doc :: Text -> Either Error Doc
 doc = pure . textStrict

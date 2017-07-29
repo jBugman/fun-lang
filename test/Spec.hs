@@ -35,7 +35,7 @@ examples = describe "Examples" $ do
   translationExample "03_variables"
   translationExample "04_for"
   translationExample "05_if_else"
-  -- translationExample "06_switch"  -- TODO: fix nested function call spec
+  -- translationExample "06_switch"
   translationExample "07_slices"
   translationExample "08_maps"
   translationExample "09_range"
@@ -587,6 +587,20 @@ unitTests = do
         , L [ ID "Size" ] ] ])
       `shouldPrint`
       "0 == suite.t.Messages[userID].Size()"
+
+    it "switch A" $
+      printGo (L [ KW "switch" , ID "i" , L
+        [ L [ KW "case" , IL 1 , L [ ID "foo" , SL "one" ] ]
+        , L [ KW "case" , IL 2 , L [ ID "bar" , SL "two" ] ] ]])
+      `shouldPrint`
+      "switch i {\n  case 1: foo(\"one\")\n  case 2: bar(\"two\")\n}"
+
+    it "switch A" $
+      printGo (L [ KW "switch", L
+        [ L [ KW "case" , L [ OP "=" , ID "i" , IL 1 ] , L [ ID "foo" , SL "one" ] ]
+        , L [ KW "default" , L [ ID "bar" , SL "two" ] ] ]])
+      `shouldPrint`
+      "switch {\n  case i == 1: foo(\"one\")\n  default: bar(\"two\")\n}"
 
 
   describe "Fun.Printer.singleLine" $ do

@@ -1,6 +1,7 @@
 package main
 
 import "fmt"
+
 import "time"
 
 func main() {
@@ -20,7 +21,6 @@ func main() {
 	default:
 		fmt.Println("It's a weekday")
 	}
-
 	var t = time.Now()
 	switch {
 	case t.Hour() < 12:

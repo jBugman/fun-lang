@@ -275,6 +275,16 @@ pprint (L [ KW "if" , c , t , e ]) = do
     e' <- pprint e
     pure $ it <+> text "else" <+> bracedBlock e'
 
+-- switch
+pprint (L [ KW "switch" , L xs ]) = do
+    xs' <- mapM printCase xs
+    pure $ text "switch" <+> bracedBlock (vsep xs')
+
+pprint (L [ KW "switch" , x , L xs ]) = do
+    x'  <- pprint x
+    xs' <- mapM printCase xs
+    pure $ text "switch" <+> x' <+> bracedBlock (vsep xs')
+
 -- for loop
 pprint (L [ KW "for" , body ]) = do
     body' <- pprint body
@@ -437,6 +447,16 @@ printAssignmentXY x y rhs = do
     y'   <- maybeWith (\t -> comma <+> t <> space) space pprint  y
     rhs' <- pprint rhs
     pure $ x' <> y' <> equals <+> rhs'
+
+printCase :: E -> Either Error Doc
+printCase (L [ KW "default" , xs ]) = do
+    xs' <- pprint xs
+    pure $ text "default" <> colon <+> xs'
+printCase (L [ KW "case" , x , xs ]) = do
+    x'  <- pprint x
+    xs' <- pprint xs
+    pure $ text "case" <+> x' <> colon <+> xs'
+printCase e = mkError "invalid case clause: " e
 
 
 -- Tier 3 --

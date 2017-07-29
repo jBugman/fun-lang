@@ -11,8 +11,8 @@ import Text.PrettyPrint.Leijen.Text (Doc, braces, brackets, colon, comma, displa
 
 import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
-import Fun.SExpression   (Atom (..), Expression, pattern ID, pattern KW, pattern OP, pattern SL,
-                          pattern TP)
+import Fun.SExpression   (Atom (..), pattern DL, Expression, pattern ID, pattern IL, pattern KW,
+                          pattern OP, pattern SL, pattern TP)
 
 type E = Expression
 
@@ -219,6 +219,16 @@ pprint (L [ t@(L [ TP "map" , _ , _ ]) , L xs ])
 
 pprint (L [ t@(TP _) , L xs ])
     = printMapLike t xs
+
+-- complex literal
+pprint (L [ TP "complex" , x@(IL _) , y@(IL _) ])
+    = printComplex x y
+pprint (L [ TP "complex" , x@(IL _) , y@(DL _) ])
+    = printComplex x y
+pprint (L [ TP "complex" , x@(DL _) , y@(IL _) ])
+    = printComplex x y
+pprint (L [ TP "complex" , x@(DL _) , y@(DL _) ])
+    = printComplex x y
 
 -- function call
 pprint (L [ f@(ID _) ])
@@ -482,6 +492,14 @@ printAssert t x = do
     t' <- pprint t
     x' <- pprint x
     pure $ x' <> dot <> parens t'
+
+printComplex :: E -> E -> Either Error Doc
+printComplex x y = do
+    x' <- pprint x
+    y' <- pprint y
+    let sign = bool (text "+") empty ("-" `isPrefixOf` tshow y')
+    pure $ x' <> sign <> y' <> text "i"
+
 
 -- Tier 3 --
 

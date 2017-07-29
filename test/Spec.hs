@@ -253,6 +253,12 @@ unitTests = do
     it "oct" $
       printGo (OL 420) `shouldPrint` "0644"
 
+    it "complex" $
+      printGo (L [ TP "complex" , DL 5.2 , IL 3 ]) `shouldPrint` "5.2+3i"
+
+    it "complex negative" $
+      printGo (L [ TP "complex" , IL 1 , IL (-2) ]) `shouldPrint` "1-2i"
+
     it "string" $
       printGo (SL "fizzbuzz") `shouldPrint` "\"fizzbuzz\""
 

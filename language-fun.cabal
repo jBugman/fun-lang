@@ -24,6 +24,7 @@ library
                       , classy-prelude
                       , containers
                       , either
+                      , extra
                       , parsec
                       , process
                       , s-cargot

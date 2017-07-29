@@ -13,7 +13,7 @@
   ))
 
   (switch (. time (Now) (Weekday)) (
-    (case (time.Saturday time.Sunday)
+    (case time.Saturday time.Sunday
       (print "It's the weekend"))
     (default (print "It's a weekday"))
   ))
@@ -25,7 +25,7 @@
   ))
 
   ; anonimous function
-  (var whatAmI (func (i :any)
+  (var whatAmI (func ((i :any))
     (switch (type t i) (
       (case :bool (print "I'm a bool"))
       (case :int (print "I'm an int"))

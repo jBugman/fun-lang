@@ -2,6 +2,7 @@
 module Fun.Go.Printer ( printGo ) where
 
 import ClassyPrelude                hiding (empty)
+import Data.Either.Extra            (maybeToEither)
 import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
 import Text.PrettyPrint.Leijen.Text (Doc, braces, brackets, colon, comma, displayTStrict, dot,
                                      empty, equals, hcat, hsep, indent, line, parens, pretty,
@@ -452,10 +453,13 @@ printCase :: E -> Either Error Doc
 printCase (L [ KW "default" , xs ]) = do
     xs' <- pprint xs
     pure $ text "default" <> colon <+> xs'
-printCase (L [ KW "case" , x , xs ]) = do
-    x'  <- pprint x
+printCase (L (KW "case" : xxs )) = do
+    (cs, xs) <- maybeToEither
+        (mkError' "invalid case: " (L xxs))
+        $ unsnoc xxs
+    cs' <- mapM pprint cs
     xs' <- pprint xs
-    pure $ text "case" <+> x' <> colon <+> xs'
+    pure $ text "case" <+> commaSep cs' <> colon <+> xs'
 printCase e = mkError "invalid case clause: " e
 
 
@@ -510,4 +514,7 @@ bracedBlock :: Doc -> Doc
 bracedBlock x = braces ( line <> indent 2 x <> line )
 
 mkError :: Text -> E -> Either Error Doc
-mkError msg e = Left . TranslationError $ msg <> singleLine e
+mkError msg e = Left $ mkError' msg e
+
+mkError' :: Text -> E -> Error
+mkError' msg e = TranslationError (msg <> singleLine e)

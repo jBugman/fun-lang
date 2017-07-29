@@ -13,6 +13,6 @@
     (break) ))
 
   (for n 0 5 (
-    (if (= (% n 2) 0) (continue))
+    (if (== (% n 2) 0) (continue))
     (print n) ))
 )))

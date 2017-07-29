@@ -8,7 +8,7 @@
   (print "sum:" sum)
 
   (for (range i num nums) (
-    (if (= num 3)
+    (if (== num 3)
       (print "index:" i) ) ))
 
   (var kvs ((:map :string :string) (("a" "apple") ("b" "banana"))) )

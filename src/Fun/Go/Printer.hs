@@ -143,7 +143,7 @@ pprint (L [ op@(OP _) , x ]) = do
         _       -> op' <> x'
 
 -- binary operators
-pprint (L [ OP "=" , lhs , rhs ]) = do -- TODO: change to ==
+pprint (L [ OP "==" , lhs , rhs ]) = do
     lhs' <- pprint lhs
     rhs' <- pprint rhs
     pure $ lhs' <+> text "==" <+> rhs'

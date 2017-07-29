@@ -152,7 +152,7 @@ unitTests = do
       parse "(+ foo)" `shouldParse` L [ OP "+" , ID "foo" ]
 
     it "op hex int" $
-      parse "(= 0xff 255)" `shouldParse` L [ OP "=" , HL 255 , IL 255 ]
+      parse "(== 0xff 255)" `shouldParse` L [ OP "==" , HL 255 , IL 255 ]
 
     it "keyword" $
       parse "for" `shouldParse` KW "for"
@@ -233,7 +233,7 @@ unitTests = do
       printGo (L [ OP "<" , ID "n" , IL 10 ]) `shouldPrint` "n < 10"
 
     it "==" $
-      printGo (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
+      printGo (L [ OP "==" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
 
     it "--" $
       printGo (L [ OP "--" , ID "j" ]) `shouldPrint` "j--"
@@ -245,7 +245,7 @@ unitTests = do
       printGo (L [ OP "*" , ID "foo" ]) `shouldPrint` "*foo"
 
     it "hex == char" $
-      printGo (L [ OP "=" , HL 1 , CL "a" ]) `shouldPrint` "0x1 == 'a'"
+      printGo (L [ OP "==" , HL 1 , CL "a" ]) `shouldPrint` "0x1 == 'a'"
 
     it "double" $
       printGo (DL 9.99) `shouldPrint` "9.99"
@@ -605,7 +605,7 @@ unitTests = do
       "c.Echo().URI(bot.handleSession)"
 
     it "call chain B" $
-      printGo (L [ OP "=" , IL 0 , L
+      printGo (L [ OP "==" , IL 0 , L
         [ OP "."
         , L [ KW "val" , ID "suite.t.Messages" , ID "userID" ]
         , L [ ID "Size" ] ] ])
@@ -621,7 +621,7 @@ unitTests = do
 
     it "switch no-expr default" $
       printGo (L [ KW "switch" , L
-        [ L [ KW "case" , L [ OP "=" , ID "i" , IL 1 ] , L [ ID "foo" , SL "one" ] ]
+        [ L [ KW "case" , L [ OP "==" , ID "i" , IL 1 ] , L [ ID "foo" , SL "one" ] ]
         , L [ KW "default" , L [ ID "bar" , SL "two" ] ] ]])
       `shouldPrint`
       "switch {\n  case i == 1: foo(\"one\")\n  default: bar(\"two\")\n}"

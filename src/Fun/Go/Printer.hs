@@ -459,7 +459,10 @@ printCase :: E -> Either Error Doc
 printCase (L [ KW "default" , xs ]) = do
     xs' <- pprint xs
     pure $ text "default" <> colon <+> xs'
-printCase (L (KW "case" : xxs )) = do
+printCase (L [ KW "case" , x ]) = do
+    x' <- pprint x
+    pure $ text "case" <+> x' <> colon
+printCase (L ( KW "case" : xxs )) = do
     (cs, xs) <- maybeToEither
         (mkError' "invalid case: " (L xxs))
         $ unsnoc xxs

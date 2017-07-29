@@ -588,19 +588,26 @@ unitTests = do
       `shouldPrint`
       "0 == suite.t.Messages[userID].Size()"
 
-    it "switch A" $
+    it "switch simple" $
       printGo (L [ KW "switch" , ID "i" , L
         [ L [ KW "case" , IL 1 , L [ ID "foo" , SL "one" ] ]
         , L [ KW "case" , IL 2 , L [ ID "bar" , SL "two" ] ] ]])
       `shouldPrint`
       "switch i {\n  case 1: foo(\"one\")\n  case 2: bar(\"two\")\n}"
 
-    it "switch A" $
-      printGo (L [ KW "switch", L
+    it "switch no-expr default" $
+      printGo (L [ KW "switch" , L
         [ L [ KW "case" , L [ OP "=" , ID "i" , IL 1 ] , L [ ID "foo" , SL "one" ] ]
         , L [ KW "default" , L [ ID "bar" , SL "two" ] ] ]])
       `shouldPrint`
       "switch {\n  case i == 1: foo(\"one\")\n  default: bar(\"two\")\n}"
+
+    it "switch empty case" $
+      printGo (L [ KW "switch" , ID "i" , L
+        [ L [ KW "case" , IL 0 ]
+        , L [ KW "default" , L [ ID "bar" , SL "two" ] ] ]])
+      `shouldPrint`
+      "switch i {\n  case 0:\n  default: bar(\"two\")\n}"
 
 
   describe "Fun.Printer.singleLine" $ do

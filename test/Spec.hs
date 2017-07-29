@@ -35,7 +35,7 @@ examples = describe "Examples" $ do
   translationExample "03_variables"
   translationExample "04_for"
   translationExample "05_if_else"
-  -- translationExample "06_switch"
+  translationExample "06_switch"
   translationExample "07_slices"
   translationExample "08_maps"
   translationExample "09_range"

@@ -247,10 +247,8 @@ pprint (L [ KW "cast" , t@(L (TP _ : _ )) , x ])
     = printCallLike t (Just x)
 
 -- type assertion
-pprint (L [ KW "assert" , t@(TP _) , x ])= do
-    t' <- pprint t
-    x' <- pprint x
-    pure $ x' <> dot <> parens t'
+pprint (L [ KW "assert" , t@(TP _) , x ])
+    = printAssert t x
 
 -- lambda
 pprint (L [ KW "func" , Nil , b ])
@@ -280,6 +278,14 @@ pprint (L [ KW "if" , c , t , e ]) = do
 pprint (L [ KW "switch" , L xs ]) = do
     xs' <- mapM printCase xs
     pure $ text "switch" <+> bracedBlock (vsep xs')
+
+pprint (L [ KW "switch" , L [ KW "type" , t@(ID _) , x ] , L xs ]) = do
+    t'  <- pprint t
+    x'  <- printAssert (TP "type") x
+    xs' <- mapM printCase xs
+    pure $ text "switch"
+        <+> t' <+> text ":=" <+> x'
+        <+> bracedBlock (vsep xs')
 
 pprint (L [ KW "switch" , x , L xs ]) = do
     x'  <- pprint x
@@ -462,6 +468,11 @@ printCase (L (KW "case" : xxs )) = do
     pure $ text "case" <+> commaSep cs' <> colon <+> xs'
 printCase e = mkError "invalid case clause: " e
 
+printAssert :: E -> E -> Either Error Doc
+printAssert t x = do
+    t' <- pprint t
+    x' <- pprint x
+    pure $ x' <> dot <> parens t'
 
 -- Tier 3 --
 

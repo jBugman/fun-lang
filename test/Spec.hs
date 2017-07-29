@@ -499,6 +499,9 @@ unitTests = do
       `shouldPrint`
       "names[5] = \"Bob\""
 
+    it "empty struct literal" $
+      printGo (L [ TP "foo" ]) `shouldPrint` "foo{}"
+
     it "struct literal" $
       printGo (L [ TP "api" , L [ L [ ID "key" , SL "SJFKD" ] ] ])
       `shouldPrint`

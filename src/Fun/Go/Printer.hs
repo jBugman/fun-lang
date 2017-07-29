@@ -213,12 +213,8 @@ pprint (L [ t@(L [ TP "map" , _ , _ ]) , L xs ])
     = printMapLike t xs
 
 -- struct literal
-
--- pprint (L [ t@(TP _) ]) -- TODO: investigate viability
---     = printMapLike t []
-
-pprint (L [ t@(TP _) , L xs ])
-    = printMapLike t xs
+pprint (L [ t@(TP _) ])        = printMapLike t []
+pprint (L [ t@(TP _) , L xs ]) = printMapLike t xs
 
 -- complex literal
 pprint (L [ TP "complex" , x@(IL _) , y@(IL _) ])

@@ -407,6 +407,12 @@ unitTests = do
         , L [ ID "perimeter" , Nil , TP "double" ] ])
       `shouldPrint` "type shape interface {\n  area() double\n  perimeter() double\n}"
 
+    it "embedded interface" $
+      printGo (L [ KW "interface" , ID "foo"
+        , TP "io.Writer"
+        , L [ ID "bar" , Nil ] ])
+      `shouldPrint` "type foo interface {\n  io.Writer\n  bar()\n}"
+
     it "forever for loop" $
       printGo (L [ KW "for" , L [ ID "fmt.Println" , SL "fizz" ] ]) `shouldPrint`
       "for {\n  fmt.Println(\"fizz\")\n}"

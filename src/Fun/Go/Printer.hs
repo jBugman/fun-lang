@@ -408,6 +408,8 @@ printStructElem (L [ x@(ID _) , y ]) = do
 printStructElem e = mkError "invalid struct elem: " e
 
 printInterfaceElem :: E -> Either Error Doc
+printInterfaceElem x@(TP _)
+    = pprint x
 printInterfaceElem (L [ n@(ID _) , a ]) = do
     n' <- pprint n
     a' <- printArgs a

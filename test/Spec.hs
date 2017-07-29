@@ -375,6 +375,12 @@ unitTests = do
         , L [ ID "y" , TP "int" ] ])
       `shouldPrint` "type point struct {\n  x int\n  y int\n}"
 
+    it "struct embedding" $
+      printGo (L [ KW "struct" , ID "point3D"
+        , TP "point"
+        , L [ ID "z" , TP "int" ] ])
+      `shouldPrint` "type point3D struct {\n  point\n  z int\n}"
+
     it "empty interface" $
       printGo (L [ KW "interface" , ID "foo" ])
       `shouldPrint` "type foo interface{}"

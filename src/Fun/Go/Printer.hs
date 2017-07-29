@@ -53,12 +53,12 @@ pprint (L [ TP "map" , k@(TP _) , v ]) = do
 
 pprint (L [ TP "func" , a ]) = do
     a' <- printArgs a
-    pure $ kwFunc <> parens a'
+    pure $ kwFunc <> a'
 
 pprint (L [ TP "func" , a , r ]) = do
     a' <- printArgs a
     r' <- pprint r
-    pure $ kwFunc <> parens a' <+> r'
+    pure $ kwFunc <> a' <+> r'
 
 -- type alias
 pprint (L [ KW "alias" , n@(ID _) , t ]) = do
@@ -385,8 +385,8 @@ printRecv (L [ n@(ID _) , t ]) = do
 printRecv e = mkError "invalid reciever: " e
 
 printArgs :: E -> Either Error Doc
-printArgs Nil    = pure empty
-printArgs (L xs) = commaSep <$> mapM printArg xs
+printArgs Nil    = pure $ parens empty
+printArgs (L xs) = parens . commaSep <$> mapM printArg xs
 printArgs e      = mkError "invalid args: " e
 
 printArg :: E -> Either Error Doc
@@ -427,12 +427,12 @@ printInterfaceElem x@(TP _)
 printInterfaceElem (L [ n@(ID _) , a ]) = do
     n' <- pprint n
     a' <- printArgs a
-    pure $ n' <> parens a'
+    pure $ n' <> a'
 printInterfaceElem (L [ n@(ID _) , a , r ]) = do
     n' <- pprint n
     a' <- printArgs a
     r' <- printResults r
-    pure $ n' <> parens a' <+> r'
+    pure $ n' <> a' <+> r'
 printInterfaceElem e = mkError "invalid interface elem: " e
 
 printMapLike :: E -> [E] ->  Either Error Doc
@@ -450,10 +450,10 @@ printFunc :: Maybe E -> Maybe E -> Maybe E -> Maybe E -> E -> Either Error Doc
 printFunc recv name args res body = do
     r'  <- maybeWith (space <>) empty printRecv recv
     n'  <- maybeWith (space <>) empty pprint name
-    a'  <- maybe' empty printArgs args
+    a'  <- maybe' (parens empty) printArgs args
     rs' <- maybe' empty printResults res
     b'  <- printBody body
-    pure $ kwFunc <> r' <> n' <> parens a' <+> rs' <+> b'
+    pure $ kwFunc <> r' <> n' <> a' <+> rs' <+> b'
 
 printCallLike :: E -> Maybe E -> Either Error Doc
 printCallLike f x = do

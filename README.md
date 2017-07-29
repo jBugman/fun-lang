@@ -160,7 +160,7 @@ Transpiling is mostly literal, but there are some differences from Go:
 
   ; Use switch in preference to chained if statements.
   (var x 42.0)
-  (switch x
+  (switch x (
     (case 0)
     (case 1)
     (case 42 (
@@ -168,7 +168,7 @@ Transpiling is mostly literal, but there are some differences from Go:
     ))
     (case 43)  ; Unreached.
     (default)  ; Default case is optional.
-  )
+  ))
 
   ; Variables declared in for and if are local to their scope.
   (for x 0 3

@@ -636,6 +636,20 @@ unitTests = do
       `shouldPrint`
       "switch i {\n  case 0:\n  default: bar(\"two\")\n}"
 
+    it "make chan" $
+      printGo (L [ KW "make" , L [ TP "chan" , TP "int" ] ])
+      `shouldPrint`
+      "make(chan int)"
+
+    it "bidirectional chan" $
+      printGo (L [ TP "chan" , TP "int" ]) `shouldPrint` "chan int"
+
+    -- it "send chan type" $
+    --   printGo (L [ TP "<-chan" , TP "int" ]) `shouldPrint` "<-chan int"
+
+    -- it "receive chan type" $
+    --   printGo (L [ TP "chan<-" , TP "int" ]) `shouldPrint` "chan<- int"
+
 
   describe "Fun.Printer.singleLine" $ do
 

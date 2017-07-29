@@ -38,6 +38,10 @@ pprint (L [ TP "ptr" , x ]) = do
     x' <- pprint x
     pure $ text "*" <> x'
 
+pprint (L [ TP "chan" , x ]) = do
+    x' <- pprint x
+    pure $ text "chan" <+> x'
+
 pprint (L [ TP "slice" , x ]) = do
     x' <- pprint x
     pure $ text "[]" <> x'
@@ -241,9 +245,13 @@ pprint (L [ KW "make" , s@(L ( TP "slice" : _ )) , d ]) = do
     d' <- pprint d
     pure $ text "make" <> parens (s'<> comma <+> d')
 
-pprint (L [ KW "make" , m@(L [ TP "map" , _ , _ ]) ]) = do
-    m' <- pprint m
-    pure $ text "make" <> parens m'
+pprint (L [ KW "make" , x@(L [ TP "map" , _ , _ ]) ]) = do
+    x' <- pprint x
+    pure $ text "make" <> parens x'
+
+pprint (L [ KW "make" , x@(L [TP "chan" , _ ]) ]) = do
+    x' <- pprint x
+    pure $ text "make" <> parens x'
 
 -- type casting
 pprint (L [ KW "cast" , t@(TP _) , x ])

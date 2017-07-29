@@ -397,7 +397,10 @@ printBody Nil = pure emptyBraces
 printBody xs  = bracedBlock <$> pprint xs
 
 printStructElem :: E -> Either Error Doc
-printStructElem x@(TP _) = pprint x
+printStructElem x@(TP _)
+    = pprint x
+printStructElem x@(L [ TP "ptr" , TP _ ])
+    = pprint x
 printStructElem (L [ x@(ID _) , y ]) = do
     x' <- pprint x
     y' <- pprint y

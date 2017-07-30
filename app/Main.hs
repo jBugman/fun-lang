@@ -85,8 +85,8 @@ translateFile successPath filePath noGofmt = do
     source <- readFileUtf8 filePath
     either errPath successPath $ trans source
     where
-        trans = if noGofmt then translate else translateFmt
-        errPath = die . unpack . unError
+        trans     = if noGofmt then translate else translateFmt
+        errPath e = die $ filePath <> ": " <> unpack (unError e)
 
 
 -- Run --

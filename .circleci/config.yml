@@ -10,7 +10,6 @@ jobs:
 
       - restore_cache:
           key: dependency-cache
-          key: v0.22
       - run:
           name: Installing GHC
           command: "stack setup"
@@ -18,7 +17,7 @@ jobs:
           name: Installing dependencies with Stack
           command: "stack test --only-dependencies"
       - save_cache:
-          key: v0.22
+          key: v2
           paths:
             - ~/.stack
 

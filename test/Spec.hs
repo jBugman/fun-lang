@@ -62,8 +62,9 @@ unitTests = do
       parse `shouldFailOn` ""
 
     it "fails on garbage imput" $
-      mapLeft unError (parse "_BANG!!") `shouldBe`
-      Left "syntax error: (line 1, column 2):\nunexpected 'B'\nexpecting space, comment or end of input"
+      mapLeft unError (parse "_BANG!!")
+      `shouldBe`
+      Left "1:2: syntax error: unexpected 'B', expecting space, comment or end of input"
 
 
     it "ignores comments A" $

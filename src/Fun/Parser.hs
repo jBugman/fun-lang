@@ -10,21 +10,20 @@ import Data.SCargot.Comments          (withLispComments)
 import Data.SCargot.Common            (hexNumber, octNumber, signedDecNumber)
 import Data.SCargot.Language.HaskLike (parseHaskellFloat)
 import Data.SCargot.Repr              (SExpr)
+import Data.Text                      (replace, strip)
 import Text.Parsec                    (char, choice, many, noneOf, oneOf, satisfy, sepBy1, try,
                                        (<?>))
 import Text.Parsec.Char               (string)
 import Text.Parsec.Text               (Parser)
+import Text.Read.Extra                (readMaybe)
 
-import Fun.Errors      (Error (SyntaxError))
+import Fun.Errors      (Error (..), Pos (..))
 import Fun.SExpression (Atom (..), Expression, Literal (..))
 import Fun.Tokens      (keywords, operators)
 
 
 parse :: Text -> Either Error Expression
 parse = mapLeft parseError <$> decodeOne parser
-
-parseError :: String -> Error
-parseError e = SyntaxError Nothing (pack e) -- TODO: position
 
 parser :: SExprParser Atom Expression
 parser = withLispComments $ asWellFormed parseAtom
@@ -100,3 +99,27 @@ parseBool :: Parser Bool
 parseBool = do
     b <- try (string "false" <|> string "true") <?> "bool"
     return (b == "true")
+
+-- Error parsing
+parseError :: String -> Error
+parseError err = fromMaybe plain $ parseError' err
+    where
+        plain = SyntaxError Nothing (oneline err)
+
+oneline :: String -> Text
+oneline = replace "\n" ", " . strip . pack
+
+parseError' :: String -> Maybe Error
+parseError' e = do
+    -- line
+    withLine <- stripPrefix "(line " e
+    let (d, rest) = break (==',') withLine
+    line <- readMaybe (unpack d)
+    -- column
+    withColumn <- stripPrefix ", column " rest
+    let (d', rest') = break (==')') withColumn
+    col <- readMaybe (unpack d')
+    -- results
+    txt <- oneline <$> stripPrefix "):" rest'
+    let pos = Pos line col
+    pure $ SyntaxError (Just pos) txt

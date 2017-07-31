@@ -20,17 +20,17 @@ library
                       , Fun.SExpression
                       , Go.Fmt
   other-modules:        Fun.Tokens
-  build-depends:        base >= 4.7 && < 5
-                      , classy-prelude
-                      , containers
-                      , either
-                      , extra
-                      , parsec
-                      , process
-                      , s-cargot
-                      , split
-                      , text
-                      , wl-pprint-text
+  build-depends:        base >= 4.9 && < 5
+                      , classy-prelude >= 1.2
+                      , containers >= 0.5
+                      , either >= 4.4
+                      , extra >= 1.5
+                      , parsec >= 3.1
+                      , process >= 1.4
+                      , s-cargot >= 0.1.2
+                      , split >= 0.2
+                      , text >= 1.2
+                      , wl-pprint-text >= 1.1.1
   ghc-options:         -Wall -Wno-partial-type-signatures
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   default-language:     Haskell2010
@@ -42,10 +42,10 @@ executable func
   build-depends:        base
                       , classy-prelude
                       , language-fun
-                      , filepath
-                      , optparse-applicative
+                      , filepath >= 1.4
+                      , optparse-applicative >= 0.13
                       , process
-                      , temporary
+                      , temporary >= 1.2
                       , text
   default-extensions:   OverloadedStrings, NoImplicitPrelude
   default-language:     Haskell2010
@@ -55,14 +55,14 @@ test-suite fun-lang-test
   hs-source-dirs:       test
   main-is:              Spec.hs
   other-modules:        Test.Utils
-  build-depends:        base
+  build-depends:        base >= 4.9 && < 5
                       , classy-prelude
                       , language-fun
                       , either
-                      , filepath
-                      , hspec
-                      , hspec-expectations
-                      , QuickCheck
+                      , filepath >= 1.4
+                      , hspec >= 2.4.4
+                      , hspec-expectations >= 0.8.2
+                      , QuickCheck >= 2.9.2
                       , s-cargot
                       , text
   ghc-options:         -Wall -threaded -rtsopts

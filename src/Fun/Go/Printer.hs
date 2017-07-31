@@ -383,7 +383,7 @@ printRecv (L [ n@(ID _) , t ]) = do
     n' <- pprint n
     t' <- pprint t
     pure $ parens (n' <+> t')
-printRecv e = mkError "invalid reciever: " e
+printRecv e = mkError "invalid receiver: " e
 
 printArgs :: E -> Either Error Doc
 printArgs Nil    = pure $ parens empty

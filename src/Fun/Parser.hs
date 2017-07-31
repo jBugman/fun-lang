@@ -104,10 +104,10 @@ parseBool = do
 parseError :: String -> Error
 parseError err = fromMaybe plain $ parseError' err
     where
-        plain = SyntaxError Nothing (oneline err)
+        plain = SyntaxError Nothing (oneLine err)
 
-oneline :: String -> Text
-oneline = replace "\n" ", " . strip . pack
+oneLine :: String -> Text
+oneLine = replace "\n" ", " . strip . pack
 
 parseError' :: String -> Maybe Error
 parseError' e = do
@@ -120,6 +120,6 @@ parseError' e = do
     let (d', rest') = break (==')') withColumn
     col <- readMaybe (unpack d')
     -- results
-    txt <- oneline <$> stripPrefix "):" rest'
+    txt <- oneLine <$> stripPrefix "):" rest'
     let pos = Pos line col
     pure $ SyntaxError (Just pos) txt

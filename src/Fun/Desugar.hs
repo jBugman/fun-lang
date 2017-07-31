@@ -75,6 +75,5 @@ isExpression (A _)                 = True
 isExpression (L ( OP _ : _ ))      = True
 isExpression (L ( ID _ : _ ))      = True
 isExpression (L ( KW "val"  : _ )) = True
-isExpression (L ( KW "spec" : _ )) = True
 isExpression (L ( KW "func" : _ )) = True
 isExpression _                     = False

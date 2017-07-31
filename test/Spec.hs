@@ -61,7 +61,7 @@ unitTests = do
     it "fails on empty string" $
       parse `shouldFailOn` ""
 
-    it "fails on garbage imput" $
+    it "fails on garbage input" $
       mapLeft unError (parse "_BANG!!")
       `shouldBe`
       Left "1:2: syntax error: unexpected 'B', expecting space, comment or end of input"
@@ -317,6 +317,7 @@ unitTests = do
       `shouldPrint`
       "var counters map[string]int"
 
+    -- spellchecker:ignore nums
     it "var with slice literal initializer" $
       printGo (L
         [ KW "var" , ID "nums"
@@ -503,6 +504,7 @@ unitTests = do
     it "empty struct literal" $
       printGo (L [ TP "foo" ]) `shouldPrint` "foo{}"
 
+    -- spellchecker:ignore SJFKD
     it "struct literal" $
       printGo (L [ TP "api" , L [ L [ ID "key" , SL "SJFKD" ] ] ])
       `shouldPrint`
@@ -526,6 +528,7 @@ unitTests = do
       `shouldPrint`
       "func f(xs []string) int {\n  return 42\n}"
 
+    -- spellchecker:ignore boop
     it "func foo() {...}" $
       printGo (L [ KW "func" , ID "foo" , Nil , L
       [ L [ KW "var" , ID "x" , IL 5 ]

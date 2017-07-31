@@ -9,7 +9,7 @@ import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
 
 import Fun               (translate)
 import Fun.Desugar       (desugar)
-import Fun.Errors        (Error (..), unError)
+import Fun.Errors        (Error (..), Pos (..), unError)
 import Fun.Go.Printer    (printGo)
 import Fun.Parser        (parse)
 import Fun.PrettyPrinter (singleLine)
@@ -786,12 +786,14 @@ integrationTests = do
       gofmt "func  foo  (  ) { \n i++}" `shouldPrint` "func foo() {\n\ti++\n}"
 
     it "returns err on a broken code" $
-      gofmt "func foo }( __" `shouldBe` Left (GoError Nothing "1:20: expected '(', found '}'")
+      gofmt "func foo }( __"
+      `shouldBe`
+      Left (GoError (Just (Pos 1 20)) "expected '(', found '}'")
 
     it "unError GoError" $
       mapLeft unError (gofmt "func foo }( __")
       `shouldBe`
-      Left "Go error: 1:20: expected '(', found '}'"
+      Left "1:20: Go error: expected '(', found '}'"
 
 
 dummyTests :: Spec

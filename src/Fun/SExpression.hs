@@ -92,8 +92,8 @@ instance PP.Pretty Literal where
     pretty (Str x)    = PP.dquotes . PP.textStrict $ x
     pretty (Chr x)    = PP.squotes . PP.textStrict $ x
     pretty (Int x)    = PP.integer x
-    pretty (Hex x)    = PP.text . pack $ "0x" ++ showHex x ""
-    pretty (Oct x)    = PP.text . pack $ "0"  ++ showOct x ""
+    pretty (Hex x)    = PP.text . pack $ "0x" <> showHex x ""
+    pretty (Oct x)    = PP.text . pack $ "0"  <> showOct x ""
     pretty (Dbl x)    = PP.double x
     pretty (Bl True)  = PP.text "true"
     pretty (Bl False) = PP.text "false"

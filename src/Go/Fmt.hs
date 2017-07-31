@@ -29,12 +29,11 @@ parseError err = GoError pos txt
 
 
 firstError :: String -> Text
-firstError e
-    = pack
-    $ fromJust -- Let it crash if it fails
-    $ stripPrefix "<standard input>:"
-    $ headEx   -- Let it crash if it fails
-    $ lines e
+firstError
+    = (pack . fromJust) -- Let it crash if it fails
+    . stripPrefix "<standard input>:"
+    . headEx   -- Let it crash if it fails
+    . lines
 
 
 getInt :: Text -> (Maybe Int, Text)

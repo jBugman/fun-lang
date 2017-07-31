@@ -326,7 +326,7 @@ pprint (L [ KW "for" , i@(ID _) , from , to , body ])
 pprint (L ( KW "package" : n@(ID _) : topLevels )) = do
     n'  <- pprint n
     ts' <- mapM pprint topLevels
-    pure $ vsep . punctuate line $ (text "package" <+> n') : ts'
+    pure . vsep . punctuate line $ ((text "package" <+> n') : ts')
 
 -- slicing
 pprint (L [ KW "slice" , x@(ID _) , ID "_" , to ]) = do
@@ -542,7 +542,7 @@ kwFunc = text "func"
 -- Utils --
 
 maybeWith :: (Doc -> Doc)-> Doc -> (E -> Either Error Doc) -> Maybe E -> Either Error Doc
-maybeWith g z f = maybe (pure z) (\x -> g <$> f x)
+maybeWith g z f = maybe (pure z) (fmap g . f)
 
 maybe' :: Doc -> (E -> Either Error Doc) -> Maybe E -> Either Error Doc
 maybe' z = maybe (pure z)

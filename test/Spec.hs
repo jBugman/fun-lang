@@ -20,7 +20,7 @@ import Test.Utils        (shouldFailOn, shouldParse, shouldPrint, translationExa
 
 
 main :: IO ()
-main = hspec $ describe "Everything" $ do
+main = hspec . describe "Everything" $ do
   dummyTests
   describe "Tests" $ do
     describe "Unit"        unitTests
@@ -773,7 +773,7 @@ unitTests = do
 integrationTests :: Spec
 integrationTests = do
 
-  describe "Fmt.translate" $
+  describe "Fmt.translate" .
 
     it "translates simple expression" $
       translate "(func foo (bar x 42))"

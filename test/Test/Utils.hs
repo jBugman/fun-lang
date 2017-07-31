@@ -51,4 +51,4 @@ readGolden path = readSourceFile path ".go"
 translated :: Text -> IO Text
 translated name = do
     src <- readSourceFile name ".fun"
-    return $ either unError id $ translateFmt src
+    return . either unError id $ translateFmt src

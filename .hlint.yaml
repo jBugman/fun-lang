@@ -1,15 +1,9 @@
 # HLint configuration file
 # https://github.com/ndmitchell/hlint
 
-- ignore: {name: "Use String"}
-- ignore: {name: "Redundant bracket", within: Test.Properties}
-- ignore: {name: "Functor law"      , within: Test.Properties}
-- ignore: {name: "Use <>"           , within: Main}
+- arguments: [-XHaskell2010]
 
-# Add custom hints for this project
-#
-# Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
-# - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
+- ignore: {name: "Use String" , within: Test.Instances}
 
-# Generalise map to fmap, ++ to <>
-- group: {name: generalise, enabled: true}
+- group: {name: dollar     , enabled: true}
+- group: {name: generalise , enabled: true}

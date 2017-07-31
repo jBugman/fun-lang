@@ -1,8 +1,16 @@
-module Fun.Errors where
+module Fun.Errors
+    ( Error (..)
+    , Pos (..)
+    , unError
+) where
 
 import ClassyPrelude
 
-type Pos = (Int, Int)
+data Pos = Pos Int Int
+    deriving (Eq)
+
+instance Show Pos where
+    show (Pos line col) = show line <> ":" <> show col <> ":"
 
 data Error
     = SyntaxError      (Maybe Pos) Text
@@ -10,18 +18,16 @@ data Error
     | GoError          (Maybe Pos) Text
     deriving (Eq, Show)
 
+printPos :: Maybe Pos -> Text
+printPos (Just p) = tshow p <> " "
+printPos Nothing  = ""
+
 unError :: Error -> Text
-unError (SyntaxError (Just (line, col)) err)
-    = tshow line <> ":" <> tshow col <> ": syntax error: " <> err
-unError (SyntaxError _ err)
-    = "syntax error: " <> err
+unError (SyntaxError pos err)
+    = printPos pos <> "syntax error: " <> err
 
-unError (TranslationError (Just (line, col)) err)
-    = tshow line <> ":" <> tshow col <> ": translation error: " <> err
-unError (TranslationError _ err)
-    = "translation error: " <> err
+unError (TranslationError pos err)
+    = printPos pos <> "translation error: " <> err
 
-unError (GoError (Just (line, col)) err)
-    = tshow line <> ":" <> tshow col <> ": Go error: " <> err
-unError (GoError _ err)
-    = "Go error: "          <> err
+unError (GoError pos err)
+    = printPos pos <> "Go error: "          <> err

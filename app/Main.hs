@@ -86,7 +86,7 @@ translateFile successPath filePath noGofmt = do
     either errPath successPath $ trans source
     where
         trans     = if noGofmt then translate else translateFmt
-        errPath e = die $ filePath <> ": " <> unpack (unError e)
+        errPath e = die $ filePath <> ":" <> unpack (unError e)
 
 
 -- Run --

@@ -5,6 +5,7 @@ module Fun.Errors
 ) where
 
 import ClassyPrelude
+import Data.Text     (strip)
 
 data Pos = Pos Int Int
     deriving (Eq)
@@ -19,15 +20,15 @@ data Error
     deriving (Eq, Show)
 
 printPos :: Maybe Pos -> Text
-printPos (Just p) = tshow p <> " "
+printPos (Just p) = tshow p
 printPos Nothing  = ""
 
 unError :: Error -> Text
 unError (SyntaxError pos err)
-    = printPos pos <> "syntax error: " <> err
+    = strip $ printPos pos <> " syntax error: " <> err
 
 unError (TranslationError pos err)
-    = printPos pos <> "translation error: " <> err
+    = strip $ printPos pos <> " translation error: " <> err
 
 unError (GoError pos err)
-    = printPos pos <> "Go error: "          <> err
+    = strip $ printPos pos <> " Go error: " <> err

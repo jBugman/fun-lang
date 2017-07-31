@@ -21,7 +21,10 @@ import Fun.Tokens      (keywords, operators)
 
 
 parse :: Text -> Either Error Expression
-parse = mapLeft (SyntaxError . pack) <$> decodeOne parser
+parse = mapLeft parseError <$> decodeOne parser
+
+parseError :: String -> Error
+parseError e = SyntaxError Nothing (pack e) -- TODO: position
 
 parser :: SExprParser Atom Expression
 parser = withLispComments $ asWellFormed parseAtom

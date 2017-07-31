@@ -786,7 +786,7 @@ integrationTests = do
       gofmt "func  foo  (  ) { \n i++}" `shouldPrint` "func foo() {\n\ti++\n}"
 
     it "returns err on a broken code" $
-      gofmt "func foo }( __" `shouldBe` Left (GoError "1:20: expected '(', found '}'")
+      gofmt "func foo }( __" `shouldBe` Left (GoError Nothing "1:20: expected '(', found '}'")
 
     it "unError GoError" $
       mapLeft unError (gofmt "func foo }( __")

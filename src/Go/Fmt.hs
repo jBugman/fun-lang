@@ -15,7 +15,7 @@ gofmt src = unsafePerformIO $ do
     (exitcode, output, errors) <- readProcessWithExitCode "gofmt" [] (unpack src)
     return $ case exitcode of
         ExitSuccess   -> Right $ pack output
-        ExitFailure _ -> Left . GoError
+        ExitFailure _ -> Left . GoError Nothing  -- TODO: error position
             $ fromJust -- We want exception there if something go wrong
             $ stripPrefix errPrefix
             $ stripEnd

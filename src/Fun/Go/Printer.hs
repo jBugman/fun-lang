@@ -356,7 +356,8 @@ pprint (L ( x@(L _) : xs )) = do
     pure $ x' <> line <> xs'
 
 -- FIXME: Catching everything that is not allowed (yet)
-pprint x = Left . TranslationError $ "not supported yet: " <> singleLine x
+-- TODO: error position
+pprint x = Left . TranslationError Nothing $ "not supported yet: " <> singleLine x
 
 
 -- Tier 2 --
@@ -559,4 +560,4 @@ mkError :: Text -> E -> Either Error Doc
 mkError msg e = Left $ mkError' msg e
 
 mkError' :: Text -> E -> Error
-mkError' msg e = TranslationError (msg <> singleLine e)
+mkError' msg e = TranslationError Nothing (msg <> singleLine e) -- TODO: error position

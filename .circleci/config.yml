@@ -9,7 +9,7 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: dependency-cache
+          key: v2
       - run:
           name: Installing GHC
           command: "stack setup"

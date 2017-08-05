@@ -87,64 +87,13 @@ const (
 	STRLIT  state = "string"
 )
 
-// type parser struct {
-// 	pos Pos
-// }
-
 func parseSource(src []byte) (Expr, error) {
-	var source = []rune(string(src))
-	var pos = Pos{Line: 1, Col: 1}
-	var cursor int
-	// var backtracker int
-	// var c rune
-	return parse(source, pos, cursor, NOTHING)
-}
-
-func parse(source []rune, startPos Pos, cursor int, state state) (Expr, error) {
-	fmt.Println(string(source))
-	var val string
-	var pos = Pos{Line: 1, Col: 1}
-	var backtracker = cursor
-	var c rune
-	for cursor < len(source) {
-		c = source[cursor]
-		fmt.Println(string(c), pos, state)
-		cursor++
-		backtracker++
-
-		switch {
-		case state == NOTHING:
-			switch {
-			case c == ';':
-				// state = COMMENT
-				parse(source[cursor:], pos, 0, COMMENT)
-			case c == '(':
-				parse(source[cursor:], pos, cursor, LIST)
-			case c == '"':
-				parse(source[cursor:], pos, cursor, STRLIT)
-			case unicode.IsLetter(c):
-				parse(source[cursor:], pos, cursor, IDENT)
-				// val += string(c)
-			}
-		// case state == LIST:
-		case state == IDENT:
-			switch {
-			case unicode.IsLetter(c):
-				val += string(c)
-			case unicode.IsSpace(c):
-				// state
-			}
-		}
-
-		// Advance Pos
-		// pos.Col++
-		// if c == '\n' {
-		// 	pos.Col = 1
-		// 	pos.Line++
-		// }
+	var source = newScanner(string(src))
+	result, scan, err := parseList(source)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%d:%d", scan.pos.Line, scan.pos.Col)
 	}
-
-	return nil, errors.New("not implemented")
+	return result, nil
 }
 
 type scanner struct {
@@ -154,9 +103,9 @@ type scanner struct {
 	c      rune
 }
 
-func newScanner(text []rune) scanner {
+func newScanner(text string) scanner {
 	return scanner{
-		source: text,
+		source: []rune(text),
 		pos:    Pos{1, 1},
 	}
 }
@@ -203,10 +152,61 @@ func parseIdent(sc scanner) (Ident, scanner, error) {
 		case unicode.IsLetter(c):
 			sc.commit()
 			val += string(c)
-		case unicode.IsSpace(c):
-			return Ident{pos: start.pos, x: val}, sc, nil
 		default:
-			return Ident{}, start, errors.Errorf("unexpected '%c', expected letter", c)
+			if len(val) == 0 {
+				return Ident{}, start, errors.Errorf("unexpected '%c', expected letter", c)
+			}
+			return Ident{pos: start.pos, x: val}, sc, nil
+		}
+	}
+}
+
+func parseList(sc scanner) (List, scanner, error) {
+	var xs []Expr
+	var start = sc
+	var opened = false
+	for {
+		c, err := sc.next()
+		switch {
+
+		case err != nil:
+			return List{pos: start.pos, xs: xs}, sc, nil
+
+		case unicode.IsSpace(c):
+			sc = skipSpace(sc)
+
+		case c == '(':
+			if !opened {
+				sc.commit()
+				opened = true
+				break
+			}
+
+			var x List
+			x, sc, err = parseList(sc)
+			if err != nil {
+				return List{}, sc, err
+			}
+			xs = append(xs, x)
+
+		case c == ')':
+			if opened {
+				sc.commit()
+				return List{pos: start.pos, xs: xs}, sc, nil
+			}
+			return List{}, start, errors.Errorf("unexpected '%c', expected expression", c)
+
+		case !opened:
+			return List{}, start, errors.Errorf("unexpected '%c', expected list", c)
+
+		default:
+			var x Expr
+			x, sc, err = parseIdent(sc)
+			if err == nil {
+				xs = append(xs, x)
+				break
+			}
+			return List{}, start, errors.Errorf("unexpected '%c', expected expression", c)
 		}
 	}
 }

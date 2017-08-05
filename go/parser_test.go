@@ -6,31 +6,40 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseIdent_0(t *testing.T) {
+func TestParseExpression_0(t *testing.T) {
 	src := newScanner("foo")
-	x, s, err := parseIdent(src)
+	x, s, err := parseExpression(src)
+	assert.NoError(t, err)
 	assert.Equal(t, Ident{x: "foo", pos: Pos{1, 1}}, x)
 	assert.Equal(t, Pos{1, 4}, s.pos)
 	assert.Equal(t, 3, s.cursor)
-	assert.NoError(t, err)
 }
 
-func TestParseIdent_1(t *testing.T) {
+func TestParseIdent_0(t *testing.T) {
 	src := newScanner("foo bar")
 	x, s, err := parseIdent(src)
+	assert.NoError(t, err)
 	assert.Equal(t, Ident{x: "foo", pos: Pos{1, 1}}, x)
 	assert.Equal(t, Pos{1, 4}, s.pos)
 	assert.Equal(t, 3, s.cursor)
-	assert.NoError(t, err)
+}
+
+func TestParseExpression_1(t *testing.T) {
+	src := newScanner("foo bar")
+	x, s, err := parseExpression(src)
+	assert.NoError(t, err) // Should fail
+	assert.Equal(t, Ident{x: "foo", pos: Pos{1, 1}}, x)
+	assert.Equal(t, Pos{1, 4}, s.pos)
+	assert.Equal(t, 3, s.cursor)
 }
 
 func TestParseIdent_2(t *testing.T) {
 	src := newScanner("foo\n\nbar")
 	x, s, err := parseIdent(src)
+	assert.NoError(t, err)
 	assert.Equal(t, Ident{x: "foo", pos: Pos{1, 1}}, x)
 	assert.Equal(t, Pos{1, 4}, s.pos)
 	assert.Equal(t, 3, s.cursor)
-	assert.NoError(t, err)
 }
 
 func TestSkipSpace(t *testing.T) {

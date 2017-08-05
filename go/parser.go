@@ -11,7 +11,6 @@ import (
 
 func main() {
 	filename := os.Args[1]
-	fmt.Println(filename)
 	source, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrap(err, "read file"))
@@ -19,7 +18,7 @@ func main() {
 	}
 	result, err := parseSource(source)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrap(err, "parse"))
+		fmt.Fprintf(os.Stderr, "%s:%s\n", filename, err)
 		os.Exit(1)
 	}
 
@@ -76,26 +75,6 @@ func (x StrLit) Pos() Pos { return x.pos }
 // Val is a atom value.
 func (x StrLit) Val() string { return x.x }
 
-type state string
-
-// Current Parser state
-const (
-	NOTHING state = "nothing"
-	COMMENT state = "comment"
-	LIST    state = "list"
-	IDENT   state = "ident"
-	STRLIT  state = "string"
-)
-
-func parseSource(src []byte) (Expr, error) {
-	var source = newScanner(string(src))
-	result, scan, err := parseList(source)
-	if err != nil {
-		return nil, errors.Wrapf(err, "%d:%d", scan.pos.Line, scan.pos.Col)
-	}
-	return result, nil
-}
-
 type scanner struct {
 	source []rune
 	pos    Pos
@@ -127,6 +106,28 @@ func (s *scanner) commit() {
 	}
 }
 
+type pe struct {
+	pos Pos
+	err error
+}
+
+func errorf(pos Pos, format string, args ...interface{}) error {
+	return pe{
+		pos: pos,
+		err: errors.Errorf(format, args...),
+	}
+}
+
+func (e pe) Error() string {
+	return fmt.Sprintf("%d:%d: %s", e.pos.Line, e.pos.Col, e.err)
+}
+
+func parseSource(src []byte) (Expr, error) {
+	source := newScanner(string(src))
+	trimmed := skipSpace(source)
+	return parseOneExpression(trimmed)
+}
+
 func skipSpace(sc scanner) scanner {
 	for {
 		c, err := sc.next()
@@ -139,6 +140,42 @@ func skipSpace(sc scanner) scanner {
 			return sc
 		}
 	}
+}
+
+func parseOneExpression(sc scanner) (Expr, error) {
+	x, sc, err := parseExpression(sc)
+	// Check if all input is consumed
+	if err == nil && sc.cursor < len(sc.source) {
+		err = errorf(sc.pos, "unexpected '%c', expected EOF", sc.c)
+	}
+	return x, err
+}
+
+func parseExpression(sc scanner) (Expr, scanner, error) {
+	var x Expr
+	var err error
+
+	x, sc, err = parseAtom(sc)
+	if err == nil {
+		return x, sc, nil
+	}
+
+	x, sc, err = parseList(sc)
+	if err == nil {
+		return x, sc, nil
+	}
+
+	return nil, sc, err
+}
+
+func parseAtom(sc scanner) (Atom, scanner, error) {
+	var x Atom
+	var err error
+	x, sc, err = parseIdent(sc)
+	if err != nil {
+		return nil, sc, err
+	}
+	return x, sc, nil
 }
 
 func parseIdent(sc scanner) (Ident, scanner, error) {
@@ -154,7 +191,7 @@ func parseIdent(sc scanner) (Ident, scanner, error) {
 			val += string(c)
 		default:
 			if len(val) == 0 {
-				return Ident{}, start, errors.Errorf("unexpected '%c', expected letter", c)
+				return Ident{}, start, errorf(sc.pos, "unexpected '%c', expected letter", c)
 			}
 			return Ident{pos: start.pos, x: val}, sc, nil
 		}
@@ -194,19 +231,19 @@ func parseList(sc scanner) (List, scanner, error) {
 				sc.commit()
 				return List{pos: start.pos, xs: xs}, sc, nil
 			}
-			return List{}, start, errors.Errorf("unexpected '%c', expected expression", c)
+			return List{}, start, errorf(sc.pos, "unexpected '%c', expected expression", c)
 
 		case !opened:
-			return List{}, start, errors.Errorf("unexpected '%c', expected list", c)
+			return List{}, start, errorf(sc.pos, "unexpected '%c', expected list", c)
 
 		default:
 			var x Expr
-			x, sc, err = parseIdent(sc)
+			x, sc, err = parseAtom(sc)
 			if err == nil {
 				xs = append(xs, x)
 				break
 			}
-			return List{}, start, errors.Errorf("unexpected '%c', expected expression", c)
+			return List{}, start, errorf(sc.pos, "unexpected '%c', expected atom", c)
 		}
 	}
 }

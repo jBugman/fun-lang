@@ -118,6 +118,14 @@ func errorf(pos Pos, format string, args ...interface{}) error {
 	}
 }
 
+func unexpected(pos Pos, c rune, expected string) error {
+	var s = string(c)
+	if c == '\n' {
+		s = "\\n"
+	}
+	return errorf(pos, "expected %s, found '%s'", expected, s)
+}
+
 func (e pe) Error() string {
 	return fmt.Sprintf("%d:%d: %s", e.pos.Line, e.pos.Col, e.err)
 }
@@ -146,7 +154,7 @@ func parseOneExpression(sc scanner) (Expr, error) {
 	x, sc, err := parseExpression(sc)
 	// Check if all input is consumed
 	if err == nil && sc.cursor < len(sc.source) {
-		err = errorf(sc.pos, "unexpected '%c', expected EOF", sc.c)
+		err = unexpected(sc.pos, sc.c, "'EOF'")
 	}
 	return x, err
 }
@@ -179,6 +187,7 @@ func parseAtom(sc scanner) (Atom, scanner, error) {
 }
 
 func parseIdent(sc scanner) (Ident, scanner, error) {
+	// TODO: proper ident
 	var val string
 	var start = sc
 	for {
@@ -191,7 +200,7 @@ func parseIdent(sc scanner) (Ident, scanner, error) {
 			val += string(c)
 		default:
 			if len(val) == 0 {
-				return Ident{}, start, errorf(sc.pos, "unexpected '%c', expected letter", c)
+				return Ident{}, start, unexpected(sc.pos, c, "letter") // FIXME: letter
 			}
 			return Ident{pos: start.pos, x: val}, sc, nil
 		}
@@ -231,10 +240,10 @@ func parseList(sc scanner) (List, scanner, error) {
 				sc.commit()
 				return List{pos: start.pos, xs: xs}, sc, nil
 			}
-			return List{}, start, errorf(sc.pos, "unexpected '%c', expected expression", c)
+			return List{}, start, unexpected(sc.pos, c, "expression")
 
 		case !opened:
-			return List{}, start, errorf(sc.pos, "unexpected '%c', expected list", c)
+			return List{}, start, unexpected(sc.pos, c, "list")
 
 		default:
 			var x Expr
@@ -243,7 +252,7 @@ func parseList(sc scanner) (List, scanner, error) {
 				xs = append(xs, x)
 				break
 			}
-			return List{}, start, errorf(sc.pos, "unexpected '%c', expected atom", c)
+			return List{}, start, unexpected(sc.pos, c, "atom")
 		}
 	}
 }

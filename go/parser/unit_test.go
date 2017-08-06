@@ -33,7 +33,7 @@ func TestParseExpression_0(t *testing.T) {
 func TestParseExpression_1(t *testing.T) {
 	source := newScanner("foo bar")
 	x, s, err := parseExpression(source)
-	assert.NoError(t, err) // Should fail
+	assert.NoError(t, err)
 	assert.Equal(t, ident("foo", pos(1, 1)), x)
 	assert.Equal(t, pos(1, 4), s.pos)
 	assert.Equal(t, 3, s.cursor)

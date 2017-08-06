@@ -1,3 +1,4 @@
 /*.json
 /*.tix
 .vscode/cSpell.json
+vendor/

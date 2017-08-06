@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: jbugman/funlang-circleci:0.3
+      - image: jbugman/funlang-circleci:0.4
     working_directory: /go/src/github.com/jBugman/fun-lang
     steps:
       - checkout
@@ -23,7 +23,7 @@ jobs:
 
       - run:
           name: Go dependencies
-          command: "go get ./fun-parse/..."
+          command: "dep ensure"
 
       - run:
           name: Go tests

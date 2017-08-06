@@ -31,15 +31,16 @@ var _ = Describe("parser", func() {
 		Expect(err).Should(HaveOccurred())
 	})
 
-	XIt("fails on empty string", func() {
+	It("fails on empty string", func() {
 		_, err := Parse("")
 		Expect(err).Should(HaveOccurred())
 	})
 
-	XIt("fails on garbage input", func() {
+	It("fails on garbage input", func() {
 		_, err := Parse("_BANG!!")
-		Expect(err).Should(MatchError(
-			"1:2: syntax error: unexpected 'B', expecting space, comment or end of input"))
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal(
+			"1:6: expected 'EOF', found '!'"))
 	})
 
 	It("fails on 'foo bar'", func() {
@@ -85,11 +86,11 @@ var _ = DescribeTable("parsing of", PV,
 		fun.CL("\\'", pos(1, 1)),
 	),
 
-	XParsing("true",
+	Parsing("true",
 		fun.BL(true, pos(1, 1)),
 	),
 
-	XParsing("false",
+	Parsing("false",
 		fun.BL(false, pos(1, 1)),
 	),
 
@@ -137,39 +138,39 @@ var _ = DescribeTable("parsing of", PV,
 		fun.TP("int", pos(1, 1)),
 	),
 
-	XParsing("+",
+	Parsing("+",
 		fun.OP("+", pos(1, 1)),
 	),
 
-	XParsing("++",
+	Parsing("++",
 		fun.OP("++", pos(1, 1)),
 	),
 
-	XParsing("&",
+	Parsing("&",
 		fun.OP("&", pos(1, 1)),
 	),
 
-	XParsing("&&",
+	Parsing("&&",
 		fun.OP("&&", pos(1, 1)),
 	),
 
-	XParsing("|",
+	Parsing("|",
 		fun.OP("|", pos(1, 1)),
 	),
 
-	XParsing("||",
+	Parsing("||",
 		fun.OP("||", pos(1, 1)),
 	),
 
-	XParsing("!",
+	Parsing("!",
 		fun.OP("!", pos(1, 1)),
 	),
 
-	XParsing("!=",
+	Parsing("!=",
 		fun.OP("!=", pos(1, 1)),
 	),
 
-	XParsing("(+ foo)",
+	Parsing("(+ foo)",
 		fun.L(pos(1, 1),
 			fun.OP("+", pos(1, 2)),
 			fun.ID("foo", pos(1, 4)),
@@ -184,14 +185,14 @@ var _ = DescribeTable("parsing of", PV,
 		),
 	),
 
-	XEntry("keyword",
+	Entry("keyword",
 		"for",
 		fun.KW("for", pos(1, 1)),
 	),
 
-	XEntry("not a keyword",
+	Entry("not a keyword",
 		"forall",
-		fun.ID("for", pos(1, 1)),
+		fun.ID("forall", pos(1, 1)),
 	),
 
 	Parsing("(foo)",

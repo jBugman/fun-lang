@@ -1,0 +1,67 @@
+package fun
+
+// Operators are language operators.
+var Operators = []string{
+	"--",
+	"-",
+	"!",
+	"!=",
+	".",
+	"*",
+	"/",
+	"&",
+	"&&",
+	"%",
+	"+",
+	"++",
+	"<-",
+	"<",
+	"<=",
+	"==",
+	">",
+	">=",
+	"|",
+	"||",
+}
+
+// Keywords are language keywords.
+var Keywords = append(goKeywords, []string{
+	"alias",
+	"assert",
+	"cast",
+	"make",
+	"method",
+	"print",
+	"printf",
+	"set",
+	"slice",
+	"val",
+}...)
+
+var goKeywords = []string{
+	"break",
+	"case",
+	"chan",
+	"const",
+	"continue",
+	"default",
+	"defer",
+	"else",
+	"fallthrough",
+	"for",
+	"func",
+	"go",
+	"goto",
+	"if",
+	"import",
+	"interface",
+	"map",
+	"package",
+	"range",
+	"return",
+	"select",
+	"struct",
+	"switch",
+	"type",
+	"var",
+}

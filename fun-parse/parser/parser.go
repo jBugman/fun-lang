@@ -13,6 +13,20 @@ import (
 	// . "github.com/jBugman/fun-lang/fun-parse/fun/pattern"
 )
 
+var (
+	keywords  = make(map[string]bool)
+	operators = make(map[string]bool)
+)
+
+func init() {
+	for _, s := range fun.Keywords {
+		keywords[s] = true
+	}
+	for _, s := range fun.Operators {
+		operators[s] = true
+	}
+}
+
 type scanner struct {
 	source []rune
 	pos    code.Pos
@@ -90,6 +104,9 @@ func skipSpace(sc scanner) scanner {
 }
 
 func parseOneExpression(sc scanner) (fun.Expr, error) {
+	if len(sc.source) == 0 {
+		return nil, errorf(sc.pos, "expected %s, found '%s'", "expression", "EOF")
+	}
 	x, sc, err := parseExpression(sc)
 	// Check if all input is consumed
 	if err == nil && sc.cursor < len(sc.source) {
@@ -116,13 +133,27 @@ func parseExpression(sc scanner) (fun.Expr, scanner, error) {
 }
 
 func parseAtom(sc scanner) (fun.Atom, scanner, error) {
-	var x fun.Atom
 	var err error
-	x, sc, err = parseIdent(sc)
-	if err != nil {
-		return nil, sc, err
+	var id fun.Ident
+	id, sc, err = parseIdent(sc)
+	if err == nil {
+		_, ok := keywords[id.X]
+		switch {
+		case id.X == "true":
+			return fun.Bool{X: true, Pos: id.Pos}, sc, nil
+		case id.X == "false":
+			return fun.Bool{X: false, Pos: id.Pos}, sc, nil
+		case ok:
+			return fun.Keyword{X: id.X, Pos: id.Pos}, sc, nil
+		}
+		return id, sc, nil
 	}
-	return x, sc, nil
+	var op fun.Operator
+	op, sc, err = parseOperator(sc)
+	if err == nil {
+		return op, sc, nil
+	}
+	return nil, sc, unexpected(sc.pos, sc.c, "atom")
 }
 
 func parseIdent(sc scanner) (fun.Ident, scanner, error) {
@@ -131,20 +162,26 @@ func parseIdent(sc scanner) (fun.Ident, scanner, error) {
 	for {
 		c, err := sc.next()
 		switch {
+
 		case err != nil:
 			return fun.ID(val, start.pos), sc, nil
+
 		case c == '_':
 			sc.commit()
 			val += string(c)
+
 		case c == '.' && len(val) > 0:
 			sc.commit()
 			val += string(c)
+
 		case unicode.IsLetter(c):
 			sc.commit()
 			val += string(c)
+
 		case unicode.IsDigit(c) && len(val) > 0:
 			sc.commit()
 			val += string(c)
+
 		default:
 			if len(val) == 0 {
 				return fun.Ident{}, start, unexpected(sc.pos, c, "letter or '_'")
@@ -153,6 +190,27 @@ func parseIdent(sc scanner) (fun.Ident, scanner, error) {
 				return fun.Ident{}, start, unexpected(sc.pos, c, "letter")
 			}
 			return fun.ID(val, start.pos), sc, nil
+		}
+	}
+}
+
+func parseOperator(sc scanner) (fun.Operator, scanner, error) {
+	var val string
+	var start = sc
+	for {
+		c, _ := sc.next()
+		switch {
+
+		case unicode.IsSymbol(c) || unicode.IsPunct(c):
+			sc.commit()
+			val += string(c)
+
+		default:
+			_, ok := operators[val]
+			if !ok {
+				return fun.Operator{}, start, unexpected(sc.pos, c, "operator")
+			}
+			return fun.Operator{X: val, Pos: start.pos}, sc, nil
 		}
 	}
 }

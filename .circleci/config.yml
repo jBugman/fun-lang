@@ -23,11 +23,11 @@ jobs:
 
       - run:
           name: Go dependencies
-          command: "go get ./go/..."
+          command: "go get ./fun-parse/..."
 
       - run:
           name: Go tests
-          command: "go test ./go/..."
+          command: "go test ./fun-parse/parser"
 
       - run:
           name: Running tests

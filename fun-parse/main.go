@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/jBugman/fun-lang/go/parser"
+	"github.com/jBugman/fun-lang/fun-parse/parser"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 // Package fun provides types of the Fun language.
 package fun
 
-import "github.com/jBugman/fun-lang/go/fun/code"
+import "github.com/jBugman/fun-lang/fun-parse/fun/code"
 
 // Expr is a generic s-expression.
 type Expr interface {

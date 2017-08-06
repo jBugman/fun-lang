@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jBugman/fun-lang/go/fun"
-	"github.com/jBugman/fun-lang/go/fun/code"
+	"github.com/jBugman/fun-lang/fun-parse/fun"
+	"github.com/jBugman/fun-lang/fun-parse/fun/code"
 )
 
 func ident(x string, pos code.Pos) fun.Ident {

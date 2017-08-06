@@ -7,8 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/jBugman/fun-lang/go/fun"
-	"github.com/jBugman/fun-lang/go/fun/code"
+	"github.com/jBugman/fun-lang/fun-parse/fun"
+	"github.com/jBugman/fun-lang/fun-parse/fun/code"
 )
 
 type scanner struct {

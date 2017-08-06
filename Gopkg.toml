@@ -3,10 +3,6 @@
   branch = "master"
 
 [[constraint]]
-  name = "github.com/stretchr/testify"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/onsi/ginkgo"
   branch = "master"
 

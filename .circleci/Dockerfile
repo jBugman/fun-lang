@@ -9,3 +9,5 @@ RUN stack upgrade
 RUN mkdir -p /home/circleci/.local/bin && \
     wget -qO- https://github.com/jBugman/hpc-coveralls/releases/download/stack/coveralls.tar.gz | \
     tar xvz -C /home/circleci/.local/bin
+
+RUN go get -u github.com/golang/dep/cmd/dep

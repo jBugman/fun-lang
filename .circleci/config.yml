@@ -22,6 +22,10 @@ jobs:
             - ~/.stack
 
       - run:
+          name: Go tests
+          command: "go test ./go/..."
+
+      - run:
           name: Running tests
           command: "stack test --coverage"
 

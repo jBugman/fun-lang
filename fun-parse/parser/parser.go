@@ -3,6 +3,7 @@ package parser
 
 import (
 	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/pkg/errors"
@@ -125,7 +126,6 @@ func parseAtom(sc scanner) (fun.Atom, scanner, error) {
 }
 
 func parseIdent(sc scanner) (fun.Ident, scanner, error) {
-	// TODO: proper ident
 	var val string
 	var start = sc
 	for {
@@ -133,12 +133,24 @@ func parseIdent(sc scanner) (fun.Ident, scanner, error) {
 		switch {
 		case err != nil:
 			return fun.ID(val, start.pos), sc, nil
+		case c == '_':
+			sc.commit()
+			val += string(c)
+		case c == '.' && len(val) > 0:
+			sc.commit()
+			val += string(c)
 		case unicode.IsLetter(c):
+			sc.commit()
+			val += string(c)
+		case unicode.IsDigit(c) && len(val) > 0:
 			sc.commit()
 			val += string(c)
 		default:
 			if len(val) == 0 {
-				return fun.Ident{}, start, unexpected(sc.pos, c, "letter") // FIXME: letter
+				return fun.Ident{}, start, unexpected(sc.pos, c, "letter or '_'")
+			}
+			if strings.HasSuffix(val, ".") {
+				return fun.Ident{}, start, unexpected(sc.pos, c, "letter")
 			}
 			return fun.ID(val, start.pos), sc, nil
 		}

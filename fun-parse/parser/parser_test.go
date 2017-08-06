@@ -121,7 +121,7 @@ var _ = DescribeTable("parsing of", PV,
 		fun.ID("foo", pos(1, 1)),
 	),
 
-	XParsing("_",
+	Parsing("_",
 		fun.ID("_", pos(1, 1)),
 	),
 
@@ -129,7 +129,7 @@ var _ = DescribeTable("parsing of", PV,
 		fun.ID("bar", pos(3, 1)),
 	),
 
-	XParsing("fmt.Println",
+	Parsing("fmt.Println",
 		fun.ID("fmt.Println", pos(1, 1)),
 	),
 

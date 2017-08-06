@@ -14,7 +14,7 @@ var _ = Describe("parseExpression", func() {
 		source := newScanner("foo")
 		x, s, err := parseExpression(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.ID("foo", pos(1, 1)),
 		))
@@ -28,7 +28,7 @@ var _ = Describe("parseExpression", func() {
 		source := newScanner("foo bar")
 		x, s, err := parseExpression(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.ID("foo", pos(1, 1)),
 		))
@@ -45,7 +45,7 @@ var _ = Describe("parseIdent", func() {
 		source := newScanner("foo bar")
 		x, s, err := parseIdent(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.ID("foo", pos(1, 1)),
 		))
@@ -59,7 +59,7 @@ var _ = Describe("parseIdent", func() {
 		source := newScanner("foo\n\nbar")
 		x, s, err := parseIdent(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.ID("foo", pos(1, 1)),
 		))
@@ -67,6 +67,17 @@ var _ = Describe("parseIdent", func() {
 			pos(1, 4),
 		))
 		Expect(s.cursor).To(Equal(3))
+	})
+
+	It("fails on non-letter first char", func() {
+		source := newScanner("99bottles")
+		_, s, err := parseIdent(source)
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).Should(Equal("1:1: expected letter or '_', found '9'"))
+		Expect(s.pos).To(Equal(
+			pos(1, 1),
+		))
+		Expect(s.cursor).To(Equal(0))
 	})
 })
 
@@ -85,11 +96,11 @@ var _ = Describe("skipSpace", func() {
 
 var _ = Describe("parseList", func() {
 
-	It("()", func() {
+	It("parses ()", func() {
 		source := newScanner("()")
 		x, s, err := parseList(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.LL(nil, pos(1, 1)),
 		))
@@ -98,11 +109,11 @@ var _ = Describe("parseList", func() {
 		Expect(s.cursor).To(Equal(2))
 	})
 
-	It("(foo)", func() {
+	It("parses (foo)", func() {
 		source := newScanner("(foo)")
 		x, s, err := parseList(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.L(pos(1, 1),
 				fun.ID("foo", pos(1, 2)),
@@ -114,11 +125,11 @@ var _ = Describe("parseList", func() {
 		Expect(s.cursor).To(Equal(5))
 	})
 
-	It("(foo bar)", func() {
+	It("parses (foo bar)", func() {
 		source := newScanner("(foo bar)")
 		x, s, err := parseList(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.L(pos(1, 1),
 				fun.ID("foo", pos(1, 2)),
@@ -131,11 +142,11 @@ var _ = Describe("parseList", func() {
 		Expect(s.cursor).To(Equal(9))
 	})
 
-	It("(foo ())", func() {
+	It("parses (foo ())", func() {
 		source := newScanner("(foo ())")
 		x, s, err := parseList(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.L(pos(1, 1),
 				fun.ID("foo", pos(1, 2)),
@@ -148,11 +159,11 @@ var _ = Describe("parseList", func() {
 		Expect(s.cursor).To(Equal(8))
 	})
 
-	It("(foo (a))", func() {
+	It("parses (foo (a))", func() {
 		source := newScanner("(foo (a))")
 		x, s, err := parseList(source)
 
-		Expect(err).Should(Succeed())
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(x).To(Equal(
 			fun.L(pos(1, 1),
 				fun.ID("foo", pos(1, 2)),

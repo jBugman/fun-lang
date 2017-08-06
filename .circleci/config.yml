@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: jbugman/funlang-circleci:0.5
+      - image: jbugman/funlang-circleci:0.5.1
     working_directory: /go/src/github.com/jBugman/fun-lang
     steps:
       - checkout

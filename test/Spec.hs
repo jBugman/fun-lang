@@ -66,7 +66,7 @@ unitTests = do
       `shouldBe`
       Left "1:2: syntax error: unexpected 'B', expecting space, comment or end of input"
 
-
+    -- spellchecker: ignore nfoo
     it "ignores comments A" $
       parse "; comment\nfoo" `shouldParse` ID "foo"
 

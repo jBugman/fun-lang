@@ -21,6 +21,16 @@ func ID(x string, pos code.Pos) Ident {
 	return Ident{X: x, Pos: pos}
 }
 
+// KW creates Keyword.
+func KW(x string, pos code.Pos) Keyword {
+	return Keyword{X: x, Pos: pos}
+}
+
+// OP creates Operator.
+func OP(x string, pos code.Pos) Operator {
+	return Operator{X: x, Pos: pos}
+}
+
 // TP creates Type.
 func TP(x string, pos code.Pos) Type {
 	return Type{X: x, Pos: pos}

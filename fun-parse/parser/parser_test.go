@@ -56,7 +56,14 @@ var _ = Describe("parser", func() {
 var _ = DescribeTable("parsing of", PV,
 
 	Parsing("()",
-		fun.L(pos(1, 1))),
+		fun.LL(nil, pos(1, 1)),
+	),
+
+	Parsing("(())",
+		fun.L(pos(1, 1),
+			fun.LL(nil, pos(1, 2)),
+		),
+	),
 
 	XEntry("string lit",
 		"\"test\"",
@@ -130,18 +137,77 @@ var _ = DescribeTable("parsing of", PV,
 		fun.TP("int", pos(1, 1)),
 	),
 
+	XParsing("+",
+		fun.OP("+", pos(1, 1)),
+	),
+
+	XParsing("++",
+		fun.OP("++", pos(1, 1)),
+	),
+
+	XParsing("&",
+		fun.OP("&", pos(1, 1)),
+	),
+
+	XParsing("&&",
+		fun.OP("&&", pos(1, 1)),
+	),
+
+	XParsing("|",
+		fun.OP("|", pos(1, 1)),
+	),
+
+	XParsing("||",
+		fun.OP("||", pos(1, 1)),
+	),
+
+	XParsing("!",
+		fun.OP("!", pos(1, 1)),
+	),
+
+	XParsing("!=",
+		fun.OP("!=", pos(1, 1)),
+	),
+
+	XParsing("(+ foo)",
+		fun.L(pos(1, 1),
+			fun.OP("+", pos(1, 2)),
+			fun.ID("foo", pos(1, 4)),
+		),
+	),
+
+	XParsing("(== 0xff 255)",
+		fun.L(pos(1, 1),
+			fun.OP("==", pos(1, 2)),
+			fun.HL("0xff", pos(1, 5)),
+			fun.IL("255", pos(1, 10)),
+		),
+	),
+
+	XEntry("keyword",
+		"for",
+		fun.KW("for", pos(1, 1)),
+	),
+
+	XEntry("not a keyword",
+		"forall",
+		fun.ID("for", pos(1, 1)),
+	),
+
 	Parsing("(foo)",
 		fun.L(
 			pos(1, 1),
 			fun.ID("foo", pos(1, 2)),
-		)),
+		),
+	),
 
 	Parsing("(foo bar)",
 		fun.L(
 			pos(1, 1),
 			fun.ID("foo", pos(1, 2)),
 			fun.ID("bar", pos(1, 6)),
-		)),
+		),
+	),
 
 	Parsing("(foo (a))",
 		fun.L(
@@ -151,7 +217,8 @@ var _ = DescribeTable("parsing of", PV,
 				pos(1, 6),
 				fun.ID("a", pos(1, 7)),
 			),
-		)),
+		),
+	),
 )
 
 func pos(line, col int) code.Pos {

@@ -31,6 +31,24 @@ type Ident struct {
 func (Ident) exprMarker() {}
 func (Ident) atomMarker() {}
 
+// Keyword is a language keyword.
+type Keyword struct {
+	Pos code.Pos
+	X   string
+}
+
+func (Keyword) exprMarker() {}
+func (Keyword) atomMarker() {}
+
+// Operator is an operator.
+type Operator struct {
+	Pos code.Pos
+	X   string
+}
+
+func (Operator) exprMarker() {}
+func (Operator) atomMarker() {}
+
 // Type is an identifier.
 type Type struct {
 	Pos code.Pos

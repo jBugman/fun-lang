@@ -22,6 +22,10 @@ jobs:
             - ~/.stack
 
       - run:
+          name: Go dependencies
+          command: "go get ./go/..."
+
+      - run:
           name: Go tests
           command: "go test ./go/..."
 

@@ -1,29 +1,11 @@
-package main
+package parser
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"unicode"
 
 	"github.com/pkg/errors"
 )
-
-func main() {
-	filename := os.Args[1]
-	source, err := ioutil.ReadFile(filename)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrap(err, "read file"))
-		os.Exit(1)
-	}
-	result, err := parseSource(source)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s:%s\n", filename, err)
-		os.Exit(1)
-	}
-
-	fmt.Println(result)
-}
 
 // Pos represents position in code.
 type Pos struct {
@@ -130,7 +112,8 @@ func (e pe) Error() string {
 	return fmt.Sprintf("%d:%d: %s", e.pos.Line, e.pos.Col, e.err)
 }
 
-func parseSource(src []byte) (Expr, error) {
+// Parse parses source code as an expression.
+func Parse(src []byte) (Expr, error) {
 	source := newScanner(string(src))
 	trimmed := skipSpace(source)
 	return parseOneExpression(trimmed)

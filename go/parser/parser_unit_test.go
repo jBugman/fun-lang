@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"testing"
@@ -120,80 +120,4 @@ func TestParseList_5(t *testing.T) {
 	}, x)
 	assert.Equal(t, Pos{1, 10}, s.pos)
 	assert.Equal(t, 9, s.cursor)
-}
-
-func TestParser_0(t *testing.T) {
-	src := []byte("foo")
-	res, err := parseSource(src)
-	assert.NoError(t, err)
-	assert.Equal(t, Ident{x: "foo", pos: Pos{1, 1}}, res)
-}
-
-func TestParser_1(t *testing.T) {
-	src := []byte("foo bar")
-	_, err := parseSource(src)
-	assert.EqualError(t, err, "1:4: expected 'EOF', found ' '")
-}
-
-func TestParser_2(t *testing.T) {
-	src := []byte("foo\n\nbar")
-	_, err := parseSource(src)
-	assert.EqualError(t, err, "1:4: expected 'EOF', found '\\n'")
-}
-
-func TestParser_3(t *testing.T) {
-	src := []byte("  \n\nbar")
-	res, err := parseSource(src)
-	assert.NoError(t, err)
-	assert.Equal(t, Ident{x: "bar", pos: Pos{3, 1}}, res)
-}
-
-func TestParser_4(t *testing.T) {
-	src := []byte("(foo)")
-	res, err := parseSource(src)
-	assert.NoError(t, err)
-	assert.Equal(t, List{
-		xs: []Expr{
-			Ident{x: "foo", pos: Pos{1, 2}},
-		},
-		pos: Pos{1, 1},
-	}, res)
-}
-
-func TestParser_5(t *testing.T) {
-	src := []byte("(foo bar)")
-	res, err := parseSource(src)
-	assert.NoError(t, err)
-	assert.Equal(t, List{
-		xs: []Expr{
-			Ident{x: "foo", pos: Pos{1, 2}},
-			Ident{x: "bar", pos: Pos{1, 6}},
-		},
-		pos: Pos{1, 1},
-	}, res)
-}
-
-func TestParser_6(t *testing.T) {
-	src := []byte("()")
-	res, err := parseSource(src)
-	assert.NoError(t, err)
-	assert.Equal(t, List{pos: Pos{1, 1}}, res)
-}
-
-func TestParser_7(t *testing.T) {
-	src := []byte("(foo (a))")
-	res, err := parseSource(src)
-	assert.NoError(t, err)
-	assert.Equal(t, List{
-		xs: []Expr{
-			Ident{x: "foo", pos: Pos{1, 2}},
-			List{
-				xs: []Expr{
-					Ident{x: "a", pos: Pos{1, 7}},
-				},
-				pos: Pos{1, 6},
-			},
-		},
-		pos: Pos{1, 1},
-	}, res)
 }

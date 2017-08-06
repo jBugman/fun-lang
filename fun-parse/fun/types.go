@@ -5,60 +5,100 @@ import "github.com/jBugman/fun-lang/fun-parse/fun/code"
 
 // Expr is a generic s-expression.
 type Expr interface {
-	Pos() code.Pos
-}
-
-// List is a list.
-type List struct {
-	pos code.Pos
-	xs  []Expr
-}
-
-// NewList creates a List.
-func NewList(xs []Expr, pos code.Pos) List {
-	return List{
-		pos: pos,
-		xs:  xs,
-	}
+	exprMarker()
 }
 
 // Atom is an atom.
 type Atom interface {
 	Expr
-	Val() interface{} // TODO: something more meaningful
+	atomMarker()
 }
+
+// List is a list.
+type List struct {
+	Pos code.Pos
+	XS  []Expr
+}
+
+func (List) exprMarker() {}
 
 // Ident is an identifier.
 type Ident struct {
-	pos code.Pos
-	x   string
+	Pos code.Pos
+	X   string
 }
 
-// NewIdent creates an Ident.
-func NewIdent(val string, pos code.Pos) Ident {
-	return Ident{
-		pos: pos,
-		x:   val,
-	}
+func (Ident) exprMarker() {}
+func (Ident) atomMarker() {}
+
+// Type is an identifier.
+type Type struct {
+	Pos code.Pos
+	X   string
 }
 
-// StrLit is a string literal.
-type StrLit struct {
-	pos code.Pos
-	x   string
+func (Type) exprMarker() {}
+func (Type) atomMarker() {}
+
+// String is a string literal.
+type String struct {
+	Pos code.Pos
+	X   string
 }
 
-// Pos designates membership of Expr.
-func (x List) Pos() code.Pos { return x.pos }
+func (String) exprMarker() {}
+func (String) atomMarker() {}
 
-// Pos designates membership of Expr.
-func (x Ident) Pos() code.Pos { return x.pos }
+// Char is a rune literal.
+type Char struct {
+	Pos code.Pos
+	X   string
+}
 
-// Pos designates membership of Expr.
-func (x StrLit) Pos() code.Pos { return x.pos }
+func (Char) exprMarker() {}
+func (Char) atomMarker() {}
 
-// Val designates membership of Atom.
-func (x Ident) Val() interface{} { return x.x }
+// Integer is an int literal.
+type Integer struct {
+	Pos code.Pos
+	X   string
+}
 
-// Val designates membership of Atom.
-func (x StrLit) Val() interface{} { return x.x }
+func (Integer) exprMarker() {}
+func (Integer) atomMarker() {}
+
+// Double is a float64 literal.
+type Double struct {
+	Pos code.Pos
+	X   string
+}
+
+func (Double) exprMarker() {}
+func (Double) atomMarker() {}
+
+// Oct is an octal int literal.
+type Oct struct {
+	Pos code.Pos
+	X   string
+}
+
+func (Oct) exprMarker() {}
+func (Oct) atomMarker() {}
+
+// Hex is a hex int literal.
+type Hex struct {
+	Pos code.Pos
+	X   string
+}
+
+func (Hex) exprMarker() {}
+func (Hex) atomMarker() {}
+
+// Bool is a boolean literal.
+type Bool struct {
+	Pos code.Pos
+	X   bool
+}
+
+func (Bool) exprMarker() {}
+func (Bool) atomMarker() {}

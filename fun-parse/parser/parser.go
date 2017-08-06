@@ -9,6 +9,7 @@ import (
 
 	"github.com/jBugman/fun-lang/fun-parse/fun"
 	"github.com/jBugman/fun-lang/fun-parse/fun/code"
+	// . "github.com/jBugman/fun-lang/fun-parse/fun/pattern"
 )
 
 type scanner struct {
@@ -131,7 +132,7 @@ func parseIdent(sc scanner) (fun.Ident, scanner, error) {
 		c, err := sc.next()
 		switch {
 		case err != nil:
-			return fun.NewIdent(val, start.pos), sc, nil
+			return fun.ID(val, start.pos), sc, nil
 		case unicode.IsLetter(c):
 			sc.commit()
 			val += string(c)
@@ -139,7 +140,7 @@ func parseIdent(sc scanner) (fun.Ident, scanner, error) {
 			if len(val) == 0 {
 				return fun.Ident{}, start, unexpected(sc.pos, c, "letter") // FIXME: letter
 			}
-			return fun.NewIdent(val, start.pos), sc, nil
+			return fun.ID(val, start.pos), sc, nil
 		}
 	}
 }
@@ -153,7 +154,7 @@ func parseList(sc scanner) (fun.List, scanner, error) {
 		switch {
 
 		case err != nil:
-			return fun.NewList(xs, start.pos), sc, nil
+			return fun.LL(xs, start.pos), sc, nil
 
 		case unicode.IsSpace(c):
 			sc = skipSpace(sc)
@@ -175,7 +176,7 @@ func parseList(sc scanner) (fun.List, scanner, error) {
 		case c == ')':
 			if opened {
 				sc.commit()
-				return fun.NewList(xs, start.pos), sc, nil
+				return fun.LL(xs, start.pos), sc, nil
 			}
 			return fun.List{}, start, unexpected(sc.pos, c, "expression")
 

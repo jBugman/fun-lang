@@ -12,7 +12,7 @@ func L(pos code.Pos, xs ...Expr) List {
 }
 
 // LL creates List from a slice of Exprs.
-func LL(pos code.Pos, xs []Expr) List {
+func LL(xs []Expr, pos code.Pos) List {
 	return List{XS: xs, Pos: pos}
 }
 

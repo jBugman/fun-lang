@@ -16,8 +16,7 @@ var _ = Describe("parseExpression", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			ident(pos(1, 1),
-				"foo"),
+			fun.ID("foo", pos(1, 1)),
 		))
 		Expect(s.pos).To(Equal(
 			pos(1, 4),
@@ -31,8 +30,7 @@ var _ = Describe("parseExpression", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			ident(pos(1, 1),
-				"foo"),
+			fun.ID("foo", pos(1, 1)),
 		))
 		Expect(s.pos).To(Equal(
 			pos(1, 4),
@@ -49,8 +47,7 @@ var _ = Describe("parseIdent", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			ident(pos(1, 1),
-				"foo"),
+			fun.ID("foo", pos(1, 1)),
 		))
 		Expect(s.pos).To(Equal(
 			pos(1, 4),
@@ -64,8 +61,7 @@ var _ = Describe("parseIdent", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			ident(pos(1, 1),
-				"foo"),
+			fun.ID("foo", pos(1, 1)),
 		))
 		Expect(s.pos).To(Equal(
 			pos(1, 4),
@@ -95,7 +91,7 @@ var _ = Describe("parseList", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			list(pos(1, 1)),
+			fun.LL(nil, pos(1, 1)),
 		))
 		Expect(s.pos).To(Equal(
 			pos(1, 3)))
@@ -108,9 +104,8 @@ var _ = Describe("parseList", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			list(pos(1, 1),
-				ident(pos(1, 2),
-					"foo"),
+			fun.L(pos(1, 1),
+				fun.ID("foo", pos(1, 2)),
 			),
 		))
 		Expect(s.pos).To(Equal(
@@ -125,11 +120,9 @@ var _ = Describe("parseList", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			list(pos(1, 1),
-				ident(pos(1, 2),
-					"foo"),
-				ident(pos(1, 6),
-					"bar"),
+			fun.L(pos(1, 1),
+				fun.ID("foo", pos(1, 2)),
+				fun.ID("bar", pos(1, 6)),
 			),
 		))
 		Expect(s.pos).To(Equal(
@@ -144,10 +137,9 @@ var _ = Describe("parseList", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			list(pos(1, 1),
-				ident(pos(1, 2),
-					"foo"),
-				list(pos(1, 6)),
+			fun.L(pos(1, 1),
+				fun.ID("foo", pos(1, 2)),
+				fun.LL(nil, pos(1, 6)),
 			),
 		))
 		Expect(s.pos).To(Equal(
@@ -162,12 +154,10 @@ var _ = Describe("parseList", func() {
 
 		Expect(err).Should(Succeed())
 		Expect(x).To(Equal(
-			list(pos(1, 1),
-				ident(pos(1, 2),
-					"foo"),
-				list(pos(1, 6),
-					ident(pos(1, 7),
-						"a"),
+			fun.L(pos(1, 1),
+				fun.ID("foo", pos(1, 2)),
+				fun.L(pos(1, 6),
+					fun.ID("a", pos(1, 7)),
 				),
 			),
 		))
@@ -178,14 +168,9 @@ var _ = Describe("parseList", func() {
 	})
 })
 
-func ident(pos code.Pos, x string) fun.Ident {
-	return fun.NewIdent(x, pos)
-}
-
-func list(pos code.Pos, xs ...fun.Expr) fun.List {
-	return fun.NewList(xs, pos)
-}
-
 func pos(line, col int) code.Pos {
-	return code.NewPos(line, col)
+	return code.Pos{
+		Line: line,
+		Col:  col,
+	}
 }

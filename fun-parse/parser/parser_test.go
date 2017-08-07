@@ -40,17 +40,17 @@ var _ = Describe("parser", func() {
 		_, err := Parse("_BANG!!")
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal(
-			"1:6: expected 'EOF', found '!'"))
+			"1:6: expected EOF, found '!'"))
 	})
 
 	It("fails on 'foo bar'", func() {
 		_, err := Parse("foo bar")
-		Expect(err).Should(MatchError("1:4: expected 'EOF', found ' '"))
+		Expect(err).Should(MatchError("1:4: expected EOF, found ' '"))
 	})
 
 	It("fails on 'foo\\n\\nbar'", func() {
 		_, err := Parse("foo\n\nbar")
-		Expect(err).Should(MatchError("1:4: expected 'EOF', found '\\n'"))
+		Expect(err).Should(MatchError("1:4: expected EOF, found '\\n'"))
 	})
 })
 
@@ -66,9 +66,14 @@ var _ = DescribeTable("parsing of", PV,
 		),
 	),
 
-	XEntry("string lit",
+	Entry("string lit",
 		"\"test\"",
 		fun.SL("test", pos(1, 1)),
+	),
+
+	Entry("raw string lit",
+		"`l1\n\"2\"`",
+		fun.String{X: "l1\n\"2\"", Pos: pos(1, 1), Raw: true},
 	),
 
 	Entry("char lit",
@@ -174,6 +179,21 @@ var _ = DescribeTable("parsing of", PV,
 		fun.L(pos(1, 1),
 			fun.OP("+", pos(1, 2)),
 			fun.ID("foo", pos(1, 4)),
+		),
+	),
+
+	Parsing("(foo \"bar\")",
+		fun.L(pos(1, 1),
+			fun.ID("foo", pos(1, 2)),
+			fun.SL("bar", pos(1, 6)),
+		),
+	),
+
+	Parsing("(foo bar baz)",
+		fun.L(pos(1, 1),
+			fun.ID("foo", pos(1, 2)),
+			fun.ID("bar", pos(1, 6)),
+			fun.ID("baz", pos(1, 10)),
 		),
 	),
 

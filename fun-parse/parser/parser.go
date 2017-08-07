@@ -78,7 +78,12 @@ func unexpected(pos code.Pos, c rune, expected string) error {
 	if c == '\n' {
 		s = "\\n"
 	}
-	return errorf(pos, "expected %s, found '%s'", expected, s)
+	if c == 0 {
+		s = "EOF"
+	} else {
+		s = "'" + s + "'"
+	}
+	return errorf(pos, "expected %s, found %s", expected, s)
 }
 
 func (e parserError) Error() string {
@@ -108,12 +113,12 @@ func skipSpace(sc scanner) scanner {
 
 func parseOneExpression(sc scanner) (fun.Expr, error) {
 	if len(sc.source) == 0 {
-		return nil, errorf(sc.pos, "expected %s, found '%s'", "expression", "EOF")
+		return nil, unexpected(sc.pos, 0, "expression")
 	}
 	x, sc, err := parseExpression(sc)
 	// Check if all input is consumed
 	if err == nil && sc.cursor < len(sc.source) {
-		err = unexpected(sc.pos, sc.c, "'EOF'")
+		err = unexpected(sc.pos, sc.c, "EOF")
 	}
 	return x, err
 }
@@ -126,7 +131,6 @@ func parseExpression(sc scanner) (fun.Expr, scanner, error) {
 	if err == nil {
 		return x, sc, nil
 	}
-	fmt.Println(err)
 
 	x, sc, err = parseList(sc)
 	if err == nil {
@@ -138,10 +142,21 @@ func parseExpression(sc scanner) (fun.Expr, scanner, error) {
 
 func parseAtom(sc scanner) (fun.Atom, scanner, error) {
 	var err error
-	var ch fun.Char
-	ch, sc, err = parseChar(sc)
+	var x fun.Atom
+	// String
+	x, sc, err = parseString(sc)
 	if err == nil {
-		return ch, sc, nil
+		return x, sc, nil
+	}
+	// Char
+	x, sc, err = parseChar(sc)
+	if err == nil {
+		return x, sc, nil
+	}
+	// Operator
+	x, sc, err = parseOperator(sc)
+	if err == nil {
+		return x, sc, nil
 	}
 	// Ident, Keyword or Bool
 	var id fun.Ident
@@ -157,12 +172,6 @@ func parseAtom(sc scanner) (fun.Atom, scanner, error) {
 			return fun.Keyword{X: id.X, Pos: id.Pos}, sc, nil
 		}
 		return id, sc, nil
-	}
-	// Operator
-	var op fun.Operator
-	op, sc, err = parseOperator(sc)
-	if err == nil {
-		return op, sc, nil
 	}
 	return nil, sc, unexpected(sc.pos, sc.c, "atom")
 }
@@ -310,13 +319,72 @@ func parseChar(sc scanner) (fun.Char, scanner, error) {
 		default:
 			if c == tick {
 				sc.commit()
-				val += string(c)
 				return fun.Char{
-					X:   val[1 : len(val)-1], // Trimming '
+					X:   val[1:], // Trimming '
 					Pos: start.pos,
 				}, sc, nil
 			}
-			return fun.Char{}, start, unexpected(sc.pos, c, "\\'")
+			return fun.Char{}, start, unexpected(sc.pos, c, "'\\''")
+		}
+	}
+}
+
+func parseString(sc scanner) (fun.String, scanner, error) {
+	var val string
+	var start = sc
+	var raw bool
+	for {
+		c, err := sc.next()
+		switch {
+
+		case len(val) == 0:
+			switch c {
+
+			case '"':
+				sc.commit()
+				val += string(c)
+
+			case '`':
+				sc.commit()
+				val += string(c)
+				raw = true
+
+			default:
+				return fun.String{}, start, unexpected(sc.pos, c, "string")
+			}
+
+		case strings.HasSuffix(val, "\\"):
+			if isEscape(c) || c == '"' {
+				sc.commit()
+				val += string(c)
+			} else {
+				return fun.String{}, start, unexpected(sc.pos, c, "escape sequence")
+			}
+
+		case c == '"' && !raw:
+			sc.commit()
+			return fun.String{
+				X:   val[1:], // trimming "
+				Pos: start.pos,
+			}, sc, nil
+
+		case c == '`' && raw:
+			sc.commit()
+			return fun.String{
+				X:   val[1:], // trimming `
+				Pos: start.pos,
+				Raw: true,
+			}, sc, nil
+
+		case c == '\n' && !raw:
+			return fun.String{}, start, unexpected(sc.pos, c, "'\"'")
+
+		case err != nil:
+			return fun.String{}, start, unexpected(sc.pos, 0, "'\"'")
+
+		default:
+			sc.commit()
+			val += string(c)
 		}
 	}
 }

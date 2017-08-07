@@ -62,6 +62,7 @@ func (Type) atomMarker() {}
 type String struct {
 	Pos code.Pos
 	X   string
+	Raw bool
 }
 
 func (String) exprMarker() {}

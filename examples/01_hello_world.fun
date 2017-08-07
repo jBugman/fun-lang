@@ -1,3 +1,4 @@
 (package main
 
-(func main (print "hello world")))
+(func main (print "hello world"))
+)

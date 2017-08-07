@@ -210,6 +210,21 @@ var _ = Describe("parseChar", func() {
 	})
 })
 
+var _ = Describe("parseString", func() {
+
+	It("fails on unclosed string", func() {
+		source := newScanner(`"asd`)
+		_, s, err := parseString(source)
+
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).Should(Equal("1:5: expected '\"', found EOF"))
+		Expect(s.pos).To(Equal(
+			pos(1, 1),
+		))
+		Expect(s.cursor).To(Equal(0))
+	})
+})
+
 func pos(line, col int) code.Pos {
 	return code.Pos{
 		Line: line,

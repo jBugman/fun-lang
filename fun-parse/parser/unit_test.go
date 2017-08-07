@@ -179,6 +179,37 @@ var _ = Describe("parseList", func() {
 	})
 })
 
+var _ = Describe("parseChar", func() {
+
+	It("parses tick char", func() {
+		source := newScanner(`'\''`)
+		x, s, err := parseChar(source)
+
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(x).To(Equal(
+			fun.CL(`\'`, pos(1, 1)),
+		))
+		Expect(s.pos).To(Equal(
+			pos(1, 5),
+		))
+		Expect(s.cursor).To(Equal(4))
+	})
+
+	It("parses newline char", func() {
+		source := newScanner(`'\n'`)
+		x, s, err := parseChar(source)
+
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(x).To(Equal(
+			fun.CL(`\n`, pos(1, 1)),
+		))
+		Expect(s.pos).To(Equal(
+			pos(1, 5),
+		))
+		Expect(s.cursor).To(Equal(4))
+	})
+})
+
 func pos(line, col int) code.Pos {
 	return code.Pos{
 		Line: line,

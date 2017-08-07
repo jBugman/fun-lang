@@ -10,12 +10,12 @@ import (
 
 	"github.com/jBugman/fun-lang/fun-parse/fun"
 	"github.com/jBugman/fun-lang/fun-parse/fun/code"
-	// . "github.com/jBugman/fun-lang/fun-parse/fun/pattern"
 )
 
 var (
 	keywords  = make(map[string]bool)
 	operators = make(map[string]bool)
+	escapable = make(map[rune]bool)
 )
 
 func init() {
@@ -24,6 +24,9 @@ func init() {
 	}
 	for _, s := range fun.Operators {
 		operators[s] = true
+	}
+	for _, s := range []rune{'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\''} {
+		escapable[s] = true
 	}
 }
 
@@ -123,6 +126,7 @@ func parseExpression(sc scanner) (fun.Expr, scanner, error) {
 	if err == nil {
 		return x, sc, nil
 	}
+	fmt.Println(err)
 
 	x, sc, err = parseList(sc)
 	if err == nil {
@@ -134,6 +138,12 @@ func parseExpression(sc scanner) (fun.Expr, scanner, error) {
 
 func parseAtom(sc scanner) (fun.Atom, scanner, error) {
 	var err error
+	var ch fun.Char
+	ch, sc, err = parseChar(sc)
+	if err == nil {
+		return ch, sc, nil
+	}
+	// Ident, Keyword or Bool
 	var id fun.Ident
 	id, sc, err = parseIdent(sc)
 	if err == nil {
@@ -148,6 +158,7 @@ func parseAtom(sc scanner) (fun.Atom, scanner, error) {
 		}
 		return id, sc, nil
 	}
+	// Operator
 	var op fun.Operator
 	op, sc, err = parseOperator(sc)
 	if err == nil {
@@ -263,4 +274,54 @@ func parseList(sc scanner) (fun.List, scanner, error) {
 			return fun.List{}, start, unexpected(sc.pos, c, "atom")
 		}
 	}
+}
+
+func parseChar(sc scanner) (fun.Char, scanner, error) {
+	const tick = '\''
+	var val string
+	var start = sc
+	for {
+		c, _ := sc.next()
+		switch val {
+
+		case "":
+			if c == tick {
+				sc.commit()
+				val += string(c)
+			} else {
+				return fun.Char{}, start, unexpected(sc.pos, c, "char literal")
+			}
+
+		case "'":
+			if c == tick {
+				return fun.Char{}, start, unexpected(sc.pos, c, "char literal")
+			}
+			sc.commit()
+			val += string(c)
+
+		case "'\\":
+			if isEscape(c) {
+				sc.commit()
+				val += string(c)
+			} else {
+				return fun.Char{}, start, unexpected(sc.pos, c, "char literal")
+			}
+
+		default:
+			if c == tick {
+				sc.commit()
+				val += string(c)
+				return fun.Char{
+					X:   val[1 : len(val)-1], // Trimming '
+					Pos: start.pos,
+				}, sc, nil
+			}
+			return fun.Char{}, start, unexpected(sc.pos, c, "\\'")
+		}
+	}
+}
+
+func isEscape(x rune) bool {
+	_, ok := escapable[x]
+	return ok
 }

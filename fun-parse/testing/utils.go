@@ -16,7 +16,7 @@ func Parse(source string) (fun.Expr, error) {
 // PV is a validator for parser cases.
 func PV(source string, result fun.Expr) {
 	res, err := Parse(source)
-	g.Expect(err).Should(g.Succeed())
+	g.Expect(err).ShouldNot(g.HaveOccurred())
 	g.Expect(res).To(g.Equal(result))
 }
 

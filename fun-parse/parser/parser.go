@@ -159,6 +159,11 @@ func parseAtom(sc scanner) (fun.Atom, scanner, error) {
 	if err == nil {
 		return x, sc, nil
 	}
+	// Type
+	x, sc, err = parseType(sc)
+	if err == nil {
+		return x, sc, nil
+	}
 	// Ident, Keyword or Bool
 	var id fun.Ident
 	id, sc, err = parseIdent(sc)
@@ -388,6 +393,21 @@ func parseString(sc scanner) (fun.String, scanner, error) {
 			val += string(c)
 		}
 	}
+}
+
+func parseType(sc scanner) (fun.Type, scanner, error) {
+	var start = sc
+	c, _ := sc.next()
+	if c != ':' {
+		return fun.Type{}, start, unexpected(sc.pos, c, "':'")
+	}
+
+	sc.commit()
+	id, sc, err := parseIdent(sc)
+	if err != nil {
+		return fun.Type{}, start, unexpected(sc.pos, c, "type")
+	}
+	return fun.Type{X: id.X, Pos: start.pos}, sc, nil
 }
 
 func isEscape(x rune) bool {

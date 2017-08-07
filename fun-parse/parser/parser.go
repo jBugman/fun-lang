@@ -306,6 +306,7 @@ func parseList(sc scanner) (fun.List, scanner, ParseError) {
 	}
 }
 
+// TODO: parse \u sequences and like
 func parseChar(sc scanner) (fun.Char, scanner, ParseError) {
 	const tick = '\''
 	var val string
@@ -449,51 +450,50 @@ func parseNumber(sc scanner) (fun.Atom, scanner, ParseError) {
 		}
 	}
 
-	var err error
 	switch {
 
 	case strings.HasPrefix(val, "0x"):
-		_, err = strconv.ParseInt(val, 0, 0)
+		x, err := strconv.ParseInt(val, 0, 0)
 		if err != nil {
 			return nil, start, parseError{
 				pos: start.pos,
 				err: errors.Wrap(err, "expected hex literal"),
 			}
 		}
-		return fun.Hex{X: val, Pos: start.pos}, sc, nil
+		return fun.Hex{X: int(x), Pos: start.pos}, sc, nil
 
 	case val == "0":
-		return fun.Integer{X: "0", Pos: start.pos}, sc, nil
+		return fun.Integer{X: 0, Pos: start.pos}, sc, nil
 
 	case strings.ContainsAny(val, ".e"):
-		_, err = strconv.ParseFloat(val, 64)
+		x, err := strconv.ParseFloat(val, 64)
 		if err != nil {
 			return nil, start, parseError{
 				pos: start.pos,
 				err: errors.Wrap(err, "expected float literal"),
 			}
 		}
-		return fun.Double{X: val, Pos: start.pos}, sc, nil
+		return fun.Double{X: x, Pos: start.pos}, sc, nil
 
 	case strings.HasPrefix(val, "0"):
-		_, err = strconv.ParseInt(val, 0, 0)
+		x, err := strconv.ParseInt(val, 0, 0)
 		if err != nil {
 			return nil, start, parseError{
 				pos: start.pos,
 				err: errors.Wrap(err, "expected octal literal"),
 			}
 		}
-		return fun.Oct{X: val, Pos: start.pos}, sc, nil
+		return fun.Oct{X: int(x), Pos: start.pos}, sc, nil
 
 	default:
-		_, err = strconv.ParseInt(val, 10, 0)
+		x, err := strconv.ParseInt(val, 10, 0)
 		if err != nil {
 			return nil, start, parseError{
 				pos: start.pos,
 				err: errors.Wrap(err, "expected int literal"),
 			}
 		}
-		return fun.Integer{X: val, Pos: start.pos}, sc, nil
+		return fun.Integer{X: int(x), Pos: start.pos}, sc, nil
 	}
 }
 

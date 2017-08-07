@@ -80,7 +80,7 @@ func (Char) atomMarker() {}
 // Integer is an int literal.
 type Integer struct {
 	Pos code.Pos
-	X   string
+	X   int
 }
 
 func (Integer) exprMarker() {}
@@ -89,7 +89,7 @@ func (Integer) atomMarker() {}
 // Double is a float64 literal.
 type Double struct {
 	Pos code.Pos
-	X   string
+	X   float64
 }
 
 func (Double) exprMarker() {}
@@ -98,7 +98,7 @@ func (Double) atomMarker() {}
 // Oct is an octal int literal.
 type Oct struct {
 	Pos code.Pos
-	X   string
+	X   int
 }
 
 func (Oct) exprMarker() {}
@@ -107,7 +107,7 @@ func (Oct) atomMarker() {}
 // Hex is a hex int literal.
 type Hex struct {
 	Pos code.Pos
-	X   string
+	X   int
 }
 
 func (Hex) exprMarker() {}

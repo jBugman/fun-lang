@@ -47,12 +47,12 @@ func CL(x string, pos code.Pos) Char {
 }
 
 // IL creates Integer.
-func IL(x string, pos code.Pos) Integer {
+func IL(x int, pos code.Pos) Integer {
 	return Integer{X: x, Pos: pos}
 }
 
 // DL creates Double.
-func DL(x string, pos code.Pos) Double {
+func DL(x float64, pos code.Pos) Double {
 	return Double{X: x, Pos: pos}
 }
 
@@ -62,11 +62,11 @@ func BL(x bool, pos code.Pos) Bool {
 }
 
 // OL creates Oct.
-func OL(x string, pos code.Pos) Oct {
+func OL(x int, pos code.Pos) Oct {
 	return Oct{X: x, Pos: pos}
 }
 
 // HL creates Hex.
-func HL(x string, pos code.Pos) Hex {
+func HL(x int, pos code.Pos) Hex {
 	return Hex{X: x, Pos: pos}
 }

@@ -9,7 +9,7 @@ import (
 )
 
 // Parse is a wrapper for parser.Parse.
-func Parse(source string) (fun.Expr, error) {
+func Parse(source string) (fun.Expr, parser.ParseError) {
 	return parser.Parse([]byte(source))
 }
 

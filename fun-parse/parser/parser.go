@@ -2,7 +2,6 @@
 package parser
 
 import (
-	"fmt"
 	"strings"
 	"unicode"
 
@@ -61,19 +60,33 @@ func (s *scanner) commit() {
 	}
 }
 
-type parserError struct {
+// ParseError annotates concrete error with its position in code.
+type ParseError interface {
+	error
+	Pos() code.Pos
+}
+
+type parseError struct {
 	pos code.Pos
 	err error
 }
 
-func errorf(pos code.Pos, format string, args ...interface{}) error {
-	return parserError{
+func (pe parseError) Error() string {
+	return pe.err.Error()
+}
+
+func (pe parseError) Pos() code.Pos {
+	return pe.pos
+}
+
+func errorf(pos code.Pos, format string, args ...interface{}) ParseError {
+	return parseError{
 		pos: pos,
 		err: errors.Errorf(format, args...),
 	}
 }
 
-func unexpected(pos code.Pos, c rune, expected string) error {
+func unexpected(pos code.Pos, c rune, expected string) ParseError {
 	var s = string(c)
 	if c == '\n' {
 		s = "\\n"
@@ -86,12 +99,8 @@ func unexpected(pos code.Pos, c rune, expected string) error {
 	return errorf(pos, "expected %s, found %s", expected, s)
 }
 
-func (e parserError) Error() string {
-	return fmt.Sprintf("%d:%d: %s", e.pos.Line, e.pos.Col, e.err)
-}
-
 // Parse parses source code as an expression.
-func Parse(src []byte) (fun.Expr, error) {
+func Parse(src []byte) (fun.Expr, ParseError) {
 	source := strings.TrimRightFunc(string(src), unicode.IsSpace)
 	sc := newScanner(source)
 	trimmed := skipSpace(sc)
@@ -112,7 +121,7 @@ func skipSpace(sc scanner) scanner {
 	}
 }
 
-func parseOneExpression(sc scanner) (fun.Expr, error) {
+func parseOneExpression(sc scanner) (fun.Expr, ParseError) {
 	if len(sc.source) == 0 {
 		return nil, unexpected(sc.pos, 0, "expression")
 	}
@@ -124,9 +133,9 @@ func parseOneExpression(sc scanner) (fun.Expr, error) {
 	return x, err
 }
 
-func parseExpression(sc scanner) (fun.Expr, scanner, error) {
+func parseExpression(sc scanner) (fun.Expr, scanner, ParseError) {
 	var x fun.Expr
-	var err error
+	var err ParseError
 
 	x, sc, err = parseAtom(sc)
 	if err == nil {
@@ -141,8 +150,8 @@ func parseExpression(sc scanner) (fun.Expr, scanner, error) {
 	return nil, sc, err
 }
 
-func parseAtom(sc scanner) (fun.Atom, scanner, error) {
-	var err error
+func parseAtom(sc scanner) (fun.Atom, scanner, ParseError) {
+	var err ParseError
 	var x fun.Atom
 	// String
 	x, sc, err = parseString(sc)
@@ -182,7 +191,7 @@ func parseAtom(sc scanner) (fun.Atom, scanner, error) {
 	return nil, sc, unexpected(sc.pos, sc.c, "atom")
 }
 
-func parseIdent(sc scanner) (fun.Ident, scanner, error) {
+func parseIdent(sc scanner) (fun.Ident, scanner, ParseError) {
 	var val string
 	var start = sc
 	for {
@@ -220,7 +229,7 @@ func parseIdent(sc scanner) (fun.Ident, scanner, error) {
 	}
 }
 
-func parseOperator(sc scanner) (fun.Operator, scanner, error) {
+func parseOperator(sc scanner) (fun.Operator, scanner, ParseError) {
 	var val string
 	var start = sc
 	for {
@@ -241,7 +250,7 @@ func parseOperator(sc scanner) (fun.Operator, scanner, error) {
 	}
 }
 
-func parseList(sc scanner) (fun.List, scanner, error) {
+func parseList(sc scanner) (fun.List, scanner, ParseError) {
 	var xs []fun.Expr
 	var start = sc
 	var opened = false
@@ -265,7 +274,7 @@ func parseList(sc scanner) (fun.List, scanner, error) {
 			var x fun.List
 			x, sc, err = parseList(sc)
 			if err != nil {
-				return fun.List{}, sc, err
+				return fun.List{}, sc, err.(ParseError)
 			}
 			xs = append(xs, x)
 
@@ -291,7 +300,7 @@ func parseList(sc scanner) (fun.List, scanner, error) {
 	}
 }
 
-func parseChar(sc scanner) (fun.Char, scanner, error) {
+func parseChar(sc scanner) (fun.Char, scanner, ParseError) {
 	const tick = '\''
 	var val string
 	var start = sc
@@ -335,7 +344,7 @@ func parseChar(sc scanner) (fun.Char, scanner, error) {
 	}
 }
 
-func parseString(sc scanner) (fun.String, scanner, error) {
+func parseString(sc scanner) (fun.String, scanner, ParseError) {
 	var val string
 	var start = sc
 	var raw bool
@@ -395,7 +404,7 @@ func parseString(sc scanner) (fun.String, scanner, error) {
 	}
 }
 
-func parseType(sc scanner) (fun.Type, scanner, error) {
+func parseType(sc scanner) (fun.Type, scanner, ParseError) {
 	var start = sc
 	c, _ := sc.next()
 	if c != ':' {

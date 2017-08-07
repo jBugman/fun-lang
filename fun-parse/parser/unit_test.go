@@ -73,10 +73,9 @@ var _ = Describe("parseIdent", func() {
 		source := newScanner("99bottles")
 		_, s, err := parseIdent(source)
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).Should(Equal("1:1: expected letter or '_', found '9'"))
-		Expect(s.pos).To(Equal(
-			pos(1, 1),
-		))
+		Expect(err).To(MatchError("expected letter or '_', found '9'"))
+		Expect(err.Pos()).To(Equal(pos(1, 1)))
+		Expect(s.pos).To(Equal(pos(1, 1)))
 		Expect(s.cursor).To(Equal(0))
 	})
 })
@@ -217,10 +216,9 @@ var _ = Describe("parseString", func() {
 		_, s, err := parseString(source)
 
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).Should(Equal("1:5: expected '\"', found EOF"))
-		Expect(s.pos).To(Equal(
-			pos(1, 1),
-		))
+		Expect(err).To(MatchError("expected '\"', found EOF"))
+		Expect(err.Pos()).To(Equal(pos(1, 5)))
+		Expect(s.pos).To(Equal(pos(1, 1)))
 		Expect(s.cursor).To(Equal(0))
 	})
 })

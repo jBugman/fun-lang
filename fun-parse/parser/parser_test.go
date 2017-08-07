@@ -40,18 +40,20 @@ var _ = Describe("parser", func() {
 	It("fails on garbage input", func() {
 		_, err := Parse("_BANG!!")
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal(
-			"1:6: expected EOF, found '!'"))
+		Expect(err).To(MatchError("expected EOF, found '!'"))
+		Expect(err.Pos()).To(Equal(pos(1, 6)))
 	})
 
 	It("fails on 'foo bar'", func() {
 		_, err := Parse("foo bar")
-		Expect(err).Should(MatchError("1:4: expected EOF, found ' '"))
+		Expect(err).To(MatchError("expected EOF, found ' '"))
+		Expect(err.Pos()).To(Equal(pos(1, 4)))
 	})
 
 	It("fails on 'foo\\n\\nbar'", func() {
 		_, err := Parse("foo\n\nbar")
-		Expect(err).Should(MatchError("1:4: expected EOF, found '\\n'"))
+		Expect(err).To(MatchError("expected EOF, found '\\n'"))
+		Expect(err.Pos()).To(Equal(pos(1, 4)))
 	})
 })
 

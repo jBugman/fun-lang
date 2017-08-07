@@ -1,6 +1,7 @@
 package parser_test
 
 import (
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -223,16 +224,14 @@ var _ = DescribeTable("parsing of", PV,
 	),
 
 	Parsing("(foo bar)",
-		fun.L(
-			pos(1, 1),
+		fun.L(pos(1, 1),
 			fun.ID("foo", pos(1, 2)),
 			fun.ID("bar", pos(1, 6)),
 		),
 	),
 
 	Parsing("(foo (a))",
-		fun.L(
-			pos(1, 1),
+		fun.L(pos(1, 1),
 			fun.ID("foo", pos(1, 2)),
 			fun.L(
 				pos(1, 6),
@@ -240,7 +239,131 @@ var _ = DescribeTable("parsing of", PV,
 			),
 		),
 	),
+
+	Entry("func call",
+		`(printf "%+v\n" v)`,
+		fun.L(pos(1, 1),
+			fun.KW("printf", pos(1, 2)),
+			fun.SL("%+v\\n", pos(1, 9)),
+			fun.ID("v", pos(1, 17)),
+		),
+	),
+
+	Entry("selector + unit",
+		`(fmt.Println ())`,
+		fun.L(pos(1, 1),
+			fun.ID("fmt.Println", pos(1, 2)),
+			fun.LL(nil, pos(1, 14)),
+		),
+	),
+
+	Entry("import",
+		`(import "foo")`,
+		fun.L(pos(1, 1),
+			fun.KW("import", pos(1, 2)),
+			fun.SL("foo", pos(1, 9)),
+		),
+	),
+
+	XEntry("multiline s-exp",
+		ml(
+			`(+ foo bar`,
+			`    :int)`,
+		),
+		fun.L(pos(1, 1),
+			fun.OP("+", pos(1, 2)),
+			fun.ID("foo", pos(1, 4)),
+			fun.ID("bar", pos(1, 8)),
+			fun.TP("int", pos(2, 5)),
+		),
+	),
+
+	XEntry("multiline s-exp with a comment",
+		ml(
+			`(foo 123 456`,
+			`; comment`,
+			`  Bar)`,
+		),
+		fun.L(pos(1, 1),
+			fun.ID("foo", pos(1, 2)),
+			fun.IL("123", pos(1, 6)),
+			fun.IL("456", pos(1, 10)),
+			// TODO: comment
+			fun.ID("Bar", pos(3, 3)),
+		),
+	),
+
+	Entry("hello world",
+		ml(
+			`(package main`,
+			``,
+			`  (func main (print "hello world")))`,
+		),
+		fun.L(pos(1, 1),
+			fun.KW("package", pos(1, 2)),
+			fun.ID("main", pos(1, 10)),
+			fun.L(pos(3, 3),
+				fun.KW("func", pos(3, 4)),
+				fun.ID("main", pos(3, 9)),
+				fun.L(pos(3, 14),
+					fun.KW("print", pos(3, 15)),
+					fun.SL("hello world", pos(3, 21)),
+				),
+			),
+		),
+	),
+
+	XEntry("var decl from slice literal",
+		`(var t (:slice :string) ("g" "h" "c"))`,
+		fun.L(pos(1, 1),
+			fun.KW("var", pos(1, 2)),
+			fun.ID("t", pos(1, 6)),
+			fun.L(pos(1, 8),
+				fun.TP("slice", pos(1, 9)),
+				fun.TP("string", pos(1, 16)),
+			),
+			fun.L(pos(1, 25),
+				fun.SL("g", pos(1, 26)),
+				fun.SL("h", pos(1, 30)),
+				fun.SL("c", pos(1, 34)),
+			),
+		),
+	),
+
+	XEntry("func type",
+		`(:func () :int)`,
+		fun.L(pos(1, 1),
+			fun.TP("func", pos(1, 2)),
+			fun.LL(nil, pos(1, 8)),
+			fun.TP("int", pos(1, 11)),
+		),
+	),
+
+	XEntry("type assert",
+		`(assert :foo x)`,
+		fun.L(pos(1, 1),
+			fun.KW("assert", pos(1, 2)),
+			fun.TP("foo", pos(1, 9)),
+			fun.ID("x", pos(1, 13)),
+		),
+	),
+
+	Entry("unit test assert",
+		`(assert.Equal (s.T) text t)`,
+		fun.L(pos(1, 1),
+			fun.ID("assert.Equal", pos(1, 2)),
+			fun.L(pos(1, 15),
+				fun.ID("s.T", pos(1, 16)),
+			),
+			fun.ID("text", pos(1, 21)),
+			fun.ID("t", pos(1, 26)),
+		),
+	),
 )
+
+func ml(lines ...string) string {
+	return strings.Join(lines, "\n")
+}
 
 func pos(line, col int) code.Pos {
 	return code.Pos{

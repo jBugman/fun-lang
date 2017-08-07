@@ -92,8 +92,9 @@ func (e parserError) Error() string {
 
 // Parse parses source code as an expression.
 func Parse(src []byte) (fun.Expr, error) {
-	source := newScanner(string(src))
-	trimmed := skipSpace(source)
+	source := strings.TrimRightFunc(string(src), unicode.IsSpace)
+	sc := newScanner(source)
+	trimmed := skipSpace(sc)
 	return parseOneExpression(trimmed)
 }
 

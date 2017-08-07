@@ -22,11 +22,6 @@ func TestParser(t *testing.T) {
 
 var _ = Describe("parser", func() {
 
-	It("fails on american double", func() {
-		_, err := Parse(".223")
-		Expect(err).Should(HaveOccurred())
-	})
-
 	It("fails on non-singleton char lit", func() {
 		_, err := Parse("'foo'")
 		Expect(err).Should(HaveOccurred())
@@ -102,27 +97,31 @@ var _ = DescribeTable("parsing of", PV,
 		fun.BL(false, pos(1, 1)),
 	),
 
-	XParsing("42",
+	Parsing("42",
 		fun.IL("42", pos(1, 1)),
 	),
 
-	XParsing("0",
+	Parsing("0",
 		fun.IL("0", pos(1, 1)),
 	),
 
-	XParsing("42.0",
+	Parsing("42.0",
 		fun.DL("42.0", pos(1, 1)),
 	),
 
-	XParsing("1e3",
+	Parsing("0.123",
+		fun.DL("0.123", pos(1, 1)),
+	),
+
+	Parsing("1e3",
 		fun.DL("1e3", pos(1, 1)),
 	),
 
-	XParsing("0644",
+	Parsing("0644",
 		fun.OL("0644", pos(1, 1)),
 	),
 
-	XParsing("0x2A",
+	Parsing("0x2A",
 		fun.HL("0x2A", pos(1, 1)),
 	),
 
@@ -200,7 +199,7 @@ var _ = DescribeTable("parsing of", PV,
 		),
 	),
 
-	XParsing("(== 0xff 255)",
+	Parsing("(== 0xff 255)",
 		fun.L(pos(1, 1),
 			fun.OP("==", pos(1, 2)),
 			fun.HL("0xff", pos(1, 5)),

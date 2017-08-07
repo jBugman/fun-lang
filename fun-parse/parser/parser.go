@@ -2,6 +2,7 @@
 package parser
 
 import (
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -153,6 +154,11 @@ func parseExpression(sc scanner) (fun.Expr, scanner, ParseError) {
 func parseAtom(sc scanner) (fun.Atom, scanner, ParseError) {
 	var err ParseError
 	var x fun.Atom
+	// Numeric
+	x, sc, err = parseNumber(sc)
+	if err == nil {
+		return x, sc, nil
+	}
 	// String
 	x, sc, err = parseString(sc)
 	if err == nil {
@@ -417,6 +423,78 @@ func parseType(sc scanner) (fun.Type, scanner, ParseError) {
 		return fun.Type{}, start, unexpected(sc.pos, c, "type")
 	}
 	return fun.Type{X: id.X, Pos: start.pos}, sc, nil
+}
+
+func parseNumber(sc scanner) (fun.Atom, scanner, ParseError) {
+	var start = sc
+	var val string
+	var stop bool
+
+	for !stop {
+		c, err := sc.next()
+		switch {
+
+		case err != nil:
+			stop = true
+
+		case c == ')':
+			stop = true
+
+		case unicode.IsSpace(c):
+			stop = true
+
+		default:
+			sc.commit()
+			val += string(c)
+		}
+	}
+
+	var err error
+	switch {
+
+	case strings.HasPrefix(val, "0x"):
+		_, err = strconv.ParseInt(val, 0, 0)
+		if err != nil {
+			return nil, start, parseError{
+				pos: start.pos,
+				err: errors.Wrap(err, "expected hex literal"),
+			}
+		}
+		return fun.Hex{X: val, Pos: start.pos}, sc, nil
+
+	case val == "0":
+		return fun.Integer{X: "0", Pos: start.pos}, sc, nil
+
+	case strings.ContainsAny(val, ".e"):
+		_, err = strconv.ParseFloat(val, 64)
+		if err != nil {
+			return nil, start, parseError{
+				pos: start.pos,
+				err: errors.Wrap(err, "expected float literal"),
+			}
+		}
+		return fun.Double{X: val, Pos: start.pos}, sc, nil
+
+	case strings.HasPrefix(val, "0"):
+		_, err = strconv.ParseInt(val, 0, 0)
+		if err != nil {
+			return nil, start, parseError{
+				pos: start.pos,
+				err: errors.Wrap(err, "expected octal literal"),
+			}
+		}
+		return fun.Oct{X: val, Pos: start.pos}, sc, nil
+
+	default:
+		_, err = strconv.ParseInt(val, 10, 0)
+		if err != nil {
+			return nil, start, parseError{
+				pos: start.pos,
+				err: errors.Wrap(err, "expected int literal"),
+			}
+		}
+		return fun.Integer{X: val, Pos: start.pos}, sc, nil
+	}
 }
 
 func isEscape(x rune) bool {

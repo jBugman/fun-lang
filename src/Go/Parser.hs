@@ -5,15 +5,15 @@
 module Go.Parser (parse) where
 
 import ClassyPrelude
-import Data.Aeson                   (FromJSON, eitherDecodeStrict, parseJSON, withObject, (.:),
-                                     (.:?))
+import Data.Aeson                   (FromJSON, eitherDecodeStrict, parseJSON, withObject, (.!=),
+                                     (.:), (.:?))
 import Data.Either.Combinators      (mapLeft)
 import Data.SCargot.Repr.WellFormed (pattern L)
 import System.Exit                  (ExitCode (..))
 import System.IO.Unsafe             (unsafePerformIO)
 import System.Process               (readProcessWithExitCode)
 
-import Fun.Errors      (Error (GoError), Pos (..))
+import Fun.Errors      (Error (..), Pos (..))
 import Fun.SExpression (pattern BL, pattern CL, pattern DL, Expression, pattern HL, pattern ID,
                         pattern IL, pattern KW, pattern OL, pattern OP, pattern SL, pattern TP)
 
@@ -45,7 +45,7 @@ instance FromJSON Pos where
         <*> v .: "col"
 
 instance FromJSON Error where
-    parseJSON = withObject "GoError" $ \v -> GoError
+    parseJSON = withObject "SyntaxError" $ \v -> SyntaxError
         <$> v .:? "pos"
         <*> v .:  "error"
 
@@ -53,7 +53,7 @@ instance FromJSON Expression where
     parseJSON = withObject "Expression" $ \v -> do
         t <- v .: "type"
         case t of
-            "List"     -> L <$> v .: "xs"
+            "List"     -> L  <$> v .:? "xs" .!= []
             "Ident"    -> ID <$> v .: "x"
             "Keyword"  -> KW <$> v .: "x"
             "Operator" -> OP <$> v .: "x"

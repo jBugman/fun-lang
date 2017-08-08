@@ -30,6 +30,10 @@ jobs:
           command: "ginkgo --noisyPendings=false ./func-parse/parser"
 
       - run:
+          name: Installing func-parse
+          command: go install ./func-parse
+
+      - run:
           name: Running tests
           command: "stack test --coverage"
 

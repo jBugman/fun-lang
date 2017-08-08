@@ -5,8 +5,8 @@ import ClassyPrelude
 import Fun.Desugar    (desugar)
 import Fun.Errors     (Error (..))
 import Fun.Go.Printer (printGo)
-import Fun.Parser     (parse)
 import Go.Fmt         (gofmt)
+import Go.Parser      (parse)
 
 
 translate :: Text -> Either Error Text

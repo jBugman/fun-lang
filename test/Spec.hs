@@ -11,11 +11,11 @@ import Fun               (translate)
 import Fun.Desugar       (desugar)
 import Fun.Errors        (Error (..), Pos (..), unError)
 import Fun.Go.Printer    (printGo)
-import Fun.Parser        (parse)
 import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
                           pattern KW, pattern OL, pattern OP, pattern SL, pattern TP)
 import Go.Fmt            (gofmt)
+import Go.Parser         (parse)
 import Test.Utils        (shouldFailOn, shouldParse, shouldPrint, translationExample)
 
 
@@ -52,9 +52,6 @@ unitTests = do
 
   describe "Fun.Parser.parse" $ do
 
-    it "fails on american double" $
-      parse `shouldFailOn` ".223"
-
     it "fails on non-singleton char lit" $
       parse `shouldFailOn` "\'foo\'"
 
@@ -64,7 +61,7 @@ unitTests = do
     it "fails on garbage input" $
       mapLeft unError (parse "_BANG!!")
       `shouldBe`
-      Left "1:2: syntax error: unexpected 'B', expecting space, comment or end of input"
+      Left "1:6: syntax error: expected EOF, found '!'"
 
     -- spellchecker: ignore nfoo
     it "ignores comments A" $
@@ -103,6 +100,9 @@ unitTests = do
 
     it "double lit" $
       parse "42.0" `shouldParse` DL 42.0
+
+    it "american double" $
+      parse ".223" `shouldParse` DL 0.223
 
     it "exp double lit" $
       parse "1e3" `shouldParse` DL 1000
@@ -162,8 +162,8 @@ unitTests = do
       parse "forall" `shouldParse` ID "forall"
 
     it "func call" $
-      parse "(printf \"%+v\n\" v)" `shouldParse`
-      L [ KW "printf", SL "%+v\n", ID "v" ]
+      parse "(printf \"%+v\\n\" v)" `shouldParse`
+      L [ KW "printf", SL "%+v\\n", ID "v" ]
 
     it "selector + unit" $
       parse "(fmt.Println ())" `shouldParse` L [ ID "fmt.Println", Nil ]

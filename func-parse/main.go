@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/jBugman/fun-lang/fun-parse/parser"
+	"github.com/jBugman/fun-lang/func-parse/parser"
 )
 
 func main() {

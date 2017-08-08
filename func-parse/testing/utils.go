@@ -4,8 +4,8 @@ import (
 	"github.com/onsi/ginkgo/extensions/table"
 	g "github.com/onsi/gomega"
 
-	"github.com/jBugman/fun-lang/fun-parse/fun"
-	"github.com/jBugman/fun-lang/fun-parse/parser"
+	"github.com/jBugman/fun-lang/func-parse/fun"
+	"github.com/jBugman/fun-lang/func-parse/parser"
 )
 
 // Parse is a wrapper for parser.Parse.

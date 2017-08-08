@@ -8,9 +8,9 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
-	"github.com/jBugman/fun-lang/fun-parse/fun"
-	"github.com/jBugman/fun-lang/fun-parse/fun/code"
-	. "github.com/jBugman/fun-lang/fun-parse/testing"
+	"github.com/jBugman/fun-lang/func-parse/fun"
+	"github.com/jBugman/fun-lang/func-parse/fun/code"
+	. "github.com/jBugman/fun-lang/func-parse/testing"
 )
 
 func TestParser(t *testing.T) {

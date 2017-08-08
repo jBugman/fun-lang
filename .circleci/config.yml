@@ -27,7 +27,7 @@ jobs:
 
       - run:
           name: Go tests
-          command: "ginkgo --noisyPendings=false ./fun-parse/parser"
+          command: "ginkgo --noisyPendings=false ./func-parse/parser"
 
       - run:
           name: Running tests

@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/jBugman/fun-lang/fun-parse/fun"
-	"github.com/jBugman/fun-lang/fun-parse/fun/code"
+	"github.com/jBugman/fun-lang/func-parse/fun"
+	"github.com/jBugman/fun-lang/func-parse/fun/code"
 )
 
 var _ = Describe("parseExpression", func() {

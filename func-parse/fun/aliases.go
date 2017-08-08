@@ -1,7 +1,7 @@
 package fun
 
 import (
-	"github.com/jBugman/fun-lang/fun-parse/fun/code"
+	"github.com/jBugman/fun-lang/func-parse/fun/code"
 )
 
 // Type shortcuts

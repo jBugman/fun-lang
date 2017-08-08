@@ -8,8 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/jBugman/fun-lang/fun-parse/fun"
-	"github.com/jBugman/fun-lang/fun-parse/fun/code"
+	"github.com/jBugman/fun-lang/func-parse/fun"
+	"github.com/jBugman/fun-lang/func-parse/fun/code"
 )
 
 var (

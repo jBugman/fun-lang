@@ -1,5 +1,5 @@
 name:                language-fun
-version:             0.23.0.0
+version:             0.24.0.0
 homepage:            https://github.com/jBugman/fun-lang#readme
 license:             MIT
 author:              Sergey Parshukov
@@ -19,9 +19,11 @@ library
                       , Fun.PrettyPrinter
                       , Fun.SExpression
                       , Go.Fmt
+                      , Go.Parser
   other-modules:        Fun.Tokens
   build-depends:        base >= 4.9 && < 5
                       , classy-prelude >= 1.2
+                      , aeson >= 1.1.2
                       , containers >= 0.5
                       , either >= 4.4
                       , extra >= 1.5

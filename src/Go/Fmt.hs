@@ -11,6 +11,7 @@ import Text.Read.Extra  (readMaybe)
 import Fun.Errors (Error (..), Pos (..))
 
 
+{-# NOINLINE gofmt #-}
 gofmt :: Text -> Either Error Text
 gofmt src = unsafePerformIO $ do
     (exitcode, output, errors) <- readProcessWithExitCode "gofmt" [] (unpack src)

@@ -34,7 +34,7 @@ jobs:
           command: go install ./func-parse
 
       - run:
-          name: Running tests
+          name: Haskell tests
           command: "stack test --coverage"
 
       - run:

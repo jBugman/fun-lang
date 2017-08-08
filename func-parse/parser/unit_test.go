@@ -33,9 +33,9 @@ var _ = Describe("parseExpression", func() {
 			fun.ID("foo", pos(1, 1)),
 		))
 		Expect(s.pos).To(Equal(
-			pos(1, 4),
+			pos(1, 5),
 		))
-		Expect(s.cursor).To(Equal(3))
+		Expect(s.cursor).To(Equal(4))
 	})
 })
 

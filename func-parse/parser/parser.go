@@ -104,18 +104,33 @@ func unexpected(pos code.Pos, c rune, expected string) ParseError {
 func Parse(src []byte) (fun.Expr, ParseError) {
 	source := strings.TrimRightFunc(string(src), unicode.IsSpace)
 	sc := newScanner(source)
-	trimmed := skipSpace(sc)
-	return parseOneExpression(trimmed)
+	return parseOneExpression(sc)
 }
 
 func skipSpace(sc scanner) scanner {
+	var comment bool
 	for {
 		c, err := sc.next()
 		switch {
+
 		case err != nil:
 			return sc
+
+		// comments
+		case c == ';':
+			sc.commit()
+			comment = true
+
+		case comment && c == '\n':
+			sc.commit()
+			return sc
+
+		case comment:
+			sc.commit()
+
 		case unicode.IsSpace(c):
 			sc.commit()
+
 		default:
 			return sc
 		}
@@ -127,7 +142,7 @@ func parseOneExpression(sc scanner) (fun.Expr, ParseError) {
 		return nil, unexpected(sc.pos, 0, "expression")
 	}
 	x, sc, err := parseExpression(sc)
-	// Check if all input is consumed
+	// Check if all input bar including whitespace is consumed
 	if err == nil && sc.cursor < len(sc.source) {
 		err = unexpected(sc.pos, sc.c, "EOF")
 	}
@@ -138,16 +153,21 @@ func parseExpression(sc scanner) (fun.Expr, scanner, ParseError) {
 	var x fun.Expr
 	var err ParseError
 
+	sc = skipSpace(sc)
+
 	x, sc, err = parseAtom(sc)
 	if err == nil {
+		sc = skipSpace(sc)
 		return x, sc, nil
 	}
 
 	x, sc, err = parseList(sc)
 	if err == nil {
+		sc = skipSpace(sc)
 		return x, sc, nil
 	}
 
+	sc = skipSpace(sc)
 	return nil, sc, err
 }
 
@@ -267,7 +287,7 @@ func parseList(sc scanner) (fun.List, scanner, ParseError) {
 		case err != nil:
 			return fun.LL(xs, start.pos), sc, nil
 
-		case unicode.IsSpace(c):
+		case isSkippable(c):
 			sc = skipSpace(sc)
 
 		case c == '(':
@@ -495,6 +515,10 @@ func parseNumber(sc scanner) (fun.Atom, scanner, ParseError) {
 		}
 		return fun.Integer{X: int(x), Pos: start.pos}, sc, nil
 	}
+}
+
+func isSkippable(x rune) bool {
+	return unicode.IsSpace(x) || x == ';'
 }
 
 func isEscape(x rune) bool {

@@ -41,14 +41,14 @@ var _ = Describe("parser", func() {
 
 	It("fails on 'foo bar'", func() {
 		_, err := Parse("foo bar")
-		Expect(err).To(MatchError("expected EOF, found ' '"))
-		Expect(err.Pos()).To(Equal(pos(1, 4)))
+		Expect(err).To(MatchError("expected EOF, found 'b'"))
+		Expect(err.Pos()).To(Equal(pos(1, 5)))
 	})
 
 	It("fails on 'foo\\n\\nbar'", func() {
 		_, err := Parse("foo\n\nbar")
-		Expect(err).To(MatchError("expected EOF, found '\\n'"))
-		Expect(err.Pos()).To(Equal(pos(1, 4)))
+		Expect(err).To(MatchError("expected EOF, found 'b'"))
+		Expect(err.Pos()).To(Equal(pos(3, 1)))
 	})
 })
 
@@ -279,7 +279,7 @@ var _ = DescribeTable("parsing of", PV,
 		),
 	),
 
-	XEntry("multiline s-exp with a comment",
+	Entry("multiline s-exp with a comment",
 		ml(
 			`(foo 123 456`,
 			`; comment`,
@@ -359,6 +359,35 @@ var _ = DescribeTable("parsing of", PV,
 			fun.ID("text", pos(1, 21)),
 			fun.ID("t", pos(1, 26)),
 		),
+	),
+
+	Entry("ignores comments A",
+		ml(
+			`; comment`,
+			`foo`,
+		),
+		fun.ID("foo", pos(2, 1)),
+	),
+
+	Entry("ignores comments B",
+		ml(
+			`; comment 1`,
+			`(foo bar)`,
+			`; comment 2`,
+		),
+		fun.L(pos(2, 1),
+			fun.ID("foo", pos(2, 2)),
+			fun.ID("bar", pos(2, 6)),
+		),
+	),
+
+	Entry("ignores comments C",
+		ml(
+			`; comment 1`,
+			`foo`,
+			`; comment 2`,
+		),
+		fun.ID("foo", pos(2, 1)),
 	),
 )
 

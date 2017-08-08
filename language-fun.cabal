@@ -17,10 +17,8 @@ library
                       , Fun.Desugar
                       , Fun.Errors
                       , Fun.Go.Printer
-                      , Fun.Parser
                       , Fun.PrettyPrinter
                       , Fun.SExpression
-  other-modules:        Fun.Tokens
   build-depends:        base >= 4.9 && < 5
                       , classy-prelude >= 1.2
                       , aeson >= 1.1.2

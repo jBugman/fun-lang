@@ -2,7 +2,7 @@
 {-# LANGUAGE PatternSynonyms      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Go.Parser (parse) where
+module Foreign.Parser (parse) where
 
 import ClassyPrelude
 import Data.Aeson                   (FromJSON, eitherDecodeStrict, parseJSON, withObject, (.!=),

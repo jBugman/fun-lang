@@ -1,4 +1,4 @@
-module Go.Fmt (gofmt) where
+module Foreign.Gofmt (gofmt) where
 
 import ClassyPrelude
 import Data.Maybe       (fromJust)

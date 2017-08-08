@@ -2,11 +2,11 @@ module Fun ( translate, translateFmt ) where
 
 import ClassyPrelude
 
+import Foreign.Gofmt  (gofmt)
+import Foreign.Parser (parse)
 import Fun.Desugar    (desugar)
 import Fun.Errors     (Error (..))
 import Fun.Go.Printer (printGo)
-import Go.Fmt         (gofmt)
-import Go.Parser      (parse)
 
 
 translate :: Text -> Either Error Text

@@ -7,6 +7,8 @@ import Data.Either.Combinators      (mapLeft)
 import Data.SCargot.Repr.WellFormed (pattern L, pattern Nil)
 import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
 
+import Foreign.Gofmt     (gofmt)
+import Foreign.Parser    (parse)
 import Fun               (translate)
 import Fun.Desugar       (desugar)
 import Fun.Errors        (Error (..), Pos (..), unError)
@@ -14,8 +16,6 @@ import Fun.Go.Printer    (printGo)
 import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern HL, pattern ID, pattern IL,
                           pattern KW, pattern OL, pattern OP, pattern SL, pattern TP)
-import Go.Fmt            (gofmt)
-import Go.Parser         (parse)
 import Test.Utils        (shouldFailOn, shouldParse, shouldPrint, translationExample)
 
 

@@ -12,11 +12,15 @@ import (
 )
 
 func main() {
-	filename := os.Args[1]
-	source := readFile(filename)
+	source, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, errors.Wrap(err, "reading input"))
+		os.Exit(1)
+	}
 
 	result, e := parser.Parse(source)
 	if e != nil {
+		const filename = "<standard input>"
 		fmt.Fprintf(os.Stderr, "%s:%d:%d: %s\n", filename, e.Pos().Line, e.Pos().Col, e)
 		os.Exit(1)
 	}
@@ -27,13 +31,4 @@ func main() {
 		os.Exit(1)
 	}
 	os.Stdout.Write(output)
-}
-
-func readFile(filename string) []byte {
-	source, err := ioutil.ReadFile(filename)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrap(err, "read file"))
-		os.Exit(1)
-	}
-	return source
 }

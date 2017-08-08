@@ -9,7 +9,7 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: v2
+          key: v3
       - run:
           name: Installing GHC
           command: "stack setup"
@@ -17,7 +17,7 @@ jobs:
           name: Installing dependencies with Stack
           command: "stack test --only-dependencies"
       - save_cache:
-          key: v2
+          key: v3
           paths:
             - ~/.stack
 

@@ -480,7 +480,7 @@ func parseNumber(sc scanner) (fun.Atom, scanner, ParseError) {
 				err: errors.Wrap(err, "expected hex literal"),
 			}
 		}
-		return fun.Hex{X: int(x), Pos: start.pos}, sc, nil
+		return fun.Integer{X: int(x), Base: 16, Pos: start.pos}, sc, nil
 
 	case val == "0":
 		return fun.Integer{X: 0, Pos: start.pos}, sc, nil
@@ -503,7 +503,7 @@ func parseNumber(sc scanner) (fun.Atom, scanner, ParseError) {
 				err: errors.Wrap(err, "expected octal literal"),
 			}
 		}
-		return fun.Oct{X: int(x), Pos: start.pos}, sc, nil
+		return fun.Integer{X: int(x), Base: 8, Pos: start.pos}, sc, nil
 
 	default:
 		x, err := strconv.ParseInt(val, 10, 0)

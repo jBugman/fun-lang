@@ -9,9 +9,8 @@ module Fun.SExpression
     , Literal (..)
     , pattern SL
     , pattern CL
-    , pattern IL
-    , pattern HL
-    , pattern OL
+    , pattern I
+    , pattern INT
     , pattern DL
     , pattern BL
     , pattern ID
@@ -42,9 +41,7 @@ data Atom
 data Literal
     = Str Text
     | Chr Text
-    | Int Integer
-    | Hex Integer
-    | Oct Integer
+    | Int Int Integer
     | Dbl Double
     | Bl  Bool
     deriving (Eq, Ord)
@@ -67,14 +64,11 @@ pattern SL x = WFSAtom (Lit (Str x))
 pattern CL :: Text -> Expression
 pattern CL x = WFSAtom (Lit (Chr x))
 
-pattern IL :: Integer -> Expression
-pattern IL x = WFSAtom (Lit (Int x))
+pattern I :: Integer -> Expression
+pattern I x = WFSAtom (Lit (Int 10 x))
 
-pattern HL :: Integer -> Expression
-pattern HL x = WFSAtom (Lit (Hex x))
-
-pattern OL :: Integer -> Expression
-pattern OL x = WFSAtom (Lit (Oct x))
+pattern INT :: Int -> Integer -> Expression
+pattern INT base x = WFSAtom (Lit (Int base x))
 
 pattern DL :: Double -> Expression
 pattern DL x = WFSAtom (Lit (Dbl x))
@@ -91,9 +85,9 @@ instance Ord Expression where
 instance PP.Pretty Literal where
     pretty (Str x)    = PP.dquotes . PP.textStrict $ x
     pretty (Chr x)    = PP.squotes . PP.textStrict $ x
-    pretty (Int x)    = PP.integer x
-    pretty (Hex x)    = PP.text . pack $ "0x" <> showHex x ""
-    pretty (Oct x)    = PP.text . pack $ "0"  <> showOct x ""
+    pretty (Int 16 x) = PP.text . pack $ "0x" <> showHex x ""
+    pretty (Int 8 x)  = PP.text . pack $ "0"  <> showOct x ""
+    pretty (Int _ x)  = PP.integer x -- 10 or 0 are supported
     pretty (Dbl x)    = PP.double x
     pretty (Bl True)  = PP.text "true"
     pretty (Bl False) = PP.text "false"

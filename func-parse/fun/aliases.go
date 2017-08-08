@@ -60,13 +60,3 @@ func DL(x float64, pos code.Pos) Double {
 func BL(x bool, pos code.Pos) Bool {
 	return Bool{X: x, Pos: pos}
 }
-
-// OL creates Oct.
-func OL(x int, pos code.Pos) Oct {
-	return Oct{X: x, Pos: pos}
-}
-
-// HL creates Hex.
-func HL(x int, pos code.Pos) Hex {
-	return Hex{X: x, Pos: pos}
-}

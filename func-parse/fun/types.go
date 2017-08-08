@@ -79,8 +79,9 @@ func (Char) atomMarker() {}
 
 // Integer is an int literal.
 type Integer struct {
-	Pos code.Pos `json:"pos"`
-	X   int      `json:"x"`
+	Pos  code.Pos `json:"pos"`
+	X    int      `json:"x"`
+	Base int      `json:"base,omitempty"` // 0 means 10 as a default
 }
 
 func (Integer) exprMarker() {}
@@ -94,24 +95,6 @@ type Double struct {
 
 func (Double) exprMarker() {}
 func (Double) atomMarker() {}
-
-// Oct is an octal int literal.
-type Oct struct {
-	Pos code.Pos `json:"pos"`
-	X   int      `json:"x"`
-}
-
-func (Oct) exprMarker() {}
-func (Oct) atomMarker() {}
-
-// Hex is a hex int literal.
-type Hex struct {
-	Pos code.Pos `json:"pos"`
-	X   int      `json:"x"`
-}
-
-func (Hex) exprMarker() {}
-func (Hex) atomMarker() {}
 
 // Bool is a boolean literal.
 type Bool struct {

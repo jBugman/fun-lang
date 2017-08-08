@@ -14,8 +14,6 @@ type (
 	_cl Char
 	_il Integer
 	_dl Double
-	_ol Oct
-	_hl Hex
 	_bl Bool
 )
 
@@ -115,28 +113,6 @@ func (x Double) MarshalJSON() ([]byte, error) {
 	}{
 		_dl:  _dl(x),
 		Type: "Double",
-	})
-}
-
-// MarshalJSON is a custom marshaler.
-func (x Oct) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Type string `json:"type"`
-		_ol
-	}{
-		_ol:  _ol(x),
-		Type: "Oct",
-	})
-}
-
-// MarshalJSON is a custom marshaler.
-func (x Hex) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Type string `json:"type"`
-		_hl
-	}{
-		_hl:  _hl(x),
-		Type: "Hex",
 	})
 }
 

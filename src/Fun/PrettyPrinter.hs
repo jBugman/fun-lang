@@ -1,21 +1,25 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Fun.PrettyPrinter (singleLine) where
 
 import ClassyPrelude
-import Data.SCargot                 (SExprPrinter, basicPrint, encodeOne, setFromCarrier)
-import Data.SCargot.Repr.WellFormed (fromWellFormed)
+import Data.SCargot.Repr.WellFormed (pattern A, pattern L)
+import Text.PrettyPrint.Leijen.Text (Doc, displayTStrict, parens, renderOneLine, sep, textStrict)
 
 import Fun.SExpression (Atom (..), Expression)
 
 
 singleLine :: Expression -> Text
-singleLine = encodeOne printer
+singleLine x = displayTStrict . renderOneLine $ pprint x
+-- displayTStrict . renderPretty 0.6 100 <$> pprint x
 
-printer :: SExprPrinter Atom Expression
-printer = setFromCarrier fromWellFormed (basicPrint printAtom)
+pprint :: Expression -> Doc
+pprint (L xs) = parens . sep $ pprint <$> xs
+pprint (A x)  = pa x
+pprint e      = error $ "pretty print: should not be: " <> show e
 
-printAtom :: Atom -> Text
-printAtom (Ident s)   = s
-printAtom (Keyword s) = s
-printAtom (Type s)    = ":" <> s
-printAtom (Op s)      = s
-printAtom (Lit lit)   = tshow lit
+pa :: Atom -> Doc
+pa (Ident s)   = textStrict s
+pa (Keyword s) = textStrict s
+pa (Type s)    = textStrict (":" <> s)
+pa (Op s)      = textStrict s
+pa (Lit lit)   = textStrict (tshow lit)

@@ -6,24 +6,28 @@ import Data.Traversable (mapAccumR)
 import GHC.Err          (errorWithoutStackTrace)
 
 import Fun.SExpression (pattern A, Expression (..), pattern ID, pattern KW, pattern L, pattern LIT,
-                        Literal (..), pattern OP)
+                        Literal (..), pattern OP, unPos)
 
 type E = Expression
 
 desugar :: E -> E
-desugar (L (KW "package" : ID name : topLevels))
-    = L $ [ KW "package", ID name ] <> imports <> decls
+desugar (L (KW "package" : ID name p : topLevels))
+    = L $ [ KW "package", ID name p ] <> imports <> decls
     where
         (imports, decls) = swapWith addReturn
                          . swapPrintf
                          . swapPrint
                          . span isImport $ topLevels
 
-        swapPrint  = swapAddImport importFmt (== KW "print")  (ID "fmt.Println")
-        swapPrintf = swapAddImport importFmt (== KW "printf") (ID "fmt.Printf")
+        swapPrint  = swapAddImport importFmt (eq (KW "print")) (ID "fmt.Println" Nothing)
+        swapPrintf = swapAddImport importFmt (eq (KW "printf")) (ID "fmt.Printf" Nothing)
 
 desugar e = e -- Ignore non-package
 
+-- TODO: add more eq checks when needed
+eq :: Expression -> Expression -> Bool
+eq (KW x) (KW y) = x == y
+eq _ _           = False
 
 importFmt :: E
 importFmt = L [ KW "import" , LIT (String "fmt") Nothing ]
@@ -40,12 +44,16 @@ swapAddImport imp cond to (imports, decls) = mapAccumR go imports decls
     where
         go :: [E] -> E -> ([E], E)
         go imps ex
-            | cond ex    = (addImport imps, to)
+            | cond ex    = (addImport imps, updatePos ex to)
             | L xs <- ex = L <$> mapAccumR go imps xs
             | otherwise  = (imps, ex)
 
         addImport :: [E] -> [E]
         addImport xs = ordNub $ imp : xs
+
+updatePos :: Expression -> Expression -> Expression
+updatePos src (Atom x _)  = Atom x (unPos src)
+updatePos src (List xs _) = List xs (unPos src)
 
 swapWith :: (E -> E) -> ([E], [E]) -> ([E], [E])
 swapWith f (imports, decls) = (imports, fmap f decls)
@@ -74,7 +82,7 @@ withReturn b
 isExpression :: E -> Bool
 isExpression (Atom _ _)                 = True
 isExpression (List ( OP _ _ : _ ) _)    = True
-isExpression (List ( ID _ : _ ) _)      = True
+isExpression (List ( ID _ _ : _ ) _)    = True
 isExpression (List ( KW "val"  : _ ) _) = True
 isExpression (List ( KW "func" : _ ) _) = True
 isExpression _                          = False

@@ -2,9 +2,11 @@
 module Test.Utils
     ( shouldPrint
     , translationExample
+    , i
+    , int
     , op
     , str
-    , int
+    , tp
 ) where
 
 import ClassyPrelude
@@ -18,14 +20,20 @@ import Fun.SExpression (Atom (..), Expression (..), Literal (..))
 
 -- Patterns --
 
-str :: Text -> Expression
-str x = Atom (Literal (String x)) Nothing
+i :: Text -> Expression
+i x = Atom (Ident x) Nothing
+
+int :: Integer -> Expression
+int x = Atom (Literal (Integer 10 x)) Nothing
 
 op :: Text -> Expression
 op x = Atom (Operator x) Nothing
 
-int :: Integer -> Expression
-int x = Atom (Literal (Integer 10 x)) Nothing
+str :: Text -> Expression
+str x = Atom (Literal (String x)) Nothing
+
+tp :: Text -> Expression
+tp x = Atom (Type x) Nothing
 
 -- API --
 

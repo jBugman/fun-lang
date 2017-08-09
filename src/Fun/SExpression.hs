@@ -74,14 +74,16 @@ pattern LIT x p = Atom (Literal x) p
 pattern LT :: Literal -> Expression
 pattern LT x = Atom (Literal x) Nothing
 
-pattern ID :: Text -> Expression
-pattern ID x = A (Ident x)
+pattern ID :: Text -> Maybe Pos -> Expression
+pattern ID x p = Atom (Ident x) p
 
+-- pattern KW :: Text -> Maybe Pos -> Expression
+-- pattern KW x p = Atom (Keyword x) p
 pattern KW :: Text -> Expression
-pattern KW x = A (Keyword x)
+pattern KW x = Atom (Keyword x) Nothing
 
-pattern TP :: Text -> Expression
-pattern TP x = A (Type x)
+pattern TP :: Text -> Maybe Pos -> Expression
+pattern TP x p = Atom (Type x) p
 
 pattern OP :: Text -> Maybe Pos -> Expression
 pattern OP x p = Atom (Operator x) p

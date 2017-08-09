@@ -22,7 +22,7 @@ printGo x = displayTStrict . renderPretty 0.6 100 <$> pprint x
 
 pprint :: E -> Either Error Doc
 -- ident
-pprint (ID x) = doc x
+pprint (ID x _) = doc x
 
 -- operator
 pprint (OP x _) = doc x
@@ -31,110 +31,110 @@ pprint (OP x _) = doc x
 pprint (LIT x _) = pure $ pretty x
 
 -- types
-pprint (TP "any")  = doc "interface{}"
-pprint (TP x)      = doc x
+pprint (TP "any" _)  = doc "interface{}"
+pprint (TP x _)      = doc x
 
-pprint (L [ TP "ptr" , x ]) = do
+pprint (L [ TP "ptr" _ , x ]) = do
     x' <- pprint x
     pure $ text "*" <> x'
 
-pprint (L [ TP "chan" , x ]) = do
+pprint (L [ TP "chan" _ , x ]) = do
     x' <- pprint x
     pure $ text "chan" <+> x'
 
-pprint (L [ TP "slice" , x ]) = do
+pprint (L [ TP "slice" _ , x ]) = do
     x' <- pprint x
     pure $ text "[]" <> x'
 
-pprint (L [ TP "map" , k@(TP _) , v ]) = do
+pprint (L [ TP "map" _ , k@(TP _ _) , v ]) = do
     k' <- pprint k
     v' <- pprint v
     pure $ text "map" <> brackets k' <> v'
 
-pprint (L [ TP "func" , a ]) = do
+pprint (L [ TP "func" _ , a ]) = do
     a' <- printArgs a
     pure $ kwFunc <> a'
 
-pprint (L [ TP "func" , a , r ]) = do
+pprint (L [ TP "func" _ , a , r ]) = do
     a' <- printArgs a
     r' <- pprint r
     pure $ kwFunc <> a' <+> r'
 
 -- type alias
-pprint (L [ KW "alias" , n@(ID _) , t ]) = do
+pprint (L [ KW "alias" , n@(ID _ _) , t ]) = do
     n' <- pprint n
     t' <- pprint t
     pure $ kwType <+> n' <+> t'
 
 -- const
-pprint (L [ KW "const" , x@(ID _) , rhs ])
+pprint (L [ KW "const" , x@(ID _ _) , rhs ])
     = printAssignmentX kwConst x Nothing (Just rhs)
 
-pprint (L [ KW "const" , x@(ID _) , t@(TP _) , rhs ])
+pprint (L [ KW "const" , x@(ID _ _) , t@(TP _ _) , rhs ])
     = printAssignmentX kwConst x (Just t) (Just rhs)
 
 -- var
-pprint (L [ KW "var" , x@(ID _) , t@(TP _) ])
+pprint (L [ KW "var" , x@(ID _ _) , t@(TP _ _) ])
     = printAssignmentX kwVar x (Just t) Nothing
 
-pprint (L [ KW "var" , x@(ID _) , rhs@(L [ TP _ , L _ ]) ])
+pprint (L [ KW "var" , x@(ID _ _) , rhs@(L [ TP _ _ , L _ ]) ])
     = printAssignmentX kwVar x Nothing (Just rhs)
 
-pprint (L [ KW "var" , x@(ID _) , rhs@(L [ L( TP _ : _ ) , L _ ]) ])
+pprint (L [ KW "var" , x@(ID _ _) , rhs@(L [ L( TP _ _ : _ ) , L _ ]) ])
     = printAssignmentX kwVar x Nothing (Just rhs)
 
-pprint (L [ KW "var" , x@(ID _) , t@( L( TP _ : _ )) ])
+pprint (L [ KW "var" , x@(ID _ _) , t@( L( TP _ _ : _ )) ])
     = printAssignmentX kwVar x (Just t) Nothing
 
-pprint (L [ KW "var" , x@(ID _) , y@(ID _) , rhs ])
+pprint (L [ KW "var" , x@(ID _ _) , y@(ID _ _) , rhs ])
     = (kwVar <+>) <$> printAssignmentXY x (Just y) rhs
 
-pprint (L [ KW "var" , x@(ID _) , t@(TP _) , rhs ])
+pprint (L [ KW "var" , x@(ID _ _) , t@(TP _ _) , rhs ])
     = printAssignmentX kwVar x (Just t) (Just rhs)
 
-pprint (L [ KW "var" , x@(ID _) , rhs ])
+pprint (L [ KW "var" , x@(ID _ _) , rhs ])
     = printAssignmentX kwVar x Nothing (Just rhs)
 
 -- struct decl
-pprint (L [ KW "struct" , n@(ID _) ]) = do
+pprint (L [ KW "struct" , n@(ID _ _) ]) = do
     n' <- pprint n
     pure $ kwType <+> n' <+> text "struct" <> emptyBraces
 
-pprint (L ( KW "struct" : n@(ID _) : xs )) = do
+pprint (L ( KW "struct" : n@(ID _ _) : xs )) = do
     n'  <- pprint n
     xs' <- mapM printStructElem xs
     pure $ kwType <+> n' <+> text "struct"
         <+> bracedBlock (vsep xs')
 
 -- interface decl
-pprint (L [ KW "interface" , n@(ID _) ]) = do
+pprint (L [ KW "interface" , n@(ID _ _) ]) = do
     n'  <- pprint n
     pure $ kwType <+> n' <+> text "interface" <> emptyBraces
 
-pprint (L ( KW "interface" : n@(ID _) : xs )) = do
+pprint (L ( KW "interface" : n@(ID _ _) : xs )) = do
     n'  <- pprint n
     xs' <- mapM printInterfaceElem xs
     pure $ kwType <+> n' <+> text "interface"
         <+> bracedBlock (vsep xs')
 
 -- func
-pprint (L [ KW "func" , n@(ID _) , b ])
+pprint (L [ KW "func" , n@(ID _ _) , b ])
     = printFunc Nothing (Just n) Nothing Nothing b
 
-pprint (L [ KW "func" , n@(ID _) , a , b ])
+pprint (L [ KW "func" , n@(ID _ _) , a , b ])
     = printFunc Nothing (Just n) (Just a) Nothing b
 
-pprint (L [ KW "func" , n@(ID _) , a , r , b ])
+pprint (L [ KW "func" , n@(ID _ _) , a , r , b ])
     = printFunc Nothing (Just n) (Just a) (Just r) b
 
 -- method
-pprint (L [ KW "method" , o , n@(ID _) , b ])
+pprint (L [ KW "method" , o , n@(ID _ _) , b ])
     = printFunc (Just o) (Just n) Nothing Nothing b
 
-pprint (L [ KW "method" , o , n@(ID _) , a , b ])
+pprint (L [ KW "method" , o , n@(ID _ _) , a , b ])
     = printFunc (Just o) (Just n) (Just a) Nothing b
 
-pprint (L [ KW "method" , o , n@(ID _) , a , r , b ])
+pprint (L [ KW "method" , o , n@(ID _ _) , a , r , b ])
     = printFunc (Just o) (Just n) (Just a) (Just r) b
 
 -- unary operators
@@ -165,7 +165,7 @@ pprint (L ( op@(OP _ _) : xs )) = do
 pprint (L [ KW "set" , x , rhs ])
     = printAssignmentXY x Nothing rhs
 
-pprint (L [ KW "set" , x@(ID _) , y@(ID _) , rhs ])
+pprint (L [ KW "set" , x@(ID _ _) , y@(ID _ _) , rhs ])
     = printAssignmentXY x (Just y) rhs
 
 -- import
@@ -183,85 +183,85 @@ pprint (L ( KW "return" : xs ) ) = do
     pure $ text "return" <+> commaSep xs'
 
 -- range
-pprint (L [ KW "range" , x@(ID _) , xs ]) = do
+pprint (L [ KW "range" , x@(ID _ _) , xs ]) = do
     x'  <- pprint x
     xs' <- pprint xs
     pure $ x' <+> text ":=" <+> text "range" <+> xs'
 
-pprint (L [ KW "range" , x@(ID _) , y@(ID _) , xs ]) = do
+pprint (L [ KW "range" , x@(ID _ _) , y@(ID _ _) , xs ]) = do
     x'  <- pprint x
     y'  <- pprint y
     xs' <- pprint xs
     pure $ x' <> comma <+> y' <+> text ":=" <+> text "range" <+> xs'
 
 -- indexed access
-pprint (L [ KW "val" , n@(ID _) , i ]) = do
+pprint (L [ KW "val" , n@(ID _ _) , i ]) = do
     n' <- pprint n
     i' <- pprint i
     pure $ n' <> brackets i'
 
-pprint (L [ KW "val" , n@(ID _) , i , j ]) = do
+pprint (L [ KW "val" , n@(ID _ _) , i , j ]) = do
     n' <- pprint n
     i' <- pprint i
     j' <- pprint j
     pure $ n' <> brackets i' <> brackets j'
 
 -- slice literal
-pprint (L [ t@(L [ TP "slice" , _ ]) , L xs ]) = do
+pprint (L [ t@(L [ TP "slice" _ , _ ]) , L xs ]) = do
     t'  <- pprint t
     xs' <- mapM pprint xs
     pure $ t' <> braces (commaSep xs')
 
 -- map literal
-pprint (L [ t@(L [ TP "map" , _ , _ ]) , L xs ])
+pprint (L [ t@(L [ TP "map" _ , _ , _ ]) , L xs ])
     = printMapLike t xs
 
 -- struct literal
-pprint (L [ t@(TP _) ])        = printMapLike t []
-pprint (L [ t@(TP _) , L xs ]) = printMapLike t xs
+pprint (L [ t@(TP _ _) ])        = printMapLike t []
+pprint (L [ t@(TP _ _) , L xs ]) = printMapLike t xs
 
 -- complex literal
-pprint (L [ TP "complex" , x@(I _ _) , y@(I _ _) ])
+pprint (L [ TP "complex" _ , x@(I _ _) , y@(I _ _) ])
     = printComplex x y
-pprint (L [ TP "complex" , x@(I _ _) , y@(DL _ _) ])
+pprint (L [ TP "complex" _ , x@(I _ _) , y@(DL _ _) ])
     = printComplex x y
-pprint (L [ TP "complex" , x@(DL _ _) , y@(I _ _) ])
+pprint (L [ TP "complex" _ , x@(DL _ _) , y@(I _ _) ])
     = printComplex x y
-pprint (L [ TP "complex" , x@(DL _ _) , y@(DL _ _) ])
+pprint (L [ TP "complex" _ , x@(DL _ _) , y@(DL _ _) ])
     = printComplex x y
 
 -- function call
-pprint (L [ f@(ID _) ])
+pprint (L [ f@(ID _ _) ])
     = printCallLike f Nothing
 
-pprint (L ( f@(ID _) : a )) = do
+pprint (L ( f@(ID _ _) : a )) = do
     f' <- pprint f
     a' <- mapM pprint a
     pure $ f' <> parens (commaSep a')
 
 -- make
-pprint (L [ KW "make" , s@(L ( TP "slice" : _ )) , d ]) = do
+pprint (L [ KW "make" , s@(L ( TP "slice" _ : _ )) , d ]) = do
     s' <- pprint s
     d' <- pprint d
     pure $ text "make" <> parens (s'<> comma <+> d')
 
-pprint (L [ KW "make" , x@(L [ TP "map" , _ , _ ]) ]) = do
+pprint (L [ KW "make" , x@(L [ TP "map" _ , _ , _ ]) ]) = do
     x' <- pprint x
     pure $ text "make" <> parens x'
 
-pprint (L [ KW "make" , x@(L [TP "chan" , _ ]) ]) = do
+pprint (L [ KW "make" , x@(L [TP "chan" _ , _ ]) ]) = do
     x' <- pprint x
     pure $ text "make" <> parens x'
 
 -- type casting
-pprint (L [ KW "cast" , t@(TP _) , x ])
+pprint (L [ KW "cast" , t@(TP _ _) , x ])
     = printCallLike t (Just x)
 
-pprint (L [ KW "cast" , t@(L (TP _ : _ )) , x ])
+pprint (L [ KW "cast" , t@(L (TP _ _ : _ )) , x ])
     = printCallLike t (Just x)
 
 -- type assertion
-pprint (L [ KW "assert" , t@(TP _) , x ])
+pprint (L [ KW "assert" , t@(TP _ _) , x ])
     = printAssert t x
 
 -- lambda
@@ -293,9 +293,9 @@ pprint (L [ KW "switch" , L xs ]) = do
     xs' <- mapM printCase xs
     pure $ text "switch" <+> bracedBlock (vsep xs')
 
-pprint (L [ KW "switch" , L [ KW "type" , t@(ID _) , x ] , L xs ]) = do
+pprint (L [ KW "switch" , L [ KW "type" , t@(ID _ _) , x ] , L xs ]) = do
     t'  <- pprint t
-    x'  <- printAssert (TP "type") x
+    x'  <- printAssert (TP "type" Nothing) x
     xs' <- mapM printCase xs
     pure $ text "switch"
         <+> t' <+> text ":=" <+> x'
@@ -316,10 +316,10 @@ pprint (L [ KW "for" , cond , body ]) = do
     body' <- pprint body
     pure $ text "for" <+> cond' <+> bracedBlock body'
 
-pprint (L [ KW "for" , i@(ID _) , from , cond , iter , body ])
+pprint (L [ KW "for" , i@(ID _ _) , from , cond , iter , body ])
     = printFor i from cond iter body
 
-pprint (L [ KW "for" , i@(ID _) , from , to , body ])
+pprint (L [ KW "for" , i@(ID _ _) , from , to , body ])
     = printFor
         i
         from
@@ -328,23 +328,23 @@ pprint (L [ KW "for" , i@(ID _) , from , to , body ])
         body
 
 -- package
-pprint (L ( KW "package" : n@(ID _) : topLevels )) = do
+pprint (L ( KW "package" : n@(ID _ _) : topLevels )) = do
     n'  <- pprint n
     ts' <- mapM pprint topLevels
     pure . vsep . punctuate line $ ((text "package" <+> n') : ts')
 
 -- slicing
-pprint (L [ KW "slice" , x@(ID _) , ID "_" , to ]) = do
+pprint (L [ KW "slice" , x@(ID _ _) , ID "_" _ , to ]) = do
     x'  <- pprint x
     to' <- pprint to
     pure $ x' <> brackets ( colon <> to' )
 
-pprint (L [ KW "slice" , x@(ID _) , from , ID "_" ]) = do
+pprint (L [ KW "slice" , x@(ID _ _) , from , ID "_" _ ]) = do
     x'    <- pprint x
     from' <- pprint from
     pure $ x' <> brackets ( from' <> colon )
 
-pprint (L [ KW "slice" , x@(ID _) , from , to ]) = do
+pprint (L [ KW "slice" , x@(ID _ _) , from , to ]) = do
     x'    <- pprint x
     from' <- pprint from
     to'   <- pprint to
@@ -380,10 +380,10 @@ printFor var from cond iter body = do
         <+> bracedBlock body'
 
 printRecv :: E -> Either Error Doc
-printRecv t@(TP _) = do
+printRecv t@(TP _ _) = do
     t' <- pprint t
     pure $ parens t'
-printRecv (L [ n@(ID _) , t ]) = do
+printRecv (L [ n@(ID _ _) , t ]) = do
     n' <- pprint n
     t' <- pprint t
     pure $ parens (n' <+> t')
@@ -395,17 +395,17 @@ printArgs (L xs) = parens . commaSep <$> mapM printArg xs
 printArgs e      = mkError "invalid args: " e
 
 printArg :: E -> Either Error Doc
-printArg t@(TP _)             = pprint t
-printArg t@(L (TP _ : _))     = pprint t
-printArg (L [ n@(ID _) , t ]) = do
+printArg t@(TP _ _)             = pprint t
+printArg t@(L (TP _ _ : _))     = pprint t
+printArg (L [ n@(ID _ _) , t ]) = do
     n' <- pprint n
     t' <- pprint t
     pure $ n' <+> t'
 printArg e                    = mkError "invalid arg: " e
 
 printResults :: E -> Either Error Doc
-printResults t@(TP _) = pprint t
-printResults t@(L ( TP "func" : _ )) = pprint t
+printResults t@(TP _ _) = pprint t
+printResults t@(L ( TP "func" _ : _ )) = pprint t
 printResults (L ts)  = do
     ts' <- mapM pprint ts
     pure $ parens (commaSep ts')
@@ -416,24 +416,24 @@ printBody Nil = pure emptyBraces
 printBody xs  = bracedBlock <$> pprint xs
 
 printStructElem :: E -> Either Error Doc
-printStructElem x@(TP _)
+printStructElem x@(TP _ _)
     = pprint x
-printStructElem x@(L [ TP "ptr" , TP _ ])
+printStructElem x@(L [ TP "ptr" _ , TP _ _ ])
     = pprint x
-printStructElem (L [ x@(ID _) , y ]) = do
+printStructElem (L [ x@(ID _ _) , y ]) = do
     x' <- pprint x
     y' <- pprint y
     pure $ x' <+> y'
 printStructElem e = mkError "invalid struct elem: " e
 
 printInterfaceElem :: E -> Either Error Doc
-printInterfaceElem x@(TP _)
+printInterfaceElem x@(TP _ _)
     = pprint x
-printInterfaceElem (L [ n@(ID _) , a ]) = do
+printInterfaceElem (L [ n@(ID _ _) , a ]) = do
     n' <- pprint n
     a' <- printArgs a
     pure $ n' <> a'
-printInterfaceElem (L [ n@(ID _) , a , r ]) = do
+printInterfaceElem (L [ n@(ID _ _) , a , r ]) = do
     n' <- pprint n
     a' <- printArgs a
     r' <- printResults r
@@ -447,7 +447,7 @@ printMapLike t xs = do
     pure $ t' <> braces (commaSep xs')
 
 printMaplikeElem :: E -> Either Error Doc
-printMaplikeElem (L [ x@(ID _) , y ])    = printColonPair x y
+printMaplikeElem (L [ x@(ID _ _) , y ])  = printColonPair x y
 printMaplikeElem (L [ x@(LIT _ _) , y ]) = printColonPair x y
 printMaplikeElem e                       = mkError "invalid map-like elem: " e
 

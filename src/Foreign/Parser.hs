@@ -14,8 +14,8 @@ import System.IO.Unsafe        (unsafePerformIO)
 import System.Process          (readProcessWithExitCode)
 
 import Fun.Errors      (Error (..), Pos (..))
-import Fun.SExpression (Atom (..), Expression (..), pattern ID, pattern INT, pattern KW, pattern L,
-                        Literal (..), pattern TP)
+import Fun.SExpression (Atom (..), Expression (..), pattern INT, pattern KW, pattern L,
+                        Literal (..))
 
 parse :: Text -> Either Error Expression
 parse src = case goParse src of
@@ -54,10 +54,10 @@ instance FromJSON Expression where
         t <- v .: "type"
         case t of
             "List"     -> L   <$> v .:? "xs" .!= []
-            "Ident"    -> ID  <$> v .:  "x"
+            "Ident"    -> mkAtom v Ident
             "Keyword"  -> KW  <$> v .:  "x"
             "Operator" -> mkAtom v Operator
-            "Type"     -> TP  <$> v .:  "x"
+            "Type"     -> mkAtom v Type
             "String"   -> mkAtom v (Literal . String)
             "Char"     -> mkAtom v (Literal . Char)
             "Integer"  -> INT <$> v .:? "base" .!= 10 <*> v .: "x" <*> v .: "pos"

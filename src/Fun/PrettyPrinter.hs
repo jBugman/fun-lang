@@ -1,10 +1,13 @@
 {-# LANGUAGE PatternSynonyms #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Fun.PrettyPrinter (singleLine) where
 
 import ClassyPrelude
-import Text.PrettyPrint.Leijen.Text (Doc, displayTStrict, parens, renderOneLine, sep, textStrict)
+import Numeric                      (showHex, showOct)
+import Text.PrettyPrint.Leijen.Text (Doc, Pretty, displayTStrict, double, dquotes, integer, parens,
+                                     pretty, renderOneLine, sep, squotes, textStrict)
 
-import Fun.SExpression (Atom (..), Expression (..))
+import Fun.SExpression (Atom (..), Expression (..), Literal (..))
 
 
 singleLine :: Expression -> Text
@@ -17,4 +20,14 @@ pprint (Atom (Ident s))     = textStrict s
 pprint (Atom (Keyword s))   = textStrict s
 pprint (Atom (Type s))      = textStrict (":" <> s)
 pprint (Atom (Operator s))  = textStrict s
-pprint (Atom (Literal lit)) = textStrict (tshow lit)
+pprint (Atom (Literal lit)) = pretty lit
+
+instance Pretty Literal where
+    pretty (String x)     = dquotes . textStrict $ x
+    pretty (Char x)       = squotes . textStrict $ x
+    pretty (Integer 16 x) = textStrict . pack $ "0x" <> showHex x ""
+    pretty (Integer 8 x)  = textStrict . pack $ "0"  <> showOct x ""
+    pretty (Integer _ x)  = integer x -- 10 or 0 are supported
+    pretty (Double x)     = double x
+    pretty (Bool True)    = textStrict "true"
+    pretty (Bool False)   = textStrict "false"

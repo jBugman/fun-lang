@@ -19,9 +19,6 @@ module Fun.SExpression
 ) where
 
 import ClassyPrelude
-import Numeric       (showHex, showOct)
-
-import qualified Text.PrettyPrint.Leijen.Text as PP
 
 
 data Expression
@@ -43,7 +40,7 @@ data Literal
     | Integer !Int !Integer
     | Double  !Double
     | Bool    !Bool
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
 pattern Nil :: Expression
 pattern Nil = List []
@@ -83,16 +80,3 @@ pattern DL x = A (Literal (Double x))
 
 pattern BL :: Bool -> Expression
 pattern BL x  = A (Literal (Bool x))
-
-instance PP.Pretty Literal where
-    pretty (String x)     = PP.dquotes . PP.textStrict $ x
-    pretty (Char x)       = PP.squotes . PP.textStrict $ x
-    pretty (Integer 16 x) = PP.text . pack $ "0x" <> showHex x ""
-    pretty (Integer 8 x)  = PP.text . pack $ "0"  <> showOct x ""
-    pretty (Integer _ x)  = PP.integer x -- 10 or 0 are supported
-    pretty (Double x)     = PP.double x
-    pretty (Bool True)    = PP.text "true"
-    pretty (Bool False)   = PP.text "false"
-
-instance Show Literal where
-    show = show . PP.pretty

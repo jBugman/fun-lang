@@ -1,24 +1,18 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Test.Utils
-    ( shouldParse
-    , shouldFailOn
-    , shouldPrint
+    ( shouldPrint
     , translationExample
-    , pos
-    , pos1
     , op
     , str
     , int
 ) where
 
 import ClassyPrelude
-import System.FilePath                 ((<.>), (</>))
-import Test.Hspec                      (Expectation, HasCallStack, Spec, describe, it, runIO,
-                                        shouldBe, shouldSatisfy)
-import Test.Hspec.Expectations.Contrib (isLeft)
+import System.FilePath ((<.>), (</>))
+import Test.Hspec      (Expectation, HasCallStack, Spec, describe, it, runIO, shouldBe)
 
 import Fun             (translateFmt)
-import Fun.Errors      (Error, Pos (..), unError)
+import Fun.Errors      (Error, unError)
 import Fun.SExpression (Atom (..), Expression (..), Literal (..))
 
 
@@ -33,19 +27,7 @@ op x = Atom (Operator x) Nothing
 int :: Integer -> Expression
 int x = Atom (Literal (Integer 10 x)) Nothing
 
-pos1 :: Maybe Pos
-pos1 = pos 1 1
-
-pos :: Int -> Int -> Maybe Pos
-pos l c = Just (Pos l c)
-
 -- API --
-
-shouldParse :: (HasCallStack) => Either Error Expression -> Expression -> Expectation
-actual `shouldParse` expected = actual `shouldBe` Right expected
-
-shouldFailOn :: (HasCallStack) => (Text -> Either Error Expression) -> Text -> Expectation
-parser `shouldFailOn` input = parser input `shouldSatisfy` isLeft
 
 shouldPrint :: (HasCallStack) => Either Error Text -> Text -> Expectation
 actual `shouldPrint` expected = actual `shouldBe` Right expected

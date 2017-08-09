@@ -9,17 +9,14 @@ import Test.Hspec              (Spec, describe, hspec, it, shouldBe)
 import qualified Data.Ord as Ord
 
 import Foreign.Gofmt     (gofmt)
-import Foreign.Parser    (parse)
 import Fun               (translate)
 import Fun.Desugar       (desugar)
 import Fun.Errors        (Error (..), Pos (..), unError)
 import Fun.Go.Printer    (printGo)
 import Fun.PrettyPrinter (singleLine)
-import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern I, pattern ID, pattern INT,
-                          pattern KW, pattern L, pattern LT, Literal (..), pattern Nil, pattern OP,
-                          pattern SL, pattern TP)
-import Test.Utils        (int, op, pos, pos1, shouldFailOn, shouldParse, shouldPrint, str,
-                          translationExample)
+import Fun.SExpression   (pattern ID, pattern KW, pattern L, pattern LT, Literal (..), pattern Nil,
+                          pattern TP)
+import Test.Utils        (int, op, shouldPrint, str, translationExample)
 
 
 main :: IO ()
@@ -52,171 +49,6 @@ examples = describe "Examples" $ do
 
 unitTests :: Spec
 unitTests = do
-
-  describe "Fun.Parser.parse" $ do
-
-    it "fails on non-singleton char lit" $
-      parse `shouldFailOn` "\'foo\'"
-
-    it "fails on empty string" $
-      parse `shouldFailOn` ""
-
-    it "fails on garbage input" $
-      mapLeft unError (parse "_BANG!!")
-      `shouldBe`
-      Left "1:6: syntax error: expected EOF, found '!'"
-
-    -- spellchecker: ignore nfoo
-    it "ignores comments A" $
-      parse "; comment\nfoo" `shouldParse` ID "foo"
-
-    it "ignores comments B" $
-      parse "; comment 1\n(foo bar)\n; comment 2" `shouldParse` L [ ID "foo", ID "bar" ]
-
-
-    it "empty list" $
-      parse "()" `shouldParse` Nil
-
-    it "string lit" $
-      parse "\"test\"" `shouldParse` SL "test" pos1
-
-    it "char lit" $
-      parse "\'z\'" `shouldParse` CL "z" pos1
-
-    it "char lit" $
-      parse "'\\''" `shouldParse` CL "\\'" pos1
-
-    it "newline char" $
-      parse "'\\n'" `shouldParse` CL "\\n" pos1
-
-    it "true" $
-      parse "true" `shouldParse` BL True pos1
-
-    it "false" $
-      parse "false" `shouldParse` BL False pos1
-
-    it "int lit" $
-      parse "42" `shouldParse` I 42 pos1
-
-    it "zero" $
-      parse "0" `shouldParse` I 0 pos1
-
-    it "double lit" $
-      parse "42.0" `shouldParse` DL 42.0 (pos 1 1)
-
-    it "american double" $
-      parse ".223" `shouldParse` DL 0.223 (pos 1 1)
-
-    it "exp double lit" $
-      parse "1e3" `shouldParse` DL 1000 (pos 1 1)
-
-    it "oct lit" $
-      parse "0644" `shouldParse` INT 8 0o644 pos1
-
-    it "hex lit" $
-      parse "0x2A" `shouldParse` INT 16 0x2A pos1
-
-    it "ident" $
-      parse "foo" `shouldParse` ID "foo"
-
-    it "placeholder ident" $
-      parse "_" `shouldParse` ID "_"
-
-    it "Go selector" $
-      parse "fmt.Println" `shouldParse` ID "fmt.Println"
-
-    it "type lit" $
-      parse ":int" `shouldParse` TP "int"
-
-    it "+" $
-      parse "+" `shouldParse` OP "+" pos1
-
-    it "++" $
-      parse "++" `shouldParse` OP "++" pos1
-
-    it "&&" $
-      parse "&&" `shouldParse` OP "&&" pos1
-
-    it "&" $
-      parse "&" `shouldParse` OP "&" pos1
-
-    it "||" $
-      parse "||" `shouldParse` OP "||" pos1
-
-    it "|" $
-      parse "|" `shouldParse` OP "|" pos1
-
-    it "!=" $
-      parse "!=" `shouldParse` OP "!=" pos1
-
-    it "!" $
-      parse "!" `shouldParse` OP "!" pos1
-
-    it "op + ident" $
-      parse "(+ foo)"
-      `shouldParse`
-      L [ OP "+" (pos 1 2) , ID "foo" ]
-
-    it "op hex int" $
-      parse "(== 0xff 255)"
-      `shouldParse`
-      L [ OP "==" (pos 1 2) , INT 16 0xFF (pos 1 5) , INT 10 255 (pos 1 10) ]
-
-    it "keyword" $
-      parse "for" `shouldParse` KW "for"
-
-    it "not a keyword" $
-      parse "forall" `shouldParse` ID "forall"
-
-    it "func call" $
-      parse "(printf \"%+v\\n\" v)" `shouldParse`
-      L [ KW "printf", SL "%+v\\n" (pos 1 9), ID "v" ]
-
-    it "selector + unit" $
-      parse "(fmt.Println ())" `shouldParse` L [ ID "fmt.Println", Nil ]
-
-    it "ident list" $
-      parse "(foo bar)" `shouldParse` L [ ID "foo", ID "bar" ]
-
-    it "nested empty list" $
-      parse "(())" `shouldParse` L [Nil]
-
-    it "op + ident + lit" $
-      parse "(< foo 10)" `shouldParse` L [ OP "<" (pos 1 2) , ID "foo" , I 10 (pos 1 8) ]
-
-    it "import" $
-      parse "(import \"foo\")" `shouldParse` L [ KW "import" , SL "foo" (pos 1 9) ]
-
-    it "multiline s-exp" $
-      parse "(+ foo bar\n    :int)" `shouldParse`
-      L [ OP "+" (pos 1 2) , ID "foo" , ID "bar" , TP "int" ]
-
-    it "multiline s-exp with a comment" $
-      parse "(foo 123 456\n; comment\n  bar)" `shouldParse`
-      L [ ID "foo" , I 123 (pos 1 6) , I 456 (pos 1 10) , ID "bar" ]
-
-    it "HelloWorld" $
-      parse "(package main\n\n  (func main (print \"hello world\")))" `shouldParse`
-      L [ KW "package" , ID "main"
-        , L [ KW "func" , ID "main"
-            , L [ KW "print" , SL "hello world" (pos 3 21)] ]]
-
-    it "var decl from slice literal" $
-      parse "(var t (:slice :string) (\"g\" \"h\" \"c\"))" `shouldParse`
-      L [ KW "var" , ID "t" , L [ TP "slice" , TP "string" ]
-        , L [ SL "g" (pos 1 26) , SL "h" (pos 1 30) , SL "c" (pos 1 34)] ]
-
-    it "func type" $
-      parse "(:func () :int)" `shouldParse` L [ TP "func" , Nil , TP "int" ]
-
-    it "type assertion" $
-      parse "(assert :foo x)" `shouldParse` L [ KW "assert" , TP "foo" , ID "x" ]
-
-    it "testing assert" $
-      parse "(assert.Equal (s.T) text t)"
-      `shouldParse`
-      L [ ID "assert.Equal" , L [ ID "s.T" ] , ID "text" , ID "t" ]
-
 
   describe "Fun.Go.Printer.printGo" $ do
 

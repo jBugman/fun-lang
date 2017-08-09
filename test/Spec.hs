@@ -3,9 +3,8 @@
 module Main where
 
 import ClassyPrelude
-import Data.Either.Combinators      (mapLeft)
-import Data.SCargot.Repr.WellFormed (pattern L, pattern Nil)
-import Test.Hspec                   (Spec, describe, hspec, it, shouldBe)
+import Data.Either.Combinators (mapLeft)
+import Test.Hspec              (Spec, describe, hspec, it, shouldBe)
 
 import Foreign.Gofmt     (gofmt)
 import Foreign.Parser    (parse)
@@ -15,7 +14,7 @@ import Fun.Errors        (Error (..), Pos (..), unError)
 import Fun.Go.Printer    (printGo)
 import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern I, pattern ID, pattern INT,
-                          pattern KW, pattern OP, pattern SL, pattern TP)
+                          pattern KW, pattern L, pattern Nil, pattern OP, pattern SL, pattern TP)
 import Test.Utils        (shouldFailOn, shouldParse, shouldPrint, translationExample)
 
 

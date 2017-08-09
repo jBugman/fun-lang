@@ -3,7 +3,6 @@ module Fun.Go.Printer ( printGo ) where
 
 import ClassyPrelude                hiding (empty)
 import Data.Either.Extra            (maybeToEither)
-import Data.SCargot.Repr.WellFormed (pattern A, pattern L, pattern Nil)
 import Text.PrettyPrint.Leijen.Text (Doc, braces, brackets, colon, comma, displayTStrict, dot,
                                      empty, equals, hcat, hsep, indent, line, parens, pretty,
                                      punctuate, renderPretty, semi, space, text, textStrict, vsep,
@@ -11,8 +10,8 @@ import Text.PrettyPrint.Leijen.Text (Doc, braces, brackets, colon, comma, displa
 
 import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
-import Fun.SExpression   (Atom (..), pattern DL, Expression, pattern I, pattern ID, pattern KW,
-                          pattern OP, pattern SL, pattern TP)
+import Fun.SExpression   (pattern A, Atom (..), pattern DL, Expression (..), pattern I, pattern ID,
+                          pattern KW, pattern L, pattern Nil, pattern OP, pattern SL, pattern TP)
 
 type E = Expression
 
@@ -28,7 +27,7 @@ pprint (ID x)      = doc x
 pprint (OP x)      = doc x
 
 -- literal
-pprint (A (Lit x)) = pure $ pretty x
+pprint (A (Literal x)) = pure $ pretty x
 
 -- types
 pprint (TP "any")  = doc "interface{}"
@@ -443,9 +442,9 @@ printMapLike t xs = do
     pure $ t' <> braces (commaSep xs')
 
 printMaplikeElem :: E -> Either Error Doc
-printMaplikeElem (L [ x@(ID _) , y ])      = printColonPair x y
-printMaplikeElem (L [ x@(A (Lit _)) , y ]) = printColonPair x y
-printMaplikeElem e                         = mkError "invalid map-like elem: " e
+printMaplikeElem (L [ x@(ID _) , y ])          = printColonPair x y
+printMaplikeElem (L [ x@(A (Literal _)) , y ]) = printColonPair x y
+printMaplikeElem e                             = mkError "invalid map-like elem: " e
 
 printFunc :: Maybe E -> Maybe E -> Maybe E -> Maybe E -> E -> Either Error Doc
 printFunc recv name args res body = do

@@ -2,11 +2,11 @@
 module Fun.Desugar (desugar) where
 
 import ClassyPrelude
-import Data.SCargot.Repr.WellFormed (pattern A, pattern L)
-import Data.Traversable             (mapAccumR)
-import GHC.Err                      (errorWithoutStackTrace)
+import Data.Traversable (mapAccumR)
+import GHC.Err          (errorWithoutStackTrace)
 
-import Fun.SExpression (Expression, pattern ID, pattern KW, pattern OP, pattern SL)
+import Fun.SExpression (pattern A, Expression, pattern ID, pattern KW, pattern L, pattern OP,
+                        pattern SL)
 
 type E = Expression
 

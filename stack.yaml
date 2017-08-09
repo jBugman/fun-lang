@@ -3,5 +3,4 @@ flags: {}
 extra-package-dbs: []
 packages:
 - '.'
-extra-deps:
-- s-cargot-0.1.2.0
+extra-deps: []

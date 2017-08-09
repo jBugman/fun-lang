@@ -5,17 +5,16 @@
 module Foreign.Parser (parse) where
 
 import ClassyPrelude
-import Data.Aeson                   (FromJSON, eitherDecodeStrict, parseJSON, withObject, (.!=),
-                                     (.:), (.:?))
-import Data.Either.Combinators      (mapLeft)
-import Data.SCargot.Repr.WellFormed (pattern L)
-import System.Exit                  (ExitCode (..))
-import System.IO.Unsafe             (unsafePerformIO)
-import System.Process               (readProcessWithExitCode)
+import Data.Aeson              (FromJSON, eitherDecodeStrict, parseJSON, withObject, (.!=), (.:),
+                                (.:?))
+import Data.Either.Combinators (mapLeft)
+import System.Exit             (ExitCode (..))
+import System.IO.Unsafe        (unsafePerformIO)
+import System.Process          (readProcessWithExitCode)
 
 import Fun.Errors      (Error (..), Pos (..))
 import Fun.SExpression (pattern BL, pattern CL, pattern DL, Expression, pattern ID, pattern INT,
-                        pattern KW, pattern OP, pattern SL, pattern TP)
+                        pattern KW, pattern L, pattern OP, pattern SL, pattern TP)
 
 parse :: Text -> Either Error Expression
 parse src = case goParse src of

@@ -8,7 +8,7 @@ import ClassyPrelude
 import Data.Text     (strip)
 
 data Pos = Pos Int Int
-    deriving (Eq)
+    deriving (Eq, Ord)
 
 instance Show Pos where
     show (Pos line col) = show line <> ":" <> show col <> ":"

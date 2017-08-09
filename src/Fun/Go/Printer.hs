@@ -10,8 +10,8 @@ import Text.PrettyPrint.Leijen.Text (Doc, braces, brackets, colon, comma, displa
 
 import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
-import Fun.SExpression   (pattern A, Atom (..), pattern DL, Expression (..), pattern I, pattern ID,
-                          pattern KW, pattern L, pattern Nil, pattern OP, pattern SL, pattern TP)
+import Fun.SExpression   (pattern DL, Expression (..), pattern I, pattern ID, pattern KW, pattern L,
+                          pattern LIT, pattern Nil, pattern OP, pattern SL, pattern TP, unPos)
 
 type E = Expression
 
@@ -27,7 +27,7 @@ pprint (ID x)      = doc x
 pprint (OP x)      = doc x
 
 -- literal
-pprint (A (Literal x)) = pure $ pretty x
+pprint (LIT x _) = pure $ pretty x
 
 -- types
 pprint (TP "any")  = doc "interface{}"
@@ -168,11 +168,11 @@ pprint (L [ KW "set" , x@(ID _) , y@(ID _) , rhs ])
     = printAssignmentXY x (Just y) rhs
 
 -- import
-pprint (L [ KW "import" , x@(SL _) ]) = do
+pprint (L [ KW "import" , x@(SL _ _) ]) = do
     x' <- pprint x
     pure $ text "import" <+> x'
 
-pprint (L [ KW "import" , x@(SL _) , SL alias ]) = do
+pprint (L [ KW "import" , x@(SL _ _) , SL alias _ ]) = do
     x' <- pprint x
     pure $ text "import" <+> textStrict alias <+> x'
 
@@ -222,11 +222,11 @@ pprint (L [ t@(TP _) , L xs ]) = printMapLike t xs
 -- complex literal
 pprint (L [ TP "complex" , x@(I _) , y@(I _) ])
     = printComplex x y
-pprint (L [ TP "complex" , x@(I _) , y@(DL _) ])
+pprint (L [ TP "complex" , x@(I _) , y@(DL _ _) ])
     = printComplex x y
-pprint (L [ TP "complex" , x@(DL _) , y@(I _) ])
+pprint (L [ TP "complex" , x@(DL _ _) , y@(I _) ])
     = printComplex x y
-pprint (L [ TP "complex" , x@(DL _) , y@(DL _) ])
+pprint (L [ TP "complex" , x@(DL _ _) , y@(DL _ _) ])
     = printComplex x y
 
 -- function call
@@ -355,8 +355,7 @@ pprint (L ( x@(L _) : xs )) = do
     pure $ x' <> line <> xs'
 
 -- FIXME: Catching everything that is not allowed (yet)
--- TODO: error position
-pprint x = Left . TranslationError Nothing $ "not supported yet: " <> singleLine x
+pprint x = mkError "not supported yet: " x
 
 
 -- Tier 2 --
@@ -442,9 +441,9 @@ printMapLike t xs = do
     pure $ t' <> braces (commaSep xs')
 
 printMaplikeElem :: E -> Either Error Doc
-printMaplikeElem (L [ x@(ID _) , y ])          = printColonPair x y
-printMaplikeElem (L [ x@(A (Literal _)) , y ]) = printColonPair x y
-printMaplikeElem e                             = mkError "invalid map-like elem: " e
+printMaplikeElem (L [ x@(ID _) , y ])    = printColonPair x y
+printMaplikeElem (L [ x@(LIT _ _) , y ]) = printColonPair x y
+printMaplikeElem e                       = mkError "invalid map-like elem: " e
 
 printFunc :: Maybe E -> Maybe E -> Maybe E -> Maybe E -> E -> Either Error Doc
 printFunc recv name args res body = do
@@ -559,4 +558,4 @@ mkError :: Text -> E -> Either Error Doc
 mkError msg e = Left $ mkError' msg e
 
 mkError' :: Text -> E -> Error
-mkError' msg e = TranslationError Nothing (msg <> singleLine e) -- TODO: error position
+mkError' msg e = TranslationError (unPos e) (msg <> singleLine e)

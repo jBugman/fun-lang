@@ -5,16 +5,17 @@
 module Foreign.Parser (parse) where
 
 import ClassyPrelude
-import Data.Aeson              (FromJSON, eitherDecodeStrict, parseJSON, withObject, (.!=), (.:),
-                                (.:?))
+import Data.Aeson              (FromJSON, Object, eitherDecodeStrict, parseJSON, withObject, (.!=),
+                                (.:), (.:?))
+import Data.Aeson.Types        (Parser)
 import Data.Either.Combinators (mapLeft)
 import System.Exit             (ExitCode (..))
 import System.IO.Unsafe        (unsafePerformIO)
 import System.Process          (readProcessWithExitCode)
 
 import Fun.Errors      (Error (..), Pos (..))
-import Fun.SExpression (pattern BL, pattern CL, pattern DL, Expression, pattern ID, pattern INT,
-                        pattern KW, pattern L, pattern OP, pattern SL, pattern TP)
+import Fun.SExpression (Atom (..), Expression (..), pattern ID, pattern INT, pattern KW, pattern L,
+                        Literal (..), pattern OP, pattern TP)
 
 parse :: Text -> Either Error Expression
 parse src = case goParse src of
@@ -57,9 +58,12 @@ instance FromJSON Expression where
             "Keyword"  -> KW  <$> v .:  "x"
             "Operator" -> OP  <$> v .:  "x"
             "Type"     -> TP  <$> v .:  "x"
-            "String"   -> SL  <$> v .:  "x"
-            "Char"     -> CL  <$> v .:  "x"
+            "String"   -> mkAtom v (Literal . String)
+            "Char"     -> mkAtom v (Literal . Char)
             "Integer"  -> INT <$> v .:? "base" .!= 10 <*> v .: "x"
-            "Double"   -> DL  <$> v .:  "x"
-            "Bool"     -> BL  <$> v .:  "x"
+            "Double"   -> mkAtom v (Literal . Double)
+            "Bool"     -> mkAtom v (Literal . Bool)
             _          -> fail $ "not a valid type: " <> t
+
+mkAtom :: FromJSON a => Object -> (a -> Atom) -> Parser Expression
+mkAtom o a = Atom <$> (a <$> o .: "x" ) <*> o .: "pos"

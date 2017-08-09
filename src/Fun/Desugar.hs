@@ -5,8 +5,8 @@ import ClassyPrelude
 import Data.Traversable (mapAccumR)
 import GHC.Err          (errorWithoutStackTrace)
 
-import Fun.SExpression (pattern A, Expression, pattern ID, pattern KW, pattern L, pattern OP,
-                        pattern SL)
+import Fun.SExpression (pattern A, Expression, pattern ID, pattern KW, pattern L, pattern LIT,
+                        Literal (..), pattern OP)
 
 type E = Expression
 
@@ -26,7 +26,8 @@ desugar e = e -- Ignore non-package
 
 
 importFmt :: E
-importFmt = L [ KW "import" , SL "fmt" ]
+importFmt = L [ KW "import" , LIT (String "fmt") Nothing ]
+-- TODO: Probably a problem with inserting expressions without position.
 
 
 isImport :: E -> Bool

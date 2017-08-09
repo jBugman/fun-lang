@@ -15,12 +15,12 @@ singleLine x = displayTStrict . renderOneLine $ pprint x
 -- displayTStrict . renderPretty 0.6 100 <$> pprint x
 
 pprint :: Expression -> Doc
-pprint (List xs)            = parens . sep $ pprint <$> xs
-pprint (Atom (Ident s))     = textStrict s
-pprint (Atom (Keyword s))   = textStrict s
-pprint (Atom (Type s))      = textStrict (":" <> s)
-pprint (Atom (Operator s))  = textStrict s
-pprint (Atom (Literal lit)) = pretty lit
+pprint (List xs _)            = parens . sep $ pprint <$> xs
+pprint (Atom (Ident s) _)     = textStrict s
+pprint (Atom (Keyword s) _)   = textStrict s
+pprint (Atom (Type s) _)      = textStrict (":" <> s)
+pprint (Atom (Operator s) _)  = textStrict s
+pprint (Atom (Literal lit) _) = pretty lit
 
 instance Pretty Literal where
     pretty (String x)     = dquotes . textStrict $ x

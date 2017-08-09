@@ -83,8 +83,8 @@ pattern KW x = A (Keyword x)
 pattern TP :: Text -> Expression
 pattern TP x = A (Type x)
 
-pattern OP :: Text -> Expression
-pattern OP x = A (Operator x)
+pattern OP :: Text -> Maybe Pos -> Expression
+pattern OP x p = Atom (Operator x) p
 
 pattern SL :: Text -> Maybe Pos -> Expression
 pattern SL x p = LIT (String x) p
@@ -92,11 +92,11 @@ pattern SL x p = LIT (String x) p
 pattern CL :: Text -> Maybe Pos -> Expression
 pattern CL x p = LIT (Char x) p
 
-pattern I :: Integer -> Expression
-pattern I x = A (Literal (Integer 10 x))
+pattern I :: Integer -> Maybe Pos -> Expression
+pattern I x p = LIT (Integer 10 x) p
 
-pattern INT :: Int -> Integer -> Expression
-pattern INT base x = A (Literal (Integer base x))
+pattern INT :: Int -> Integer -> Maybe Pos -> Expression
+pattern INT base x p = LIT (Integer base x) p
 
 pattern DL :: Double -> Maybe Pos -> Expression
 pattern DL x p = LIT (Double x) p

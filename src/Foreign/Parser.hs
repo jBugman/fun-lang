@@ -15,7 +15,7 @@ import System.Process          (readProcessWithExitCode)
 
 import Fun.Errors      (Error (..), Pos (..))
 import Fun.SExpression (Atom (..), Expression (..), pattern ID, pattern INT, pattern KW, pattern L,
-                        Literal (..), pattern OP, pattern TP)
+                        Literal (..), pattern TP)
 
 parse :: Text -> Either Error Expression
 parse src = case goParse src of
@@ -56,11 +56,11 @@ instance FromJSON Expression where
             "List"     -> L   <$> v .:? "xs" .!= []
             "Ident"    -> ID  <$> v .:  "x"
             "Keyword"  -> KW  <$> v .:  "x"
-            "Operator" -> OP  <$> v .:  "x"
+            "Operator" -> mkAtom v Operator
             "Type"     -> TP  <$> v .:  "x"
             "String"   -> mkAtom v (Literal . String)
             "Char"     -> mkAtom v (Literal . Char)
-            "Integer"  -> INT <$> v .:? "base" .!= 10 <*> v .: "x"
+            "Integer"  -> INT <$> v .:? "base" .!= 10 <*> v .: "x" <*> v .: "pos"
             "Double"   -> mkAtom v (Literal . Double)
             "Bool"     -> mkAtom v (Literal . Bool)
             _          -> fail $ "not a valid type: " <> t

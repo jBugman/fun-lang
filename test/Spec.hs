@@ -18,14 +18,9 @@ import Fun.PrettyPrinter (singleLine)
 import Fun.SExpression   (pattern BL, pattern CL, pattern DL, pattern I, pattern ID, pattern INT,
                           pattern KW, pattern L, pattern LT, Literal (..), pattern Nil, pattern OP,
                           pattern SL, pattern TP)
-import Test.Utils        (shouldFailOn, shouldParse, shouldPrint, translationExample)
+import Test.Utils        (int, op, pos, pos1, shouldFailOn, shouldParse, shouldPrint, str,
+                          translationExample)
 
-
-pos1 :: Maybe Pos
-pos1 = pos 1 1
-
-pos :: Int -> Int -> Maybe Pos
-pos l c = Just (Pos l c)
 
 main :: IO ()
 main = hspec . describe "Everything" $ do
@@ -101,10 +96,10 @@ unitTests = do
       parse "false" `shouldParse` BL False pos1
 
     it "int lit" $
-      parse "42" `shouldParse` I 42
+      parse "42" `shouldParse` I 42 pos1
 
     it "zero" $
-      parse "0" `shouldParse` I 0
+      parse "0" `shouldParse` I 0 pos1
 
     it "double lit" $
       parse "42.0" `shouldParse` DL 42.0 (pos 1 1)
@@ -116,10 +111,10 @@ unitTests = do
       parse "1e3" `shouldParse` DL 1000 (pos 1 1)
 
     it "oct lit" $
-      parse "0644" `shouldParse` INT 8 0o644
+      parse "0644" `shouldParse` INT 8 0o644 pos1
 
     it "hex lit" $
-      parse "0x2A" `shouldParse` INT 16 0x2A
+      parse "0x2A" `shouldParse` INT 16 0x2A pos1
 
     it "ident" $
       parse "foo" `shouldParse` ID "foo"
@@ -134,34 +129,38 @@ unitTests = do
       parse ":int" `shouldParse` TP "int"
 
     it "+" $
-      parse "+" `shouldParse` OP "+"
+      parse "+" `shouldParse` OP "+" pos1
 
     it "++" $
-      parse "++" `shouldParse` OP "++"
+      parse "++" `shouldParse` OP "++" pos1
 
     it "&&" $
-      parse "&&" `shouldParse` OP "&&"
+      parse "&&" `shouldParse` OP "&&" pos1
 
     it "&" $
-      parse "&" `shouldParse` OP "&"
+      parse "&" `shouldParse` OP "&" pos1
 
     it "||" $
-      parse "||" `shouldParse` OP "||"
+      parse "||" `shouldParse` OP "||" pos1
 
     it "|" $
-      parse "|" `shouldParse` OP "|"
+      parse "|" `shouldParse` OP "|" pos1
 
     it "!=" $
-      parse "!=" `shouldParse` OP "!="
+      parse "!=" `shouldParse` OP "!=" pos1
 
     it "!" $
-      parse "!" `shouldParse` OP "!"
+      parse "!" `shouldParse` OP "!" pos1
 
     it "op + ident" $
-      parse "(+ foo)" `shouldParse` L [ OP "+" , ID "foo" ]
+      parse "(+ foo)"
+      `shouldParse`
+      L [ OP "+" (pos 1 2) , ID "foo" ]
 
     it "op hex int" $
-      parse "(== 0xff 255)" `shouldParse` L [ OP "==" , INT 16 0xFF , INT 10 255 ]
+      parse "(== 0xff 255)"
+      `shouldParse`
+      L [ OP "==" (pos 1 2) , INT 16 0xFF (pos 1 5) , INT 10 255 (pos 1 10) ]
 
     it "keyword" $
       parse "for" `shouldParse` KW "for"
@@ -183,18 +182,18 @@ unitTests = do
       parse "(())" `shouldParse` L [Nil]
 
     it "op + ident + lit" $
-      parse "(< foo 10)" `shouldParse` L [ OP "<" , ID "foo" , I 10 ]
+      parse "(< foo 10)" `shouldParse` L [ OP "<" (pos 1 2) , ID "foo" , I 10 (pos 1 8) ]
 
     it "import" $
       parse "(import \"foo\")" `shouldParse` L [ KW "import" , SL "foo" (pos 1 9) ]
 
     it "multiline s-exp" $
       parse "(+ foo bar\n    :int)" `shouldParse`
-      L [ OP "+" , ID "foo" , ID "bar" , TP "int" ]
+      L [ OP "+" (pos 1 2) , ID "foo" , ID "bar" , TP "int" ]
 
     it "multiline s-exp with a comment" $
       parse "(foo 123 456\n; comment\n  bar)" `shouldParse`
-      L [ ID "foo" , I 123 , I 456 , ID "bar" ]
+      L [ ID "foo" , I 123 (pos 1 6) , I 456 (pos 1 10) , ID "bar" ]
 
     it "HelloWorld" $
       parse "(package main\n\n  (func main (print \"hello world\")))" `shouldParse`
@@ -227,39 +226,39 @@ unitTests = do
       Left "translation error: not supported yet: ()"
 
     it "import" $
-      printGo (L [ KW "import" , LT (String "fmt") ])
+      printGo (L [ KW "import" , str "fmt" ])
       `shouldPrint`
       "import \"fmt\""
 
     it "import with alias" $
-      printGo (L [ KW "import" , LT (String "very/long-package") , LT (String "pkg") ])
+      printGo (L [ KW "import" , str "very/long-package" , str "pkg" ])
       `shouldPrint`
       "import pkg \"very/long-package\""
 
     it "simple func" $
-      printGo (L [ KW "func" , ID "setS" , L [ KW "set" , ID "s" , I 2 ] ])
+      printGo (L [ KW "func" , ID "setS" , L [ KW "set" , ID "s" , int 2 ] ])
       `shouldPrint`
       "func setS() {\n  s = 2\n}"
 
     it "<" $
-      printGo (L [ OP "<" , ID "n" , I 10 ]) `shouldPrint` "n < 10"
+      printGo (L [ op "<" , ID "n" , int 10 ]) `shouldPrint` "n < 10"
 
     it "==" $
-      printGo (L [ OP "==" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
+      printGo (L [ op "==" , ID "foo" , ID "bar" ]) `shouldPrint` "foo == bar"
 
     it "--" $
-      printGo (L [ OP "--" , ID "j" ]) `shouldPrint` "j--"
+      printGo (L [ op "--" , ID "j" ]) `shouldPrint` "j--"
 
     it "* as product" $
-      printGo (L [ OP "*" , ID "x" , ID "y" ]) `shouldPrint` "x * y"
+      printGo (L [ op "*" , ID "x" , ID "y" ]) `shouldPrint` "x * y"
 
     it "* as pointer" $
-      printGo (L [ OP "*" , ID "foo" ]) `shouldPrint` "*foo"
+      printGo (L [ op "*" , ID "foo" ]) `shouldPrint` "*foo"
 
     it "hex == char" $
       printGo (L
-        [ OP "=="
-        , INT 16 1
+        [ op "=="
+        , LT (Integer 16 1)
         , LT (Char "a")
         ]) `shouldPrint` "0x1 == 'a'"
 
@@ -267,32 +266,32 @@ unitTests = do
       printGo (LT (Double 9.99)) `shouldPrint` "9.99"
 
     it "oct" $
-      printGo (INT 8 0o644) `shouldPrint` "0644"
+      printGo (LT (Integer 8 0o644)) `shouldPrint` "0644"
 
     it "complex" $
-      printGo (L [ TP "complex" , LT (Double 5.2) , I 3 ]) `shouldPrint` "5.2+3i"
+      printGo (L [ TP "complex" , LT (Double 5.2) , int 3 ]) `shouldPrint` "5.2+3i"
 
     it "complex negative" $
-      printGo (L [ TP "complex" , I 1 , I (-2) ]) `shouldPrint` "1-2i"
+      printGo (L [ TP "complex" , int 1 , int (-2) ]) `shouldPrint` "1-2i"
 
     it "string" $
-      printGo (LT (String "fizzbuzz")) `shouldPrint` "\"fizzbuzz\""
+      printGo (str "fizzbuzz") `shouldPrint` "\"fizzbuzz\""
 
     it "'any' type" $
       printGo (TP "any") `shouldPrint` "interface{}"
 
     it "const decl" $
-      printGo (L [ KW "const" , ID "a" , LT (String "initial") ])
+      printGo (L [ KW "const" , ID "a" , str "initial" ])
       `shouldPrint`
       "const a = \"initial\""
 
     it "full const decl" $
-      printGo (L [ KW "const" , ID "a" , TP "State" , INT 16 0xA ])
+      printGo (L [ KW "const" , ID "a" , TP "State" , LT (Integer 16 0xA) ])
       `shouldPrint`
       "const a State = 0xa"
 
     it "full var decl" $
-      printGo (L [ KW "var" , ID "b" , TP "int" , I 1 ]) `shouldPrint` "var b int = 1"
+      printGo (L [ KW "var" , ID "b" , TP "int" , int 1 ]) `shouldPrint` "var b int = 1"
 
     it "infer type var" $
       printGo (L [ KW "var" , ID "d" , LT (Bool True) ]) `shouldPrint` "var d = true"
@@ -311,12 +310,12 @@ unitTests = do
       "var x, y = factory(z)"
 
     it "var x, y = m[2]" $
-      printGo (L [ KW "var" , ID "x" , ID "y" , L [ KW "val" , ID "m" , I 2 ] ])
+      printGo (L [ KW "var" , ID "x" , ID "y" , L [ KW "val" , ID "m" , int 2 ] ])
       `shouldPrint`
       "var x, y = m[2]"
 
     it "var _, x = m[2]" $
-      printGo (L [ KW "var" , ID "_" , ID "x" , L [ KW "val" , ID "m" , I 2 ] ])
+      printGo (L [ KW "var" , ID "_" , ID "x" , L [ KW "val" , ID "m" , int 2 ] ])
       `shouldPrint`
       "var _, x = m[2]"
 
@@ -337,15 +336,15 @@ unitTests = do
       printGo (L
         [ KW "var" , ID "nums"
         , L [ L [ TP "slice" , TP "int" ]
-        , L [ I 1 , I 2, I 3 ] ] ])
+        , L [ int 1 , int 2, int 3 ] ] ])
       `shouldPrint`
       "var nums = []int{1, 2, 3}"
 
     it "var with map literal initializer" $
       printGo (L [ KW "var" , ID "m" , L
       [ L [ TP "map" , TP "string" , TP "bool" ] , L
-        [ L [ LT (String "foo"), LT (Bool True) ]
-        , L [ LT (String "bar") , LT (Bool False) ] ]]])
+        [ L [ str "foo", LT (Bool True) ]
+        , L [ str "bar" , LT (Bool False) ] ]]])
       `shouldPrint`
       "var m = map[string]bool{\"foo\": true, \"bar\": false}"
 
@@ -355,12 +354,12 @@ unitTests = do
       "[][]string"
 
     it "map lookup" $
-      printGo (L [ KW "set" , ID "_" , ID "ok" , L [ KW "val" , ID "m" , LT (String "Bob") ] ])
+      printGo (L [ KW "set" , ID "_" , ID "ok" , L [ KW "val" , ID "m" , str "Bob" ] ])
       `shouldPrint`
       "_, ok = m[\"Bob\"]"
 
     it "slice index" $
-      printGo (L [ KW "val" , ID "xs" , I 4 ]) `shouldPrint` "xs[4]"
+      printGo (L [ KW "val" , ID "xs" , int 4 ]) `shouldPrint` "xs[4]"
 
     it "slice 2D-index" $
       printGo (L [ KW "val" , ID "xs" , ID "y" , ID "x" ]) `shouldPrint` "xs[y][x]"
@@ -374,18 +373,22 @@ unitTests = do
       "k, v := range users"
 
     it "slice from" $
-      printGo (L [ KW "slice" , ID "xs" , I 1 , ID "_" ]) `shouldPrint` "xs[1:]"
+      printGo (L [ KW "slice" , ID "xs" , int 1 , ID "_" ]) `shouldPrint` "xs[1:]"
 
     it "slice to" $
-      printGo (L [ KW "slice" , ID "xs" , ID "_" , I 4 ]) `shouldPrint` "xs[:4]"
+      printGo (L [ KW "slice" , ID "xs" , ID "_" , int 4 ])
+      `shouldPrint`
+      "xs[:4]"
 
     it "slice from-to" $
-      printGo (L [ KW "slice" , ID "indexes" , ID "i" , L [ OP "+" , ID "j" , I 1 ] ])
-      `shouldPrint` "indexes[i:j + 1]"
+      printGo (L [ KW "slice" , ID "indexes" , ID "i" , L [ op "+" , ID "j" , int 1 ] ])
+      `shouldPrint`
+      "indexes[i:j + 1]"
 
     it "empty struct" $
       printGo (L [ KW "struct" , ID "foo" ])
-      `shouldPrint` "type foo struct{}"
+      `shouldPrint`
+      "type foo struct{}"
 
     it "single entry struct" $
       printGo (L [ KW "struct" , ID "List" , L
@@ -438,44 +441,44 @@ unitTests = do
       `shouldPrint` "type foo interface {\n  io.Writer\n  bar()\n}"
 
     it "forever for loop" $
-      printGo (L [ KW "for" , L [ ID "fmt.Println" , LT (String "fizz") ] ])
+      printGo (L [ KW "for" , L [ ID "fmt.Println" , str "fizz" ] ])
       `shouldPrint`
       "for {\n  fmt.Println(\"fizz\")\n}"
 
     it "standard for loop" $
-      printGo (L [ KW "for" , ID "i" , I 0 , I 10 , L [ ID "fmt.Println" , LT (String "buzz") ] ])
+      printGo (L [ KW "for" , ID "i" , int 0 , int 10 , L [ ID "fmt.Println" , str "buzz" ] ])
       `shouldPrint`
       "for i := 0; i < 10; i++ {\n  fmt.Println(\"buzz\")\n}"
 
     it "only condition for loop" $
       printGo (L [ KW "for"
-        , L [ OP "<" , ID "n" , I 42 ]
-        , L [ ID "fmt.Print" , LT (String "?") ] ])
+        , L [ op "<" , ID "n" , int 42 ]
+        , L [ ID "fmt.Print" , str "?" ] ])
       `shouldPrint`
       "for n < 42 {\n  fmt.Print(\"?\")\n}"
 
     it "custom for loop" $
       printGo (L [ KW "for" , ID "x" , ID "k" , LT (Bool True)
-      , L [ KW "set" , ID "x" , L [ OP "+", ID "x", ID "foo.N" ] ]
+      , L [ KW "set" , ID "x" , L [ op "+", ID "x", ID "foo.N" ] ]
       , L [ KW "break" ] ])
       `shouldPrint`
       "for x := k; true; x = x + foo.N {\n  break\n}"
 
     it "minimal func literal" $
-      printGo (L [ KW "func" , Nil , L [ ID "pass" , I 42 ] ])
+      printGo (L [ KW "func" , Nil , L [ ID "pass" , int 42 ] ])
       `shouldPrint`
       "func() {\n  pass(42)\n}"
 
     it "func literal with result" $
       printGo (L [ KW "func" , Nil , TP "int" , L
-      [ L [ KW "set" , ID "i" , L [ OP "+", ID "i", I 1 ] ]
+      [ L [ KW "set" , ID "i" , L [ op "+", ID "i", int 1 ] ]
       , L [ KW "return" , ID "i" ] ]])
       `shouldPrint`
       "func() int {\n  i = i + 1\n  return i\n}"
 
     it "func literal with args" $
       printGo (L [ KW "func" , L [ L [ ID "x" , TP "int" ]] , L
-      [ L [ KW "set" , ID "i" , L [ OP "+", ID "i", ID "x" ] ]
+      [ L [ KW "set" , ID "i" , L [ op "+", ID "i", ID "x" ] ]
       , L [ KW "return" , ID "i" ] ]])
       `shouldPrint`
       "func(x int) {\n  i = i + x\n  return i\n}"
@@ -514,7 +517,7 @@ unitTests = do
       "x, ok = os.LookupEnv(name)"
 
     it "slice elem set" $
-      printGo (L [ KW "set" , L [ KW "val" , ID "names" , I 5 ] , LT (String "Bob") ])
+      printGo (L [ KW "set" , L [ KW "val" , ID "names" , int 5 ] , str "Bob" ])
       `shouldPrint`
       "names[5] = \"Bob\""
 
@@ -523,13 +526,13 @@ unitTests = do
 
     -- spellchecker:ignore SJFKD
     it "struct literal" $
-      printGo (L [ TP "api" , L [ L [ ID "key" , LT (String "SJFKD") ] ] ])
+      printGo (L [ TP "api" , L [ L [ ID "key" , str "SJFKD" ] ] ])
       `shouldPrint`
       "api{key: \"SJFKD\"}"
 
     it "var from struct literal" $
       printGo (L [ KW "var" , ID "x" , L [ TP "api" , L [ L
-        [ ID "key" , LT (String "SJFKD") ] ] ] ])
+        [ ID "key" , str "SJFKD" ] ] ] ])
       `shouldPrint`
       "var x = api{key: \"SJFKD\"}"
 
@@ -542,14 +545,14 @@ unitTests = do
       printGo (L [ KW "func" , ID "f"
         , L [ L [ ID "xs" , L [ TP "slice" , TP "string" ] ] ]
         , TP "int"
-        , L [ KW "return" , I 42 ] ])
+        , L [ KW "return" , int 42 ] ])
       `shouldPrint`
       "func f(xs []string) int {\n  return 42\n}"
 
     -- spellchecker:ignore boop
     it "func foo() {...}" $
       printGo (L [ KW "func" , ID "foo" , Nil , L
-      [ L [ KW "var" , ID "x" , I 5 ]
+      [ L [ KW "var" , ID "x" , int 5 ]
       , L [ ID "boop" , ID "x" ] ] ])
       `shouldPrint`
       "func foo() {\n  var x = 5\n  boop(x)\n}"
@@ -573,7 +576,7 @@ unitTests = do
       printGo (L [ KW "method"
         , L [ ID "b" , L [ TP "ptr" , TP "bar" ] ]
         , ID "foo" , Nil , L
-          [ L [ KW "var" , ID "x" , L [ OP "+" , ID "b" , I 3 ] ]
+          [ L [ KW "var" , ID "x" , L [ op "+" , ID "b" , int 3 ] ]
           , L [ ID "boop" , ID "x" ] ] ])
       `shouldPrint`
       "func (b *bar) foo() {\n  var x = b + 3\n  boop(x)\n}"
@@ -595,15 +598,15 @@ unitTests = do
       "x = y.(Foo)"
 
     it "slice literal" $
-      printGo (L [ L [ TP "slice" , TP "int" ] , L [ I 1 , I 2 , I 3 ] ])
+      printGo (L [ L [ TP "slice" , TP "int" ] , L [ int 1 , int 2 , int 3 ] ])
       `shouldPrint`
       "[]int{1, 2, 3}"
 
     it "map literal" $
       printGo (L
         [ L [ TP "map" , TP "foo" , TP "int" ] , L
-          [ L [ LT (String "foo") , I 42 ]
-          , L [ LT (String "bar") , I 3 ] ] ])
+          [ L [ str "foo" , int 42 ]
+          , L [ str "bar" , int 3 ] ] ])
       `shouldPrint`
       "map[foo]int{\"foo\": 42, \"bar\": 3}"
 
@@ -623,7 +626,7 @@ unitTests = do
       "map[x]map[y]z"
 
     it "call chain A" $
-      printGo (L [ OP "."
+      printGo (L [ op "."
         , ID "c"
         , L [ ID "Echo" ]
         , L [ ID "URI" , ID "bot.handleSession" ] ])
@@ -631,8 +634,8 @@ unitTests = do
       "c.Echo().URI(bot.handleSession)"
 
     it "call chain B" $
-      printGo (L [ OP "==" , I 0 , L
-        [ OP "."
+      printGo (L [ op "==" , int 0 , L
+        [ op "."
         , L [ KW "val" , ID "suite.t.Messages" , ID "userID" ]
         , L [ ID "Size" ] ] ])
       `shouldPrint`
@@ -640,22 +643,22 @@ unitTests = do
 
     it "switch simple" $
       printGo (L [ KW "switch" , ID "i" , L
-        [ L [ KW "case" , I 1 , L [ ID "foo" , LT (String "one") ] ]
-        , L [ KW "case" , I 2 , L [ ID "bar" , LT (String "two") ] ] ]])
+        [ L [ KW "case" , int 1 , L [ ID "foo" , str "one" ] ]
+        , L [ KW "case" , int 2 , L [ ID "bar" , str "two" ] ] ]])
       `shouldPrint`
       "switch i {\n  case 1: foo(\"one\")\n  case 2: bar(\"two\")\n}"
 
     it "switch no-expr default" $
       printGo (L [ KW "switch" , L
-        [ L [ KW "case" , L [ OP "==" , ID "i" , I 1 ] , L [ ID "foo" , LT (String "one") ] ]
-        , L [ KW "default" , L [ ID "bar" , LT (String "two") ] ] ]])
+        [ L [ KW "case" , L [ op "==" , ID "i" , int 1 ] , L [ ID "foo" , str "one" ] ]
+        , L [ KW "default" , L [ ID "bar" , str "two" ] ] ]])
       `shouldPrint`
       "switch {\n  case i == 1: foo(\"one\")\n  default: bar(\"two\")\n}"
 
     it "switch empty case" $
       printGo (L [ KW "switch" , ID "i" , L
-        [ L [ KW "case" , I 0 ]
-        , L [ KW "default" , L [ ID "bar" , LT (String "two") ] ] ]])
+        [ L [ KW "case" , int 0 ]
+        , L [ KW "default" , L [ ID "bar" , str "two" ] ] ]])
       `shouldPrint`
       "switch i {\n  case 0:\n  default: bar(\"two\")\n}"
 
@@ -677,11 +680,11 @@ unitTests = do
   describe "Fun.Printer.singleLine" $ do
 
     it "==" $
-      singleLine (L [ OP "=" , ID "foo" , ID "bar" ]) `shouldBe`
+      singleLine (L [ op "=" , ID "foo" , ID "bar" ]) `shouldBe`
       "(= foo bar)"
 
     it "var" $
-      singleLine (L [ KW "var" , ID "foo" , TP "int" , I 42 ]) `shouldBe`
+      singleLine (L [ KW "var" , ID "foo" , TP "int" , int 42 ]) `shouldBe`
       "(var foo :int 42)"
 
 
@@ -693,107 +696,107 @@ unitTests = do
       desugar (L
         [ KW "package" , ID "main" , L
         [ KW "func" , ID "main" , L
-          [ KW "print" , LT (String "hello world") ] ]])
+          [ KW "print" , str "hello world" ] ]])
       `shouldBe` L
         [ KW "package", ID "main" , L
-        [ KW "import" , LT (String "fmt") ] , L
+        [ KW "import" , str "fmt" ] , L
         [ KW "func" , ID "main" , L
-          [ ID "fmt.Println" , LT (String "hello world") ] ]]
+          [ ID "fmt.Println" , str "hello world" ] ]]
 
     it "printf" $
       desugar (L
         [ KW "package" , ID "main" , L
         [ KW "func" , ID "main" , L
-          [ KW "printf" , LT (String "<%s>\\n") , LT (String "hello world") ] ]])
+          [ KW "printf" , str "<%s>\\n" , str "hello world" ] ]])
       `shouldBe` L
         [ KW "package", ID "main" , L
-        [ KW "import" , LT (String "fmt") ] , L
+        [ KW "import" , str "fmt" ] , L
         [ KW "func" , ID "main" , L
-          [ ID "fmt.Printf" , LT (String "<%s>\\n"), LT (String "hello world") ] ]]
+          [ ID "fmt.Printf" , str "<%s>\\n" , str "hello world" ] ]]
 
     it "print with existing import" $
       desugar (L
         [ KW "package" , ID "main" , L
-        [ KW "import" , LT (String "fmt") ] , L
+        [ KW "import" , str "fmt" ] , L
         [ KW "func" , ID "main" , L
-          [ KW "print" , LT (String "hello world") ] ]])
+          [ KW "print" , str "hello world" ] ]])
       `shouldBe` L
         [ KW "package" , ID "main" , L
-        [ KW "import" , LT (String "fmt") ] , L
+        [ KW "import" , str "fmt" ] , L
         [ KW "func" , ID "main" , L
-          [ ID "fmt.Println" , LT (String "hello world") ] ]]
+          [ ID "fmt.Println" , str "hello world" ] ]]
 
     it "deeper nested print" $
       desugar (L
         [ KW "package" , ID "main" , L
         [ KW "func" , ID "main" , L
           [ KW "for" , L
-            [ KW "print" , LT (String "hello world") ] ]]])
+            [ KW "print" , str "hello world" ] ]]])
       `shouldBe` L
         [ KW "package", ID "main" , L
-        [ KW "import" , LT (String "fmt") ] , L
+        [ KW "import" , str "fmt" ] , L
         [ KW "func" , ID "main" , L
           [ KW "for" , L
-            [ ID "fmt.Println" , LT (String "hello world") ] ]]]
+            [ ID "fmt.Println" , str "hello world" ] ]]]
 
     it "print and printf" $
       desugar (L
         [ KW "package" , ID "main" , L
         [ KW "func" , ID "main" , L
-          [ L [ KW "print" , LT (String "<first>") ]
+          [ L [ KW "print" , str "<first>" ]
           , L [ KW "printf"
-              , LT (String "<%s>\\n")
-              , LT (String "second") ] ]]])
+              , str "<%s>\\n"
+              , str "second" ] ]]])
       `shouldBe` L
         [ KW "package", ID "main" , L
-        [ KW "import" , LT (String "fmt") ] , L
+        [ KW "import" , str "fmt" ] , L
         [ KW "func" , ID "main" , L
-          [ L [ ID "fmt.Println" , LT (String "<first>") ]
+          [ L [ ID "fmt.Println" , str "<first>" ]
           , L [ ID "fmt.Printf"
-              , LT (String "<%s>\\n")
-              , LT (String "second") ] ]]]
+              , str "<%s>\\n"
+              , str "second" ] ]]]
 
     it "adds return to constant func" $
       desugar (L
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "Version" , Nil , TP "string" ,
-          LT (String "v1.02") ] ])
+          str "v1.02" ] ])
       `shouldBe` L
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "Version" , Nil , TP "string" ,
-          L [ KW "return" , LT (String "v1.02") ] ]]
+          L [ KW "return" , str "v1.02" ] ]]
 
     it "adds return to func with declared results" $
       desugar (L
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
-          L [ OP "*" , ID "x" , I 2 ] ]])
+          L [ op "*" , ID "x" , int 2 ] ]])
       `shouldBe` L
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
-          L [ KW "return" , L [ OP "*" , ID "x" , I 2 ] ] ]]
+          L [ KW "return" , L [ op "*" , ID "x" , int 2 ] ] ]]
 
     it "adds return to the last expression" $
       desugar (L
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" , L
-          [ L [ KW "var" , ID "y" , L [ OP "*" , ID "x" , I 2 ] ]
+          [ L [ KW "var" , ID "y" , L [ op "*" , ID "x" , int 2 ] ]
           , ID "y" ]]])
       `shouldBe` L
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" , L
-          [ L [ KW "var" , ID "y" , L [ OP "*" , ID "x" , I 2 ] ]
+          [ L [ KW "var" , ID "y" , L [ op "*" , ID "x" , int 2 ] ]
           , L [ KW "return" , ID "y" ] ]]]
 
     it "does not add return if already present" $
       desugar (L
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
-          L [ KW "return" , L [ OP "*" , ID "x" , I 2 ] ] ]])
+          L [ KW "return" , L [ op "*" , ID "x" , int 2 ] ] ]])
       `shouldBe` L
         [ KW "package" , ID "acme" , L
         [ KW "func" , ID "double" , L [ L [ ID "x" , TP "int" ] ] , TP "int" ,
-          L [ KW "return" , L [ OP "*" , ID "x" , I 2 ] ] ]]
+          L [ KW "return" , L [ op "*" , ID "x" , int 2 ] ] ]]
 
 
 integrationTests :: Spec

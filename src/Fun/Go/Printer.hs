@@ -10,8 +10,9 @@ import Text.PrettyPrint.Leijen.Text (Doc, braces, brackets, colon, comma, displa
 
 import Fun.Errors        (Error (..))
 import Fun.PrettyPrinter (singleLine)
-import Fun.SExpression   (pattern DL, Expression (..), pattern I, pattern ID, pattern KW, pattern L,
-                          pattern LIT, pattern Nil, pattern OP, pattern SL, pattern TP, unPos)
+import Fun.SExpression   (Atom (..), pattern DL, Expression (..), pattern I, pattern ID, pattern KW,
+                          pattern L, pattern LIT, pattern Nil, pattern OP, pattern SL, pattern TP,
+                          unPos)
 
 type E = Expression
 
@@ -21,10 +22,10 @@ printGo x = displayTStrict . renderPretty 0.6 100 <$> pprint x
 
 pprint :: E -> Either Error Doc
 -- ident
-pprint (ID x)      = doc x
+pprint (ID x) = doc x
 
 -- operator
-pprint (OP x)      = doc x
+pprint (OP x _) = doc x
 
 -- literal
 pprint (LIT x _) = pure $ pretty x
@@ -137,25 +138,25 @@ pprint (L [ KW "method" , o , n@(ID _) , a , r , b ])
     = printFunc (Just o) (Just n) (Just a) (Just r) b
 
 -- unary operators
-pprint (L [ op@(OP _) , x ]) = do
+pprint (L [ op@(OP _ _) , x ]) = do
     op' <- pprint op
     x'  <- pprint x
     pure $ case op of
-        OP "++" -> x'  <> op'
-        OP "--" -> x'  <> op'
-        _       -> op' <> x'
+        OP "++" _ -> x'  <> op'
+        OP "--" _ -> x'  <> op'
+        _         -> op' <> x'
 
 -- binary operators
-pprint (L [ OP "==" , lhs , rhs ]) = do
+pprint (L [ OP "==" _ , lhs , rhs ]) = do
     lhs' <- pprint lhs
     rhs' <- pprint rhs
     pure $ lhs' <+> text "==" <+> rhs'
 
-pprint (L ( OP "." : xs )) = do -- chained function call
+pprint (L ( OP "." _ : xs )) = do -- chained function call
     xs' <- mapM pprint xs
     pure $ hcat (punctuate dot xs')
 
-pprint (L ( op@(OP _) : xs )) = do
+pprint (L ( op@(OP _ _) : xs )) = do
     op' <- pprint op
     xs' <- mapM pprint xs
     pure $ hsep (intersperse op' xs')
@@ -220,11 +221,11 @@ pprint (L [ t@(TP _) ])        = printMapLike t []
 pprint (L [ t@(TP _) , L xs ]) = printMapLike t xs
 
 -- complex literal
-pprint (L [ TP "complex" , x@(I _) , y@(I _) ])
+pprint (L [ TP "complex" , x@(I _ _) , y@(I _ _) ])
     = printComplex x y
-pprint (L [ TP "complex" , x@(I _) , y@(DL _ _) ])
+pprint (L [ TP "complex" , x@(I _ _) , y@(DL _ _) ])
     = printComplex x y
-pprint (L [ TP "complex" , x@(DL _ _) , y@(I _) ])
+pprint (L [ TP "complex" , x@(DL _ _) , y@(I _ _) ])
     = printComplex x y
 pprint (L [ TP "complex" , x@(DL _ _) , y@(DL _ _) ])
     = printComplex x y
@@ -319,7 +320,12 @@ pprint (L [ KW "for" , i@(ID _) , from , cond , iter , body ])
     = printFor i from cond iter body
 
 pprint (L [ KW "for" , i@(ID _) , from , to , body ])
-    = printFor i from (L [ OP "<" , i , to ]) (L [ OP "++" , i ]) body
+    = printFor
+        i
+        from
+        (L [ Atom (Operator "<") Nothing  , i , to ])
+        (L [ Atom (Operator "++") Nothing , i ])
+        body
 
 -- package
 pprint (L ( KW "package" : n@(ID _) : topLevels )) = do

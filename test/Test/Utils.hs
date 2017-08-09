@@ -4,6 +4,11 @@ module Test.Utils
     , shouldFailOn
     , shouldPrint
     , translationExample
+    , pos
+    , pos1
+    , op
+    , str
+    , int
 ) where
 
 import ClassyPrelude
@@ -13,9 +18,26 @@ import Test.Hspec                      (Expectation, HasCallStack, Spec, describ
 import Test.Hspec.Expectations.Contrib (isLeft)
 
 import Fun             (translateFmt)
-import Fun.Errors      (Error, unError)
-import Fun.SExpression (Expression)
+import Fun.Errors      (Error, Pos (..), unError)
+import Fun.SExpression (Atom (..), Expression (..), Literal (..))
 
+
+-- Patterns --
+
+str :: Text -> Expression
+str x = Atom (Literal (String x)) Nothing
+
+op :: Text -> Expression
+op x = Atom (Operator x) Nothing
+
+int :: Integer -> Expression
+int x = Atom (Literal (Integer 10 x)) Nothing
+
+pos1 :: Maybe Pos
+pos1 = pos 1 1
+
+pos :: Int -> Int -> Maybe Pos
+pos l c = Just (Pos l c)
 
 -- API --
 

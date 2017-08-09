@@ -5,7 +5,7 @@ import ClassyPrelude
 import Data.Traversable (mapAccumR)
 import GHC.Err          (errorWithoutStackTrace)
 
-import Fun.SExpression (pattern A, Expression, pattern ID, pattern KW, pattern L, pattern LIT,
+import Fun.SExpression (pattern A, Expression (..), pattern ID, pattern KW, pattern L, pattern LIT,
                         Literal (..), pattern OP)
 
 type E = Expression
@@ -72,9 +72,9 @@ withReturn b
 
 
 isExpression :: E -> Bool
-isExpression (A _)                 = True
-isExpression (L ( OP _ : _ ))      = True
-isExpression (L ( ID _ : _ ))      = True
-isExpression (L ( KW "val"  : _ )) = True
-isExpression (L ( KW "func" : _ )) = True
-isExpression _                     = False
+isExpression (Atom _ _)                 = True
+isExpression (List ( OP _ _ : _ ) _)    = True
+isExpression (List ( ID _ : _ ) _)      = True
+isExpression (List ( KW "val"  : _ ) _) = True
+isExpression (List ( KW "func" : _ ) _) = True
+isExpression _                          = False
